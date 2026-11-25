@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Factoring Polynomials in Several Variables</title>
+<meta name="description" content="Factoring polynomials in several variables over the rationals with Kronecker substitution.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Polynomials</div>
+<h1>Factoring</h1>
+<p class="lede">x³ + y³ + z³ − 3xyz = (x + y + z)(x² + y² + z² − xy − xz − yz). Factoring finds the irreducible pieces of any polynomial with rational coefficients, in any number of variables.</p>
+<div data-expr="factor(x^3 + y^3 + z^3 - 3xyz)" data-examples="factor(x^4 + 4y^4)|factor(x^2 - y^2 - 2y - 1)|factor(a^2 b + a b^2 + b^2 c + b c^2 + c^2 a + c a^2 + 2abc)|factor(x^6 - y^6)|factor(2/3 x^2 y - 2/3 y)|irreducible(x^2 + y^2 - 1)|factor(det(1, x, x^2; 1, y, y^2; 1, z, z^2))|factor((x + y)^4 - z^4)"></div>
+
+<h2>What the answer means</h2>
+<p>A polynomial is <em>irreducible</em> over Q when it is not a product of two polynomials of lower degree with rational coefficients. Every nonzero polynomial is a product</p>
+\[ f = c \cdot p_1^{m_1} \cdots p_k^{m_k} \]
+<p>of irreducible ones, uniquely up to order and sign. The library returns each \(p_i\) with whole-number coefficients having no common factor, and puts the leftover rational number in <code>unit</code>.</p>
+<p>The field matters. \(x^2 + y^2\) is irreducible over Q but equals \((x + iy)(x - iy)\) once \(i\) is allowed; \(x^2 - 2y^2\) is irreducible over Q but splits over Q(√2). Curiously \(x^2 + y^2 - 1\), the circle, stays irreducible over every field of characteristic other than 2.</p>
+
+<h2>How it is done: Kronecker's substitution</h2>
+<p>Factoring in one variable is a solved problem (the <a href="https://ratmath.com/algebraic/factoring.html">Zassenhaus method</a> in @ratmath/algebraic). Kronecker's idea reduces several variables to one.</p>
+<ol>
+  <li><strong>Remove repeated factors</strong> with the <a href="gcd.html">square-free decomposition</a>, and make the coefficients whole numbers.</li>
+  <li><strong>Substitute.</strong> Choose \(d\) larger than the degree of \(f\) in every variable and replace
+  \[ x_1 \to t, \quad x_2 \to t^{d}, \quad x_3 \to t^{d^2}, \ \dots \]
+  A monomial \(x_1^{a_1} x_2^{a_2} x_3^{a_3}\) becomes \(t^{a_1 + a_2 d + a_3 d^2}\): its exponents are the digits of one number in base \(d\). Distinct monomials with all exponents below \(d\) therefore stay distinct, and the substitution can be undone.</li>
+  <li><strong>Factor the image</strong> \(f(t, t^d, t^{d^2}, \dots)\) in the single variable \(t\).</li>
+  <li><strong>Recombine.</strong> Any true factor \(g\) of \(f\) has exponents below \(d\) as well, so its image is a product of some of the one-variable factors. Try each product of 1, 2, … of them: read its exponents back in base \(d\) and test whether the result divides \(f\). Whatever divides is a factor; if nothing does, \(f\) is irreducible.</li>
+</ol>
+<p>For \(f = x^2 - y^2\) take \(d = 3\): the image is \(t^2 - t^6 = -t^2(t - 1)(t + 1)(t^2 + 1)\). The product \(t(t^2 + 1) = t^3 + t\) reads back as \(y + x\), which divides \(f\).</p>
+<p>The method is simple and always right, but the image has degree about \(d^n\), so it suits the polynomials of a course or a calculator rather than very large ones. The library refuses (with a clear error) when the image would pass degree 60,000.</p>
+<pre><code>import { ring, factor, isIrreducible } from "@ratmath/structures";
+
+const R = ring("x, y");
+const { unit, factors } = factor(R.poly("2/3 x^4 y - 2/3 y^5"));
+String(unit);                                   // "2/3"
+factors.map((t) =&gt; [String(t.factor), t.multiplicity]);
+        // [["y", 1], ["x + y", 1], ["x − y", 1], ["x² + y²", 1]]
+isIrreducible(R.poly("x^2 + y^2 - 1"));         // true</code></pre>
+<template data-runbox>
+const R = ring("x, y, z");
+const show = (text) =&gt; {
+  const { unit, factors } = factor(R.poly(text));
+  const parts = factors.map(({ factor: p, multiplicity: m }) =&gt; `(${p})${m &gt; 1 ? "^" + m : ""}`);
+  PRINT(text, " = ", String(unit) === "1" ? "" : `${unit} · `, parts.join(" "));
+};
+show("x^3 + y^3 + z^3 - 3xyz");
+show("x^4 + 4y^4");                 // Sophie Germain's identity
+show("(x + y)^4 - z^4");
+show("x^2 y^2 - 2 x y z + z^2");
+show("x^6 - y^6");
+
+// Which of x^n + y^n are irreducible over Q?  (Exactly the powers of 2.)
+const S = ring("x, y");
+Array.from({ length: 8 }, (_, i) =&gt; i + 1).filter((n) =&gt; isIrreducible(S.poly(`x^${n} + y^${n}`)))
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

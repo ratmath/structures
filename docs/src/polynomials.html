@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Polynomials in Several Variables</title>
+<meta name="description" content="Polynomial rings with exact coefficients: making, reading, printing, arithmetic, substitution and derivatives.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Polynomials</div>
+<h1>Polynomials in several variables</h1>
+<p class="lede">Choose the variables, and every polynomial in them lives in one ring. Arithmetic is exact, and a polynomial prints the way you would write it.</p>
+<div data-expr="(x + y + 1)^3" data-examples="(x - y)(x^2 + xy + y^2)|diff(x^3 y^2 - 2xy, x)|subs(x^2 + y^2, x, t + 1)|homogenize(x^3 + xy + 1)|degree(x^3 y^2 - 2xy)|expand((a + b)^2 - (a - b)^2)|0.5 x^2 + 1/3 x"></div>
+
+<h2>The ring K[x₁, …, xₙ]</h2>
+<p>Fix a field \(K\) of coefficients and variables \(x_1, \dots, x_n\). A <em>monomial</em> is a product of powers \(x^a = x_1^{a_1}\cdots x_n^{a_n}\) with whole-number exponents, and a polynomial is a finite sum</p>
+\[ f = \sum_a c_a\, x^a, \qquad c_a \in K . \]
+<p>Two polynomials are equal exactly when they have the same coefficients. Sums and products follow the usual rules, with \(x^a \cdot x^b = x^{a+b}\), and the result is a ring \(K[x_1, \dots, x_n]\). The <em>total degree</em> of a monomial is \(a_1 + \dots + a_n\), and the degree of \(f\) is the largest total degree among its terms.</p>
+<p>The library stores only the nonzero terms (a sparse representation), so \(x^{100}y - 1\) takes two entries, and multiplication costs the product of the numbers of terms.</p>
+
+<h2>Making polynomials</h2>
+<pre><code>import { ring } from "@ratmath/structures";
+
+const R = ring("x, y, z");            // Q[x, y, z], terms ordered by grevlex
+const [x, y, z] = R.gens;             // the variables as polynomials
+const f = R.poly("x^2 y - 3/2 x z + 1");
+const g = x.pow(2).mul(y).sub(x.mul(z).mul("3/2")).add(1);
+f.equals(g);                          // true
+String(f);                            // "x²y − (3/2)xz + 1"
+f.toText();                           // "x^2*y - 3/2*x*z + 1"   (R.poly reads this back)
+f.toTeX();                            // "x^{2}y - \\frac{3}{2}xz + 1"</code></pre>
+<p>Text allows juxtaposition for products (<code>3xy</code>), <code>^</code> or <code>**</code> for powers, parentheses, and exact numbers in any form Core reads: <code>3/4</code>, <code>1.25</code>, <code>0.#3</code> (one third). Dividing is allowed when it comes out exactly, as in <code>(x^2 - 1)/(x - 1)</code>. Every method that takes a polynomial also takes text or a number.</p>
+
+<h2>Looking inside</h2>
+<pre><code>f.degree();              // 3      total degree
+f.degree("x");           // 2      degree in x
+f.degrees();             // { x: 2, y: 1, z: 1 }
+f.variables();           // ["x", "y", "z"]
+f.coefficient({ x: 1, z: 1 });    // Rational −3/2
+f.coefficients("x");     // [1, −(3/2)z, y]   as a polynomial in x, constant first
+f.leadingTerm();         // x²y  (largest in the ring's monomial order)
+f.terms();               // [{ coefficient, exponents, monomial }, …]
+f.isHomogeneous();       // false</code></pre>
+
+<h2>Calculus and substitution</h2>
+<p>Partial derivatives are taken term by term: \(\partial_x (c\,x^a y^b) = a\,c\,x^{a-1}y^b\). Substitution replaces a variable by a number or another polynomial of the ring; evaluating at a point gives an exact number.</p>
+<pre><code>f.diff("x");                      // 2xy − (3/2)z
+f.gradient();                     // [∂f/∂x, ∂f/∂y, ∂f/∂z]
+f.subs({ z: "x + y" });           // still in Q[x, y, z]
+f.at({ x: 2, y: "1/3", z: 1 });   // Rational −2/3
+f.compose({ x: "s + t", y: "s - t", z: 1 }, ring("s, t"));   // a change of variables
+f.homogenize("h");                // every term brought up to degree 3 with a new variable h</code></pre>
+
+<h2>Other coefficient fields</h2>
+<p>A ring takes any field object RatMath uses, such as those of <a href="https://ratmath.com/algebraic/finite-fields.html">@ratmath/algebraic</a>. Over the integers modulo 5 the "freshman's dream" \((x + y)^5 = x^5 + y^5\) is true, because every middle binomial coefficient is divisible by 5.</p>
+<pre><code>import { ring, primeField, NumberField } from "@ratmath/structures";
+
+const S = ring("x, y", { field: primeField(5) });
+String(S.poly("(x + y)^5"));          // "x⁵ + y⁵"
+
+const K = NumberField.quadratic(2);   // Q(√2)
+const T = ring("x", { field: K });
+const r = T.constant(K.gen);          // √2 as a constant polynomial
+String(T.gens[0].add(r).pow(2));      // "x² + 2√2·x + 2"</code></pre>
+<template data-runbox>
+const R = ring("x, y, z");
+const f = R.poly("x^2 y - 3/2 x z + 1");
+PRINT("f =", f, "  degree", f.degree(), "  degrees", JSON.stringify(f.degrees()));
+PRINT("∂f/∂x =", f.diff("x"));
+PRINT("f at (2, 1/3, 1) =", f.at({ x: 2, y: "1/3", z: 1 }));
+PRINT("after x = s + t, y = s − t, z = 1:", f.compose({ x: "s + t", y: "s - t", z: 1 }, ring("s, t")));
+
+// (x + y)^p = x^p + y^p in characteristic p
+for (const p of [2, 3, 5, 7]) PRINT(`mod ${p}: (x + y)^${p} =`, ring("x, y", { field: primeField(p) }).poly(`(x + y)^${p}`));
+
+// the binomial theorem in three variables: the coefficients of (x + y + z)^4
+R.poly("(x + y + z)^4").terms().map((t) =&gt; `${t.coefficient}·${t.monomial}`)
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

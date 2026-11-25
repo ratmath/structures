@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Symmetric Polynomials</title>
+<meta name="description" content="Elementary symmetric polynomials, power sums, Newton&#x27;s identities and the fundamental theorem, computed exactly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Symmetry</div>
+<h1>Symmetric polynomials</h1>
+<p class="lede">A polynomial that does not change when its variables are shuffled can always be rewritten using just a few building blocks. That is why you can know the sum of the squares of the roots of an equation without solving it.</p>
+<div data-expr="symmetric(x^2 + y^2 + z^2)" data-title="Rewrite in elementary symmetric polynomials" data-examples="symmetric(x^3 + y^3 + z^3)|symmetric((x - y)^2 (x - z)^2 (y - z)^2)|symmetric(x^2 y + x y^2)|symmetric(x^4 + y^4)|symmetric(x^2 y + y^2 z + z^2 x)|elementary(2, a, b, c, d)|complete(2, x, y, z)|symmetric(x^5 + y^5 + z^5)"></div>
+
+<h2>The building blocks</h2>
+<p>A polynomial in \(x_1, \dots, x_n\) is <em>symmetric</em> when every permutation of the variables leaves it unchanged. The <em>elementary symmetric polynomials</em> are</p>
+\[ e_1 = \sum_i x_i, \qquad e_2 = \sum_{i &lt; j} x_i x_j, \qquad \dots, \qquad e_n = x_1 x_2 \cdots x_n , \]
+<p>so \(e_k\) is the sum of all products of \(k\) different variables. They are exactly the coefficients that appear when a product of linear factors is multiplied out (Vieta's formulas):</p>
+\[ (t - x_1)(t - x_2)\cdots(t - x_n) = t^n - e_1 t^{n-1} + e_2 t^{n-2} - \dots + (-1)^n e_n . \]
+<p>Two other families are the <em>power sums</em> \(p_k = x_1^k + \dots + x_n^k\) and the <em>complete homogeneous</em> polynomials \(h_k\), the sum of all monomials of degree \(k\).</p>
+
+<h2>The fundamental theorem</h2>
+<p><strong>Every symmetric polynomial is a polynomial in \(e_1, \dots, e_n\), in exactly one way.</strong> The proof is an algorithm, and it is the one the library runs.</p>
+<p>Order the monomials <a href="orders.html">lexicographically</a>. Because \(f\) is symmetric, its leading monomial \(x_1^{a_1} \cdots x_n^{a_n}\) has \(a_1 \ge a_2 \ge \dots \ge a_n\) (otherwise a permutation of it would be larger). The product</p>
+\[ e_1^{\,a_1 - a_2}\, e_2^{\,a_2 - a_3} \cdots e_n^{\,a_n} \]
+<p>has the same leading monomial. Subtract the right multiple of it from \(f\): what is left is symmetric with a smaller leading monomial. Repeat until nothing is left.</p>
+<p>For \(f = x^2 + y^2\): the leading monomial is \(x^2\), matched by \(e_1^2 = x^2 + 2xy + y^2\). The difference is \(-2xy = -2e_2\). So \(x^2 + y^2 = e_1^2 - 2e_2\).</p>
+<pre><code>import { ring, elementary, powerSum, completeHomogeneous, isSymmetric, toElementary } from "@ratmath/structures";
+
+const R = ring("x, y, z");
+String(elementary(R, 2));                    // "xy + xz + yz"
+String(powerSum(R, 3));                      // "x³ + y³ + z³"
+isSymmetric(R.poly("x^2 y + y^2 z + z^2 x")); // false: only cyclic shifts fix it
+
+const { polynomial, ring: E } = toElementary(powerSum(R, 3));
+String(polynomial);                          // "e1³ − 3e1·e2 + 3e3"
+E.vars;                                      // ["e1", "e2", "e3"]
+// substituting the elementary polynomials back recovers the original
+polynomial.compose([elementary(R, 1), elementary(R, 2), elementary(R, 3)]).equals(powerSum(R, 3));   // true</code></pre>
+
+<h2>Roots without solving</h2>
+<p>If \(x_1, \dots, x_n\) are the roots of \(t^n + c_{n-1}t^{n-1} + \dots + c_0\), Vieta's formulas give \(e_k = (-1)^k c_{n-k}\). Any symmetric expression in the roots is then a polynomial in the coefficients. The roots of \(t^3 - 2t^2 - 5t + 6\) have \(e_1 = 2\), \(e_2 = -5\), \(e_3 = -6\), so the sum of their cubes is \(e_1^3 - 3e_1e_2 + 3e_3 = 8 + 30 - 18 = 20\). (The roots are 1, −2 and 3, and indeed \(1 - 8 + 27 = 20\).)</p>
+<p>The formulas for power sums are <em>Newton's identities</em>, and the <a href="resultants.html">discriminant</a> is the symmetric polynomial \(\prod_{i&lt;j}(x_i - x_j)^2\) written in the coefficients. The same theorem is the starting point of Galois theory: the symmetric functions of the roots are the ones that lie in the base field.</p>
+<template data-runbox>
+const R = ring("x, y, z");
+// Newton's identities: power sums in terms of e1, e2, e3
+for (let k = 1; k &lt;= 5; k += 1) PRINT(`p${k} =`, toElementary(powerSum(R, k)).polynomial);
+
+// the discriminant of a cubic, from the roots
+const disc = toElementary(R.poly("(x - y)^2 (x - z)^2 (y - z)^2")).polynomial;
+PRINT("∏(xi − xj)² =", disc);
+
+// sum of the fifth powers of the roots of t³ − 2t² − 5t + 6, without finding them
+const p5 = toElementary(powerSum(R, 5)).polynomial;
+PRINT("sum of fifth powers of the roots:", p5.at({ e1: 2, e2: -5, e3: -6 }), " (check: 1 − 32 + 243 = 212)");
+
+// complete homogeneous polynomials obey h2 = e1² − e2, h3 = e1³ − 2e1e2 + e3
+[2, 3, 4].map((k) =&gt; `h${k} = ${toElementary(completeHomogeneous(R, k)).polynomial}`)
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

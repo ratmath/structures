@@ -1,0 +1,63 @@
+{
+  "name": "@ratmath/structures",
+  "version": "0.1.0",
+  "description": "Abstract algebra for RatMath: exact polynomials in several variables and rational functions, over the rationals, finite fields and number fields",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "src/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "bun test ./tests",
+    "docs:build": "bun scripts/build-docs.js"
+  },
+  "keywords": [
+    "polynomial",
+    "multivariate",
+    "exact",
+    "rational-function",
+    "resultant",
+    "gcd",
+    "abstract-algebra"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ratmath/structures.git"
+  },
+  "homepage": "https://ratmath.com/structures/",
+  "dependencies": {
+    "@ratmath/core": "^0.10.0",
+    "@ratmath/algebraic": "^0.1.0"
+  },
+  "types": "index.d.ts",
+  "workspaces": [
+    "vendor/algebraic"
+  ],
+  "devDependencies": {
+    "katex": "0.19.1"
+  },
+  "author": "James Taylor",
+  "engines": {
+    "node": ">=22"
+  },
+  "bugs": {
+    "url": "https://github.com/ratmath/structures/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

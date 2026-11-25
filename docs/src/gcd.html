@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Greatest Common Divisors</title>
+<meta name="description" content="Gcds of polynomials in several variables: contents, primitive parts, pseudo-remainders and square-free decomposition.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Polynomials</div>
+<h1>Greatest common divisors</h1>
+<p class="lede">Polynomials in several variables factor uniquely, so any two of them have a greatest common divisor. Finding it without factoring is what keeps fractions of polynomials in lowest terms.</p>
+<div data-expr="gcd(x^3 - y^3, x^2 - y^2)" data-examples="gcd(x^2 y - y, x y^2 + y^2)|lcm(x^2 - y^2, x^2 + 2xy + y^2)|content((y^2 - 1)x^2 + (y + 1)x, x)|primpart((y^2 - 1)x^2 + (y + 1)x, x)|sqfree((x + y)^3 (x - y)^2 z)|f = (x + y)^3 (x - y)\ngcd(f, diff(f, x))|gcd(x^4 - y^4, x^6 - y^6, x^10 - y^10)"></div>
+
+<h2>Why a gcd exists</h2>
+<p>\(K[x_1, \dots, x_n]\) is a <em>unique factorisation domain</em>: every polynomial is a product of irreducible ones, uniquely up to order and constant factors. The gcd of \(f\) and \(g\) is the product of the irreducible factors they share, and it is determined up to a constant; the library returns the one whose leading coefficient is 1.</p>
+<p>With one variable Euclid's algorithm finds it by repeated division with remainder. With several variables that fails as it stands: dividing \(x^2 + y\) by \(yx + 1\) as polynomials in \(x\) would need the coefficient \(1/y\).</p>
+
+<h2>Contents and Gauss's lemma</h2>
+<p>Pick a main variable, say \(x\), and view \(f\) as a polynomial in \(x\) whose coefficients are polynomials in the other variables. Its <em>content</em> is the gcd of those coefficients and its <em>primitive part</em> is \(f\) divided by the content:</p>
+\[ (y^2 - 1)x^2 + (y + 1)x = \underbrace{(y + 1)}_{\text{content}} \cdot \underbrace{\big((y - 1)x^2 + x\big)}_{\text{primitive part}} . \]
+<p><strong>Gauss's lemma</strong> says the product of primitive polynomials is primitive. It follows that</p>
+\[ \gcd(f, g) = \gcd(\operatorname{cont} f, \operatorname{cont} g) \cdot \gcd(\operatorname{pp} f, \operatorname{pp} g), \]
+<p>where the first gcd involves one variable fewer (so the method recurses) and the second can be found by a version of Euclid's algorithm.</p>
+
+<h2>Pseudo-remainders</h2>
+<p>To divide \(a\) by \(b\) in \(x\) without fractions, first multiply \(a\) by a power of the leading coefficient of \(b\). The <em>pseudo-remainder</em> \(r\) satisfies</p>
+\[ \operatorname{lc}(b)^{\deg a - \deg b + 1}\, a = q\,b + r, \qquad \deg_x r &lt; \deg_x b . \]
+<p>Replacing \((a, b)\) by \((b, \operatorname{pp} r)\) until the remainder is zero gives the gcd of the primitive parts. Taking the primitive part at every step (the <em>primitive remainder sequence</em>) stops the coefficients from growing out of hand.</p>
+<pre><code>import { ring, gcd, lcm, content, primitivePart } from "@ratmath/structures";
+
+const R = ring("x, y");
+const f = R.poly("(y^2 - 1) x^2 + (y + 1) x");
+String(content(f, "x"));                    // "y + 1"
+String(primitivePart(f, "x"));              // "x²y − x² + x"
+String(gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));   // "x − y"
+String(lcm(R.poly("x^2 - y^2"), R.poly("(x + y)^2")));   // "x³ + x²y − xy² − y³"
+gcd([f, "x y + x", "x^2"]);                 // any number of polynomials: x</code></pre>
+<p>The same code runs over any exact field: modulo a prime, in GF(pᵏ), or over a number field.</p>
+
+<h2>Square-free decomposition</h2>
+<p>A polynomial is <em>square-free</em> when no irreducible factor is repeated. In characteristic 0 a repeated factor of \(f\) is also a factor of its derivative: if \(f = p^k h\) then \(f' = p^{k-1}(k p' h + p h')\). So \(\gcd(f, \partial f/\partial x)\) collects the repeated factors, and Yun's algorithm uses a chain of such gcds to write</p>
+\[ f = c \cdot f_1 \cdot f_2^{\,2} \cdot f_3^{\,3} \cdots \]
+<p>with every \(f_k\) square-free and no two sharing a factor. No factoring is needed, and it is the first step of factoring.</p>
+<pre><code>import { squareFree, squareFreePart } from "@ratmath/structures";
+
+const g = R.poly("3 (x + y)^3 (x - y)^2 (x y + 1)");
+squareFree(g);            // { unit: 3, factors: [{ factor: xy + 1, multiplicity: 1 },
+                          //                      { factor: x − y,  multiplicity: 2 },
+                          //                      { factor: x + y,  multiplicity: 3 }] }
+String(squareFreePart(g));   // the product of the distinct factors</code></pre>
+<template data-runbox>
+const R = ring("x, y");
+// two polynomials built with a hidden common factor
+const hidden = R.poly("x^2 + x y - 2y + 1");
+const a = hidden.mul("x^3 - y^2 + 3");
+const b = hidden.mul("2 x y^2 + x - 5");
+PRINT("a has", a.length, "terms, b has", b.length);
+PRINT("gcd(a, b) =", gcd(a, b));
+PRINT("lcm degree:", lcm(a, b).degree(), " = ", a.degree(), "+", b.degree(), "−", gcd(a, b).degree());
+
+// repeated factors show up in gcd(f, f')
+const f = R.poly("(x + y)^3 (x - y)^2 (x y + 1)");
+PRINT("gcd(f, ∂f/∂x) =", gcd(f, f.diff("x")));
+for (const { factor: p, multiplicity } of squareFree(f).factors) PRINT("  ", p, "with multiplicity", multiplicity);
+
+// the same over the integers modulo 7
+const S = ring("x, y", { field: primeField(7) });
+gcd(S.poly("x^7 - x"), S.poly("(x - 3)(x - 5)(x^2 + 1)"))
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

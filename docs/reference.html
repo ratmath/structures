@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Structures Reference</title>
+<meta property="og:title" content="Structures Reference">
+<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ratmath.com/structures/reference.html">
+<meta name="description" content="Every function of @ratmath/structures.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css?v=39861edd55">
+<script type="module" src="assets/site.js?v=39861edd55"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Reference</div>
+<h1>Everything in the library</h1>
+<p class="lede">Every export of <code>@ratmath/structures</code>. Coefficients handed back to you are Core Rationals over Q, and the field's own elements otherwise. Wherever a polynomial is expected, text or a number is accepted too.</p>
+<input class="filter" id="filter" type="search" placeholder="Filter, e.g. gcd, order, factor" aria-label="Filter the reference">
+<div class="tablewrap"><table class="ref" id="ref">
+<tr><th>Function</th><th>What it does</th></tr>
+<tr class="grp"><th colspan="2"><a href="polynomials.html">Rings</a></th></tr>
+<tr><td>ring(vars, { field, order })</td><td>A polynomial ring. vars is text (&quot;x, y, z&quot;) or a list of names; field is any RatMath field object (default: the rationals); order is &quot;lex&quot;, &quot;grlex&quot;, &quot;grevlex&quot; (default) or a comparison of exponent lists.</td></tr>
+<tr><td>R.vars, R.n, R.gens, R.zero, R.one</td><td>The variable names, their number, the variables as polynomials, and the constants 0 and 1.</td></tr>
+<tr><td>R.poly(text)</td><td>Read a polynomial: &quot;x^2 y - 3/2 x z + 1&quot;. Juxtaposition multiplies, ^ or ** is a power, numbers are exact, exact division is allowed.</td></tr>
+<tr><td>R.from(x)</td><td>A polynomial of R from a polynomial of R, text, or a coefficient (number, BigInt, Core Rational, field element).</td></tr>
+<tr><td>R.gen(v), R.constant(c), R.monomial(exps, c)</td><td>One variable; a constant from a field element; c·x^exps with exps a list or { x: 2, y: 1 }.</td></tr>
+<tr><td>R.fromTerms(list), R.fromUnivariate(coeffs, v)</td><td>From [[coefficient, exponents], …]; from a constant-first coefficient list in one variable.</td></tr>
+<tr><td>R.withOrder(order), R.equals(S), String(R)</td><td>The same ring with another order; same variables, field and order; a name such as &quot;Q[x, y]&quot;.</td></tr>
+<tr><td>QQ, ORDERS</td><td>The field of rationals used by default; the three built-in orders by name.</td></tr>
+<tr><td>primeField(p), galoisField(p, k), NumberField</td><td>Coefficient fields from @ratmath/algebraic, re-exported.</td></tr>
+<tr class="grp"><th colspan="2"><a href="polynomials.html">A polynomial f</a></th></tr>
+<tr><td>f.add(g), f.sub(g), f.mul(g), f.neg(), f.pow(n), f.scale(c)</td><td>Ring arithmetic. g may be a polynomial, text or a number.</td></tr>
+<tr><td>f.equals(g), f.isZero(), f.isConstant(), f.isMonomial(), f.isHomogeneous()</td><td>Exact tests.</td></tr>
+<tr><td>f.degree(), f.degree(v), f.degrees(), f.variables(), f.length</td><td>Total degree (−1 for 0); degree in one variable; all of them; the variables that occur; the number of terms.</td></tr>
+<tr><td>f.terms()</td><td>The terms, largest first: [{ coefficient, exponents, monomial }].</td></tr>
+<tr><td>f.coefficient(exps), f.coefficients(v), f.constantTerm(), f.toConstant()</td><td>One coefficient; f as a polynomial in v (constant first, entries polynomials); the constant term; the value of a constant polynomial.</td></tr>
+<tr><td>f.leadingTerm(), f.leadingCoefficient(), f.leadingMonomial(), f.leadingExponents()</td><td>The largest term in the ring&#x27;s order and its parts.</td></tr>
+<tr><td>f.monic()</td><td>f divided by its leading coefficient.</td></tr>
+<tr><td>f.diff(v, times), f.gradient()</td><td>Partial derivatives.</td></tr>
+<tr><td>f.subs({ x: … }), f.at(point), f.compose(values, target)</td><td>Substitute for some variables (same ring); the exact value at a point; replace every variable by a polynomial of another ring.</td></tr>
+<tr><td>f.homogenize(name), f.into(S), f.toUnivariate()</td><td>Make homogeneous with a new variable; the same polynomial in another ring; a constant-first coefficient list when only one variable occurs.</td></tr>
+<tr><td>String(f), f.toText(), f.toTeX(), f.toJSON()</td><td>&quot;x²y − (3/2)xz + 1&quot;; &quot;x^2*y - 3/2*x*z + 1&quot; (reads back); LaTeX; { vars, terms }.</td></tr>
+<tr class="grp"><th colspan="2"><a href="orders.html">Division</a></th></tr>
+<tr><td>f.divmod(g)</td><td>{ quotient, remainder } on division by one polynomial, in the ring&#x27;s order.</td></tr>
+<tr><td>f.divmod([g1, g2, …])</td><td>{ quotients, remainder } with f = Σ qᵢgᵢ + r and no term of r divisible by a leading term of a divisor.</td></tr>
+<tr><td>f.rem(g or list), f.div(g), f.isDivisibleBy(g)</td><td>The remainder; the exact quotient (throws if there is a remainder); whether g divides f.</td></tr>
+<tr class="grp"><th colspan="2"><a href="gcd.html">Greatest common divisors</a></th></tr>
+<tr><td>gcd(f, g, …), lcm(f, g, …)</td><td>Greatest common divisor and least common multiple, leading coefficient 1. A single list is accepted too.</td></tr>
+<tr><td>content(f, v), primitivePart(f, v)</td><td>The gcd of the coefficients of f as a polynomial in v, and f divided by it.</td></tr>
+<tr><td>squareFree(f)</td><td>{ unit, factors: [{ factor, multiplicity }] } with square-free, pairwise coprime factors (characteristic 0).</td></tr>
+<tr><td>squareFreePart(f)</td><td>The product of the distinct irreducible factors.</td></tr>
+<tr class="grp"><th colspan="2"><a href="factoring.html">Factoring</a></th></tr>
+<tr><td>factor(f)</td><td>{ unit, factors: [{ factor, multiplicity }] }: the irreducible factors over Q, each with coprime integer coefficients; unit is a Rational.</td></tr>
+<tr><td>isIrreducible(f)</td><td>Whether a non-constant polynomial over Q is irreducible.</td></tr>
+<tr><td>integerPrimitive(f)</td><td>{ content, primitive }: f as a rational number times a polynomial with coprime integer coefficients.</td></tr>
+<tr class="grp"><th colspan="2"><a href="resultants.html">Determinants and elimination</a></th></tr>
+<tr><td>det(matrix, R)</td><td>The determinant of a square matrix of polynomials, by fraction-free (Bareiss) elimination. R is needed only when no entry is a polynomial.</td></tr>
+<tr><td>sylvester(f, g, v)</td><td>The Sylvester matrix of f and g as polynomials in v.</td></tr>
+<tr><td>resultant(f, g, v)</td><td>Its determinant: zero exactly where f and g have a common root in v.</td></tr>
+<tr><td>discriminant(f, v)</td><td>(−1)^(n(n−1)/2) Res(f, ∂f/∂v) / lc(f): zero exactly where f has a repeated root in v.</td></tr>
+<tr><td>jacobian([f1, f2, …]), hessian(f)</td><td>The matrix of gradients; the matrix of second partial derivatives.</td></tr>
+<tr class="grp"><th colspan="2"><a href="rational-functions.html">Rational functions</a></th></tr>
+<tr><td>fractions(R)</td><td>The field of fractions K(x₁, …, xₙ) as a field object: zero, one, add, sub, mul, div, neg, inv, pow, sign, equals, format, gens, name.</td></tr>
+<tr><td>F.parse(text), F.from(x), F.of(num, den)</td><td>Read &quot;(x^2 - 1)/(x y + 1)&quot; (negative powers allowed); convert a polynomial, number or text; a fraction of two polynomials, reduced.</td></tr>
+<tr><td>q.num, q.den</td><td>Numerator and denominator in lowest terms (over Q: coprime integer coefficients, positive leading denominator).</td></tr>
+<tr><td>q.add(r), q.sub(r), q.mul(r), q.div(r), q.neg(), q.inv(), q.pow(n)</td><td>Field arithmetic; n may be negative.</td></tr>
+<tr><td>q.equals(r), q.isZero(), q.isPolynomial(), q.toPolynomial()</td><td>Exact tests; the polynomial when the denominator is constant.</td></tr>
+<tr><td>q.diff(v), q.subs(values), q.at(point)</td><td>Derivative; substitution; exact value (throws at a pole).</td></tr>
+<tr><td>String(q), q.toText(), q.toTeX()</td><td>&quot;2x/(x² − y²)&quot;; text that F.parse reads back; LaTeX.</td></tr>
+<tr class="grp"><th colspan="2"><a href="symmetric.html">Symmetric polynomials</a></th></tr>
+<tr><td>elementary(R, k), powerSum(R, k), completeHomogeneous(R, k)</td><td>eₖ, pₖ and hₖ in the variables of R.</td></tr>
+<tr><td>isSymmetric(f)</td><td>Whether every permutation of the ring&#x27;s variables fixes f.</td></tr>
+<tr><td>toElementary(f, { prefix })</td><td>{ polynomial, ring }: f written in e1, …, en (a polynomial of a new ring with those variables).</td></tr>
+</table></div>
+<h2>Errors</h2>
+<p>Bad input throws a <code>RangeError</code> or <code>TypeError</code> with a message that names the problem: a variable the ring does not have, an inexact division, a field that cannot decide whether a coefficient is zero, a factoring job too large for the method.</p>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// A tour of the main entry points.
+const R = ring("x, y");
+const f = R.poly("x^3 y - x y^3");
+PRINT("factor:", factor(f).factors.map((t) =&gt; String(t.factor)));
+PRINT("gcd with x² − y²:", gcd(f, "x^2 - y^2"));
+PRINT("divmod by x − y:", f.divmod(R.poly("x - y")).quotient);
+PRINT("resultant with x + y − 1 in y:", resultant(f, R.poly("x + y - 1"), "y"));
+PRINT("as a fraction over x² + xy:", fractions(R).of(f, R.poly("x^2 + x y")));
+toElementary(R.poly("x^3 + y^3")).polynomial</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<footer class="sitelinks"><a href="https://github.com/ratmath/structures">GitHub</a> · <a href="https://ratmath.com/">ratmath.com</a> · <a href="https://ratmath.com/core/">core</a> · <a href="https://ratmath.com/shelf/">shelf</a> · <a href="https://ratmath.com/algebraic/">algebraic</a> · <a href="https://ratmath.com/linalg/">linalg</a> · <a href="https://ratmath.com/graphics/">graphics</a></footer>
+</article>
+</main>
+</div>
+<script type="module">
+const filter = document.getElementById("filter");
+const rows = [...document.querySelectorAll("#ref tr")].slice(1);
+filter.addEventListener("input", () => {
+  const q = filter.value.trim().toLowerCase();
+  let group = null;
+  let shown = false;
+  for (const tr of rows) {
+    if (tr.classList.contains("grp")) {
+      if (group) group.hidden = !shown;
+      group = tr;
+      shown = false;
+      continue;
+    }
+    const hit = !q || tr.textContent.toLowerCase().includes(q);
+    tr.hidden = !hit;
+    shown ||= hit;
+  }
+  if (group) group.hidden = !shown;
+});
+</script>
+</body>
+</html>

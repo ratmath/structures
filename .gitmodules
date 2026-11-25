@@ -1,0 +1,3 @@
+[submodule "vendor/algebraic"]
+	path = vendor/algebraic
+	url = https://github.com/ratmath/algebraic.git

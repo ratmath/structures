@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RatMath Structures</title>
+<meta name="description" content="Exact polynomials in several variables, rational functions, resultants and factoring in JavaScript.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">@ratmath/structures</div>
+<h1>Polynomials in several variables, held exactly</h1>
+<p class="lede">A JavaScript library for the algebra of x, y and z together: polynomials with exact coefficients, the fractions built from them, greatest common divisors, factoring, and the resultants that eliminate a variable. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
+
+<div data-expr="factor(x^3 + y^3 + z^3 - 3xyz)" data-title="Try it" data-examples="(x + y)^4|gcd(x^3 - y^3, x^2 - y^2)|resultant(x^2 + y^2 - 1, y - x^2, y)|disc(a x^2 + b x + c, x)|det(1, x, x^2; 1, y, y^2; 1, z, z^2)|inverse(a, b; c, d)|symmetric(x^3 + y^3 + z^3)|1/(x + y) + 1/(x - y)"></div>
+
+<h2>What this is</h2>
+<p>A polynomial in several variables is a finite sum of terms, each a coefficient times a product of powers of the variables: \(x^2y - \tfrac32 xz + 1\). The polynomials in fixed variables with coefficients in a field \(K\) form a ring, written \(K[x, y, z]\): they can be added, subtracted and multiplied, and sometimes divided.</p>
+<p>This library holds such a polynomial as the list of its nonzero terms, with every coefficient exact (a fraction of whole numbers by default). The coefficients can instead come from any exact field in RatMath: the integers modulo a prime, a finite field GF(pᵏ), or a number field such as Q(√2).</p>
+<p>It is the first part of <code>@ratmath/structures</code>, the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Groups, rings and ideals, and Gröbner bases are planned for the same package and will build on what is here.</p>
+
+<h2>A first program</h2>
+<pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
+
+const R = ring("x, y, z");                    // the ring Q[x, y, z]
+const f = R.poly("x^3 + y^3 + z^3 - 3xyz");
+String(f);                                    // "x³ + y³ − 3xyz + z³"
+factor(f).factors.map((t) =&gt; String(t.factor));
+                                              // ["x + y + z", "x² − xy + y² − xz − yz + z²"]
+String(gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));   // "x − y"
+String(resultant(R.poly("x^2 + y^2 - 1"), R.poly("y - x^2"), "y"));
+                                              // "x⁴ + x² − 1": where the circle meets the parabola
+const F = fractions(R);                       // the field Q(x, y, z)
+String(F.parse("1/(x + y) + 1/(x - y)"));     // "2x/(x² − y²)"</code></pre>
+<p class="small muted">Text is read the way it is written on paper: <code>3xy^2</code>, <code>(x + 1)(x - 1)</code>, <code>1.25 x</code>, <code>2/3 y</code>. Numbers are exact, so 0.1 is one tenth.</p>
+
+<h2>What is in it</h2>
+<ul>
+  <li><strong>Polynomial rings</strong> over Q or any exact field, with the monomial orders lex, grlex and grevlex or one of your own.</li>
+  <li><strong>Arithmetic and calculus</strong>: sums, products, powers, partial derivatives, gradients, substitution, evaluation, change of variables.</li>
+  <li><strong>Division</strong> by one polynomial or by a list of them, with quotients and remainder.</li>
+  <li><strong>Greatest common divisors</strong>, least common multiples, contents, square-free parts.</li>
+  <li><strong>Factoring</strong> into irreducible polynomials over the rationals.</li>
+  <li><strong>Determinants, resultants and discriminants</strong> of polynomials, plus Jacobians and Hessians.</li>
+  <li><strong>Rational functions</strong>: the field of fractions, usable as the entries of a matrix with parameters.</li>
+  <li><strong>Symmetric polynomials</strong>: the elementary ones, power sums, and rewriting any symmetric polynomial in terms of them.</li>
+</ul>
+
+<h2>Topics</h2>
+<p>Each topic page explains the mathematics and lets you run it. <a href="explore.html">Explore</a> is a free-form calculator for all of it; <a href="reference.html">Reference</a> lists every function.</p>
+<div class="cards" id="cards"></div>
+
+<h2>Install</h2>
+<pre><code>bun add github:ratmath/structures    # depends on @ratmath/core and @ratmath/algebraic</code></pre>
+<p>The library is pure JavaScript with BigInt arithmetic and no floating point anywhere.</p>
+<template data-runbox>
+const R = ring("x, y, z");
+const f = R.poly("x^3 + y^3 + z^3 - 3xyz");
+PRINT("f =", f);
+for (const { factor: g, multiplicity } of factor(f).factors) PRINT("  factor:", g, "to the power", multiplicity);
+PRINT("gcd:", gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));
+PRINT("circle and parabola meet where", resultant(R.poly("x^2 + y^2 - 1"), R.poly("y - x^2"), "y"), "= 0");
+fractions(R).parse("1/(x + y) + 1/(x - y)")
+</template>
+</article>
+</main>
+</div>
+<script type="module">
+import { topicCards } from "./assets/site.js";
+topicCards(document.getElementById("cards"));
+</script>
+</body>
+</html>

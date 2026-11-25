@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rational Functions</title>
+<meta name="description" content="The field of fractions of a polynomial ring, and exact matrices whose entries contain parameters.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Elimination</div>
+<h1>Rational functions</h1>
+<p class="lede">Fractions of polynomials form a field, just as fractions of whole numbers do. Because it is a field, everything linear algebra does with numbers it can do with formulas.</p>
+<div data-expr="1/(x + y) + 1/(x - y)" data-examples="(x^2 - y^2)/(x - y)|inverse(a, b; c, d)|inverse(1, t; t, 1)|diff(x/(x^2 + y^2), x)|(1 + 1/x)/(1 - 1/x)|subs((x + y)/(x - y), y, 2x - 1)|inverse(1, x, x^2; 1, y, y^2; 1, z, z^2)|x^-2 y + y^-2 x"></div>
+
+<h2>The field of fractions</h2>
+<p>A <em>rational function</em> is a fraction \(p/q\) of polynomials with \(q \ne 0\), where \(p/q\) and \(r/s\) are the same when \(ps = qr\). With</p>
+\[ \frac pq + \frac rs = \frac{ps + qr}{qs}, \qquad \frac pq \cdot \frac rs = \frac{pr}{qs}, \qquad \Big(\frac pq\Big)^{-1} = \frac qp \]
+<p>they form a field, written \(K(x_1, \dots, x_n)\): the smallest field containing the polynomial ring, in the same way Q is built from the integers.</p>
+<p>A fraction has many names, so the library keeps each one in a single standard form. The numerator and denominator are divided by their <a href="gcd.html">gcd</a> (lowest terms); over Q both then get whole-number coefficients with no common factor and the denominator's leading coefficient is made positive. Two rational functions are equal exactly when their standard forms match, which is what makes "is this expression zero?" a question with a definite answer.</p>
+<pre><code>import { ring, fractions } from "@ratmath/structures";
+
+const R = ring("x, y");
+const F = fractions(R);                      // the field Q(x, y)
+const a = F.parse("1/(x + y)");
+const b = F.parse("1/(x - y)");
+String(a.add(b));                            // "2x/(x² − y²)"
+String(a.div(b));                            // "(x − y)/(x + y)"
+String(F.parse("(x^2 - y^2)/(x - y)"));      // "x + y"
+a.add(b).num; a.add(b).den;                  // the two polynomials
+a.diff("x");                                 // −1/(x² + 2xy + y²)   (the quotient rule)
+a.subs({ y: 1 });                            // 1/(x + 1)
+a.at({ x: 2, y: 1 });                        // Rational 1/3</code></pre>
+
+<h2>A field object</h2>
+<p><code>fractions(R)</code> is also a <em>field object</em>: it carries <code>zero</code>, <code>one</code>, <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>, <code>neg</code> and <code>sign</code>, the shape every RatMath library uses to say "do arithmetic here". Anything written against that shape works with formulas. In particular the elimination, determinant and inverse of <a href="https://ratmath.com/linalg/">@ratmath/linalg</a>'s <code>field</code> module accept it, which gives exact linear algebra with symbolic parameters:</p>
+<pre><code>import { field } from "@ratmath/linalg";
+import { ring, fractions } from "@ratmath/structures";
+
+const F = fractions(ring("a, b, c, d"));
+const [a, b, c, d] = F.gens;
+field.det([[a, b], [c, d]], F);              // −bc + ad
+field.inverse([[a, b], [c, d]], F);          // [[−d/(bc − ad), b/(bc − ad)], [c/(bc − ad), −a/(bc − ad)]]
+
+const G = fractions(ring("t"));
+field.rref([[1, G.parse("t"), 1], [G.parse("t"), 1, 1]], G);
+        // x = 1/(t + 1), y = 1/(t + 1): the solution of the system as a formula in t</code></pre>
+<p>One caution comes with formulas: a result such as \(1/(t + 1)\) is correct as a rational function, and says nothing about the special value \(t = -1\), where the original system has no solution. Elimination over the field treats any nonzero polynomial as a legitimate pivot.</p>
+
+<h2>Why the gcd matters</h2>
+<p>Without reduction to lowest terms, fractions grow without bound: adding \(n\) fractions multiplies \(n\) denominators together. Each operation here ends with one gcd, and sums are formed over the least common denominator, so the answer is as small as it can be.</p>
+<template data-runbox>
+const F = fractions(ring("x, y"));
+const a = F.parse("1/(x + y)"), b = F.parse("1/(x - y)");
+PRINT("a + b =", a.add(b), "   a/b =", a.div(b));
+
+// a telescoping sum: 1/(k(k+1)) = 1/k − 1/(k+1), with x in place of the starting point
+const G = fractions(ring("x"));
+let sum = G.zero;
+for (let k = 0; k &lt; 6; k += 1) sum = sum.add(G.parse(`1/((x + ${k})(x + ${k + 1}))`));
+PRINT("six terms add up to", sum);
+
+// Gauss–Jordan elimination written against the field interface: works for any field object
+function inverse(K, m) {
+  const n = m.length;
+  const w = m.map((row, i) =&gt; [...row, ...m.map((_, j) =&gt; (i === j ? K.one : K.zero))]);
+  for (let c = 0; c &lt; n; c += 1) {
+    const p = w.findIndex((row, i) =&gt; i &gt;= c &amp;&amp; K.sign(row[c]) !== 0);
+    if (p &lt; 0) throw new Error("singular");
+    [w[c], w[p]] = [w[p], w[c]];
+    const lead = w[c][c];
+    w[c] = w[c].map((v) =&gt; K.div(v, lead));
+    for (let i = 0; i &lt; n; i += 1) if (i !== c) { const k = w[i][c]; w[i] = w[i].map((v, j) =&gt; K.sub(v, K.mul(k, w[c][j]))); }
+  }
+  return w.map((row) =&gt; row.slice(n));
+}
+const H = fractions(ring("t"));
+const t = H.gens[0];
+const M = [[t, 1, 0], [1, t, 1], [0, 1, t]];
+for (const row of inverse(H, M)) PRINT(row.map(String).join("    "));
+PRINT("the denominators vanish where det = ", det(M.map((row) =&gt; row.map((v) =&gt; H.from(v).num))), "= 0");
+inverse(H, M)[0][0].at({ t: 2 })
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

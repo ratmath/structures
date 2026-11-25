@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resultants and Discriminants</title>
+<meta name="description" content="Sylvester matrices, resultants, discriminants and fraction-free determinants: eliminating a variable exactly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Elimination</div>
+<h1>Resultants and discriminants</h1>
+<p class="lede">Two equations in x and y can be turned into one equation in x alone. The resultant does it with a determinant, and tells you exactly where two curves meet.</p>
+
+<div class="demo" id="curves">
+  <div class="demo-title">Where two curves meet</div>
+  <div class="demo-row"><input class="text grow" id="cv-f" value="x^2 + y^2 - 1" spellcheck="false" aria-label="First curve"><span class="small muted">= 0</span></div>
+  <div class="demo-row"><input class="text grow" id="cv-g" value="y - x^2" spellcheck="false" aria-label="Second curve"><span class="small muted">= 0</span><button id="cv-go">Eliminate y</button></div>
+  <div class="demo-row" id="cv-ex"></div>
+  <div class="split"><canvas class="curves" id="cv-plot" aria-label="Plot of both curves"></canvas><div class="out" id="cv-out"></div></div>
+</div>
+
+<h2>The resultant</h2>
+<p>Take two polynomials in \(x\), with coefficients that may involve other variables:</p>
+\[ f = a_m x^m + \dots + a_0, \qquad g = b_n x^n + \dots + b_0 . \]
+<p>They share a root (or a common factor) exactly when there are nonzero \(u, v\) with \(\deg u &lt; n\), \(\deg v &lt; m\) and \(u f + v g = 0\). Written out coefficient by coefficient, that is a square system of \(m + n\) linear equations whose matrix is the <em>Sylvester matrix</em>: \(n\) shifted rows of the coefficients of \(f\) above \(m\) shifted rows of those of \(g\). Its determinant is the <em>resultant</em>:</p>
+\[ \operatorname{Res}_x(f, g) = \det \operatorname{Syl}(f, g) = a_m^{\,n}\, b_n^{\,m} \prod_{i,j} (\alpha_i - \beta_j), \]
+<p>where the \(\alpha_i\) and \(\beta_j\) are the roots of \(f\) and \(g\). So the resultant vanishes exactly when \(f\) and \(g\) have a common root in \(x\).</p>
+<p>When \(f\) and \(g\) also involve \(y\), the resultant with respect to \(y\) is a polynomial in \(x\) alone. Its roots are the \(x\)-coordinates of the common points of the two curves (together with any \(x\) where both leading coefficients vanish). The variable \(y\) has been <em>eliminated</em>.</p>
+<pre><code>import { ring, resultant, sylvester, discriminant } from "@ratmath/structures";
+
+const R = ring("x, y");
+const circle = R.poly("x^2 + y^2 - 1");
+const parabola = R.poly("y - x^2");
+String(resultant(circle, parabola, "y"));    // "x⁴ + x² − 1"
+sylvester(circle, parabola, "y");            // [[1, 0, x² − 1], [1, −x², 0], [0, 1, −x²]]</code></pre>
+
+<h2>The discriminant</h2>
+<p>A polynomial has a repeated root exactly when it shares a root with its derivative. The <em>discriminant</em> is the resultant of \(f\) and \(f'\), normalised:</p>
+\[ \operatorname{Disc}(f) = \frac{(-1)^{n(n-1)/2}}{a_n} \operatorname{Res}_x(f, f') = a_n^{2n-2} \prod_{i &lt; j} (\alpha_i - \alpha_j)^2 . \]
+<p>For a quadratic it is the familiar \(b^2 - 4ac\), and for \(x^3 + px + q\) it is \(-4p^3 - 27q^2\). For a curve \(f(x, y) = 0\), the discriminant with respect to \(y\) vanishes at the \(x\) where the curve has a vertical tangent or a singular point.</p>
+<div data-expr="disc(a x^2 + b x + c, x)" data-title="Discriminants and resultants" data-examples="disc(x^3 + p x + q, x)|disc(x^2 + y^2 - 1, y)|disc(y^2 - x^3 + x, y)|factor(disc(x^4 + p x + q, x))|resultant(a x + b, c x + d, x)|resultant(x^2 + y^2 - 4, x y - 1, y)|factor(resultant(x^2 + y^2 - 5, x^2 - y^2 - 3, y))"></div>
+
+<h2>Determinants without fractions</h2>
+<p>Gaussian elimination on a matrix of polynomials would fill it with fractions. <em>Bareiss elimination</em> avoids them: the update</p>
+\[ m_{ij} \leftarrow \frac{m_{ij}\, m_{kk} - m_{ik}\, m_{kj}}{\text{previous pivot}} \]
+<p>always divides exactly, because every entry it produces is itself a minor of the original matrix (Sylvester's identity). The entries stay polynomials and stay as small as possible, and the last pivot is the determinant.</p>
+<pre><code>import { det, jacobian, hessian } from "@ratmath/structures";
+
+const S = ring("x, y, z");
+const [x, y, z] = S.gens;
+String(det([[1, x, x.pow(2)], [1, y, y.pow(2)], [1, z, z.pow(2)]]));
+        // the Vandermonde determinant (y − x)(z − x)(z − y), expanded
+
+const T = ring("u, v");
+const J = jacobian([T.poly("u^2 - v^2"), T.poly("2 u v")]);   // rows are gradients
+String(det(J));                                              // "4u² + 4v²"
+hessian(T.poly("u^3 - 3 u v^2"));                            // second partial derivatives</code></pre>
+<template data-runbox>
+const R = ring("x, y");
+const f = R.poly("x^2 + y^2 - 5");
+const g = R.poly("x y - 2");
+const rx = resultant(f, g, "y");
+PRINT("eliminating y:", rx, "=", factor(rx).factors.map((t) =&gt; `(${t.factor})`).join(""));
+const ry = resultant(f, g, "x");
+PRINT("eliminating x:", ry);
+// the four intersection points are (±1, ±2) and (±2, ±1); check them
+for (const [px, py] of [[1, 2], [2, 1], [-1, -2], [-2, -1]]) PRINT(`  (${px}, ${py}):`, f.at([px, py]), g.at([px, py]));
+
+// the discriminant of the general cubic
+const C = ring("a, b, c, d, x");
+PRINT("cubic discriminant:", discriminant(C.poly("a x^3 + b x^2 + c x + d"), "x"));
+
+// a 5 × 5 determinant in one parameter: the characteristic polynomial of a path graph
+const T = ring("t");
+const M = Array.from({ length: 5 }, (_, i) =&gt; Array.from({ length: 5 }, (_, j) =&gt; (i === j ? T.gens[0] : Math.abs(i - j) === 1 ? -1 : 0)));
+factor(det(M, T)).factors.map((t) =&gt; String(t.factor))
+</template>
+</article>
+</main>
+</div>
+<script type="module">
+import { A, h, later } from "./assets/site.js";
+const R = A.ring("x, y");
+const fIn = document.getElementById("cv-f");
+const gIn = document.getElementById("cv-g");
+const out = document.getElementById("cv-out");
+const canvas = document.getElementById("cv-plot");
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888";
+const fn = (p) => {
+  const ts = p.terms().map((t) => [t.coefficient.toNumber(), t.exponents[0], t.exponents[1]]);
+  return (x, y) => ts.reduce((s, [c, a, b]) => s + c * x ** a * y ** b, 0);
+};
+function plot(curves, xs, half) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth || 360;
+  canvas.width = canvas.height = Math.round(W * dpr);
+  const g = canvas.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, W);
+  const sx = (x) => W / 2 + (x / half) * (W / 2);
+  const sy = (y) => W / 2 - (y / half) * (W / 2);
+  g.strokeStyle = css("--line");
+  g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, sy(0)); g.lineTo(W, sy(0)); g.moveTo(sx(0), 0); g.lineTo(sx(0), W); g.stroke();
+  g.setLineDash([4, 4]);
+  g.strokeStyle = css("--muted");
+  for (const x of xs) { g.beginPath(); g.moveTo(sx(x), 0); g.lineTo(sx(x), W); g.stroke(); }
+  g.setLineDash([]);
+  const N = 140;
+  const step = (2 * half) / N;
+  curves.forEach((f, k) => {
+    g.strokeStyle = css(k ? "--float" : "--accent");
+    g.lineWidth = 1.8;
+    g.beginPath();
+    let prev = Array.from({ length: N + 1 }, (_, i) => f(-half + i * step, -half));
+    for (let j = 0; j < N; j += 1) {
+      const y0 = -half + j * step;
+      const next = Array.from({ length: N + 1 }, (_, i) => f(-half + i * step, y0 + step));
+      for (let i = 0; i < N; i += 1) {
+        const x0 = -half + i * step;
+        const v = [prev[i], prev[i + 1], next[i + 1], next[i]];
+        const pts = [];
+        const edge = (a, b, ax, ay, bx, by) => { if ((a < 0) !== (b < 0)) { const t = a / (a - b); pts.push([ax + t * (bx - ax), ay + t * (by - ay)]); } };
+        edge(v[0], v[1], x0, y0, x0 + step, y0);
+        edge(v[1], v[2], x0 + step, y0, x0 + step, y0 + step);
+        edge(v[2], v[3], x0 + step, y0 + step, x0, y0 + step);
+        edge(v[3], v[0], x0, y0 + step, x0, y0);
+        for (let p = 0; p + 1 < pts.length; p += 2) { g.moveTo(sx(pts[p][0]), sy(pts[p][1])); g.lineTo(sx(pts[p + 1][0]), sy(pts[p + 1][1])); }
+      }
+      prev = next;
+    }
+    g.stroke();
+  });
+  g.font = `11px ${css("--font-mono")}`;
+  g.fillStyle = css("--muted");
+  g.fillText(String(half), W - 22, sy(0) + 14);
+}
+const go = () => later(out, () => {
+  const f = R.poly(fIn.value);
+  const g = R.poly(gIn.value);
+  const res = A.resultant(f, g, "y");
+  const rows = [["resultant in x", String(res)]];
+  let xs = [];
+  if (res.isZero()) rows.push(["meaning", "the curves share a whole component"]);
+  else if (res.isConstant()) rows.push(["meaning", "no common points (the resultant is a nonzero constant)"]);
+  else {
+    const { factors } = A.factor(res);
+    rows.push(["factored", factors.map((t) => `(${t.factor})${t.multiplicity > 1 ? "^" + t.multiplicity : ""}`).join(" ")]);
+    const roots = A.realRoots(res.toUnivariate());
+    xs = roots.map((r) => r.value.toNumber());
+    rows.push(["real roots", roots.length ? roots.map((r) => `x = ${A.formatAlgebraic(r.value)}`).join(",  ") : "none: the curves do not meet over the reals"]);
+    rows.push(["approximately", xs.map((x) => x.toFixed(6)).join(",  ") || "—"]);
+  }
+  const half = Math.max(2, Math.ceil(Math.max(0, ...xs.map(Math.abs)) * 1.3));
+  plot([fn(f), fn(g)], xs, half);
+  return h("dl", { class: "kv" }, rows.flatMap(([k, x]) => [h("dt", {}, k), h("dd", {}, x)]));
+});
+document.getElementById("cv-go").onclick = go;
+for (const el of [fIn, gIn]) el.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+const EX = [["x^2 + y^2 - 1", "y - x^2"], ["x^2 + y^2 - 4", "x y - 1"], ["y^2 - x^3 + x", "y - x/2"], ["x^2 + y^2 - 1", "(x - 1)^2 + y^2 - 1"], ["x^3 + y^3 - 3 x y", "x + y - 1"], ["x^2 - y^2 - 1", "x^2 + 4 y^2 - 4"]];
+document.getElementById("cv-ex").append(...EX.map(([a, b]) => h("button", { class: "chipbtn", onclick: () => { fIn.value = a; gIn.value = b; go(); } }, `${a}, ${b}`)));
+go();
+</script>
+</body>
+</html>

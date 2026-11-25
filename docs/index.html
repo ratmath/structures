@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RatMath Structures</title>
+<meta property="og:title" content="RatMath Structures">
+<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ratmath.com/structures/">
+<meta name="description" content="Exact polynomials in several variables, rational functions, resultants and factoring in JavaScript.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
+<link rel="stylesheet" href="assets/style.css?v=39861edd55">
+<script type="module" src="assets/site.js?v=39861edd55"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">@ratmath/structures</div>
+<h1>Polynomials in several variables, held exactly</h1>
+<p class="lede">A JavaScript library for the algebra of x, y and z together: polynomials with exact coefficients, the fractions built from them, greatest common divisors, factoring, and the resultants that eliminate a variable. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
+
+<div data-expr="factor(x^3 + y^3 + z^3 - 3xyz)" data-title="Try it" data-examples="(x + y)^4|gcd(x^3 - y^3, x^2 - y^2)|resultant(x^2 + y^2 - 1, y - x^2, y)|disc(a x^2 + b x + c, x)|det(1, x, x^2; 1, y, y^2; 1, z, z^2)|inverse(a, b; c, d)|symmetric(x^3 + y^3 + z^3)|1/(x + y) + 1/(x - y)"></div>
+
+<h2>What this is</h2>
+<p>A polynomial in several variables is a finite sum of terms, each a coefficient times a product of powers of the variables: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup><mi>y</mi><mo>−</mo><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>3</mn><mn>2</mn></mfrac></mstyle><mi>x</mi><mi>z</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x^2y - \tfrac32 xz + 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0085em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal">x</span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>. The polynomials in fixed variables with coefficients in a field <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span></span></span></span> form a ring, written <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo stretchy="false">[</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo separator="true">,</mo><mi>z</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">K[x, y, z]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="mopen">[</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mclose">]</span></span></span></span>: they can be added, subtracted and multiplied, and sometimes divided.</p>
+<p>This library holds such a polynomial as the list of its nonzero terms, with every coefficient exact (a fraction of whole numbers by default). The coefficients can instead come from any exact field in RatMath: the integers modulo a prime, a finite field GF(pᵏ), or a number field such as Q(√2).</p>
+<p>It is the first part of <code>@ratmath/structures</code>, the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Groups, rings and ideals, and Gröbner bases are planned for the same package and will build on what is here.</p>
+
+<h2>A first program</h2>
+<pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
+
+const R = ring("x, y, z");                    // the ring Q[x, y, z]
+const f = R.poly("x^3 + y^3 + z^3 - 3xyz");
+String(f);                                    // "x³ + y³ − 3xyz + z³"
+factor(f).factors.map((t) =&gt; String(t.factor));
+                                              // ["x + y + z", "x² − xy + y² − xz − yz + z²"]
+String(gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));   // "x − y"
+String(resultant(R.poly("x^2 + y^2 - 1"), R.poly("y - x^2"), "y"));
+                                              // "x⁴ + x² − 1": where the circle meets the parabola
+const F = fractions(R);                       // the field Q(x, y, z)
+String(F.parse("1/(x + y) + 1/(x - y)"));     // "2x/(x² − y²)"</code></pre>
+<p class="small muted">Text is read the way it is written on paper: <code>3xy^2</code>, <code>(x + 1)(x - 1)</code>, <code>1.25 x</code>, <code>2/3 y</code>. Numbers are exact, so 0.1 is one tenth.</p>
+
+<h2>What is in it</h2>
+<ul>
+  <li><strong>Polynomial rings</strong> over Q or any exact field, with the monomial orders lex, grlex and grevlex or one of your own.</li>
+  <li><strong>Arithmetic and calculus</strong>: sums, products, powers, partial derivatives, gradients, substitution, evaluation, change of variables.</li>
+  <li><strong>Division</strong> by one polynomial or by a list of them, with quotients and remainder.</li>
+  <li><strong>Greatest common divisors</strong>, least common multiples, contents, square-free parts.</li>
+  <li><strong>Factoring</strong> into irreducible polynomials over the rationals.</li>
+  <li><strong>Determinants, resultants and discriminants</strong> of polynomials, plus Jacobians and Hessians.</li>
+  <li><strong>Rational functions</strong>: the field of fractions, usable as the entries of a matrix with parameters.</li>
+  <li><strong>Symmetric polynomials</strong>: the elementary ones, power sums, and rewriting any symmetric polynomial in terms of them.</li>
+</ul>
+
+<h2>Topics</h2>
+<p>Each topic page explains the mathematics and lets you run it. <a href="explore.html">Explore</a> is a free-form calculator for all of it; <a href="reference.html">Reference</a> lists every function.</p>
+<div class="cards" id="cards"></div>
+
+<h2>Install</h2>
+<pre><code>bun add github:ratmath/structures    # depends on @ratmath/core and @ratmath/algebraic</code></pre>
+<p>The library is pure JavaScript with BigInt arithmetic and no floating point anywhere.</p>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">const R = ring("x, y, z");
+const f = R.poly("x^3 + y^3 + z^3 - 3xyz");
+PRINT("f =", f);
+for (const { factor: g, multiplicity } of factor(f).factors) PRINT("  factor:", g, "to the power", multiplicity);
+PRINT("gcd:", gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));
+PRINT("circle and parabola meet where", resultant(R.poly("x^2 + y^2 - 1"), R.poly("y - x^2"), "y"), "= 0");
+fractions(R).parse("1/(x + y) + 1/(x - y)")</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<footer class="sitelinks"><a href="https://github.com/ratmath/structures">GitHub</a> · <a href="https://ratmath.com/">ratmath.com</a> · <a href="https://ratmath.com/core/">core</a> · <a href="https://ratmath.com/shelf/">shelf</a> · <a href="https://ratmath.com/algebraic/">algebraic</a> · <a href="https://ratmath.com/linalg/">linalg</a> · <a href="https://ratmath.com/graphics/">graphics</a></footer>
+</article>
+</main>
+</div>
+<script type="module">
+import { topicCards } from "./assets/site.js?v=39861edd55";
+topicCards(document.getElementById("cards"));
+</script>
+</body>
+</html>

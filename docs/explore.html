@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Structures Explorer</title>
+<meta property="og:title" content="Structures Explorer">
+<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ratmath.com/structures/explore.html">
+<meta name="description" content="A free-form exact calculator for polynomials in several variables and rational functions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css?v=39861edd55">
+<script type="module" src="assets/site.js?v=39861edd55"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article class="wide">
+<div class="eyebrow">Explore</div>
+<h1>Explore</h1>
+<p class="lede">An exact calculator for everything in the library. Type an expression and press Enter (Shift+Enter for a new line). Letters are variables, numbers are exact, and <code>name = …</code> keeps a value for later lines.</p>
+<div class="explore-layout">
+  <div class="repl">
+    <div class="repl-input"><textarea class="text" id="repl-in" rows="2" spellcheck="false" aria-label="Expression">f = (x + y)^3 - 8</textarea><button id="repl-go">Run</button></div>
+    <div class="demo-row"><button class="ghost" id="repl-clear">Clear</button><span class="small muted">Click an entry to edit it again.</span></div>
+    <div class="repl-log" id="repl-log" aria-live="polite"></div>
+  </div>
+  <div class="palette" id="palette" data-check="(x + y + z)^3|f = (x + y)^3 - 8|diff(x^3 y^2 - 2xy, x)|subs(x^2 + y^2, x, t + 1)|homogenize(x^3 + xy + 1)|degree(x^3 y^2 - 2xy, y)|order lex|order grevlex|lead(x y^2 + x^2 + y^3)|divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)|rem(x^3 + y^3, x + y)|gcd(x^3 - y^3, x^2 - y^2)|lcm(x^2 - y^2, x^2 + 2xy + y^2)|content((y^2 - 1)x^2 + (y + 1)x, x)|sqfree((x + y)^3 (x - y)^2)|factor(x^3 + y^3 + z^3 - 3xyz)|factor(x^4 + 4y^4)|factor(x^6 - y^6)|irreducible(x^2 + y^2 - 1)|resultant(x^2 + y^2 - 1, y - x^2, y)|disc(a x^2 + b x + c, x)|disc(x^3 + p x + q, x)|det(1, x, x^2; 1, y, y^2; 1, z, z^2)|jacobian(x^2 - y^2, 2xy)|hessian(x^3 - 3x y^2)|1/(x + y) + 1/(x - y)|(x^2 - y^2)/(x - y)|inverse(a, b; c, d)|inverse(1, t; t, 1)|diff(x/(x^2 + y^2), x)|symmetric(x^3 + y^3 + z^3)|symmetric((x - y)^2 (x - z)^2 (y - z)^2)|elementary(2, x, y, z)|powersum(3, x, y, z)|complete(2, x, y, z)">
+    <details class="help" open><summary>How to write things</summary>
+      <p class="small">Variables are single letters, and the ring is made from the letters you use. Products can be written side by side: <code>3xy^2</code>, <code>(x + 1)(x - 1)</code>. Fractions and decimals are exact. Rows of a matrix are separated by <code>;</code> as in <code>det(a, b; c, d)</code>. <code>order lex</code> (or <code>grlex</code>, <code>grevlex</code>) changes how terms are ordered and how division runs. A kept name such as <code>f</code> can be used in later lines: <code>factor(f)</code>, <code>gcd(f, diff(f, x))</code>.</p>
+    </details>
+  </div>
+</div>
+<section class="runbox" aria-label="Runnable code">
+  <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// The explorer's language calls these functions; here they are in JavaScript.
+const R = ring("x, y");
+const f = R.poly("(x + y)^3 - 8");
+PRINT("f =", f);
+PRINT("factors:", factor(f).factors.map((t) =&gt; String(t.factor)));
+PRINT("gcd(f, ∂f/∂x) =", gcd(f, f.diff("x")));
+PRINT("where f meets the line y = x:", resultant(f, R.poly("y - x"), "y"));
+fractions(R).of(f, R.poly("x + y - 2"))</textarea>
+  <div class="runbox-bar"><button type="button" data-run>Run</button><button type="button" class="ghost" data-reset>Reset</button><span class="runbox-meta">Ctrl/⌘ + Enter runs</span></div>
+  <div class="runbox-out" aria-live="polite"></div>
+</section>
+<footer class="sitelinks"><a href="https://github.com/ratmath/structures">GitHub</a> · <a href="https://ratmath.com/">ratmath.com</a> · <a href="https://ratmath.com/core/">core</a> · <a href="https://ratmath.com/shelf/">shelf</a> · <a href="https://ratmath.com/algebraic/">algebraic</a> · <a href="https://ratmath.com/linalg/">linalg</a> · <a href="https://ratmath.com/graphics/">graphics</a></footer>
+</article>
+</main>
+</div>
+<script type="module">
+import { h, run, render, later } from "./assets/site.js?v=39861edd55";
+const env = {};
+const input = document.getElementById("repl-in");
+const log = document.getElementById("repl-log");
+const GROUPS = [["Polynomials", ["(x + y + z)^3", "f = (x + y)^3 - 8", "diff(x^3 y^2 - 2xy, x)", "subs(x^2 + y^2, x, t + 1)", "homogenize(x^3 + xy + 1)", "degree(x^3 y^2 - 2xy, y)"]], ["Orders and division", ["order lex", "order grevlex", "lead(x y^2 + x^2 + y^3)", "divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)", "rem(x^3 + y^3, x + y)"]], ["Gcd", ["gcd(x^3 - y^3, x^2 - y^2)", "lcm(x^2 - y^2, x^2 + 2xy + y^2)", "content((y^2 - 1)x^2 + (y + 1)x, x)", "sqfree((x + y)^3 (x - y)^2)"]], ["Factoring", ["factor(x^3 + y^3 + z^3 - 3xyz)", "factor(x^4 + 4y^4)", "factor(x^6 - y^6)", "irreducible(x^2 + y^2 - 1)"]], ["Elimination", ["resultant(x^2 + y^2 - 1, y - x^2, y)", "disc(a x^2 + b x + c, x)", "disc(x^3 + p x + q, x)", "det(1, x, x^2; 1, y, y^2; 1, z, z^2)", "jacobian(x^2 - y^2, 2xy)", "hessian(x^3 - 3x y^2)"]], ["Fractions", ["1/(x + y) + 1/(x - y)", "(x^2 - y^2)/(x - y)", "inverse(a, b; c, d)", "inverse(1, t; t, 1)", "diff(x/(x^2 + y^2), x)"]], ["Symmetric", ["symmetric(x^3 + y^3 + z^3)", "symmetric((x - y)^2 (x - z)^2 (y - z)^2)", "elementary(2, x, y, z)", "powersum(3, x, y, z)", "complete(2, x, y, z)"]]];
+const palette = document.getElementById("palette");
+for (const [name, xs] of GROUPS) {
+  palette.append(h("div", { class: "grp" }, h("span", {}, name), h("div", { class: "btns" }, xs.map((x) => h("button", { class: "chipbtn", onclick: () => { input.value = x; go(); } }, x)))));
+}
+function entry(src) {
+  const out = h("div", { class: "out" });
+  const box = h("div", { class: "entry" }, h("button", { class: "src", title: "Edit again", onclick: () => { input.value = src; input.focus(); } }, src), out);
+  log.prepend(box);
+  later(out, () => {
+    const lines = src.split(/\n/).map((s) => s.trim()).filter(Boolean);
+    let res = null;
+    for (const line of lines) res = run(line, env);
+    const node = render(res.result);
+    return res.name ? h("div", {}, h("div", { class: "small muted" }, res.name + " ="), node) : node;
+  });
+  setTimeout(() => box.classList.toggle("err", out.classList.contains("err")), 60);
+}
+function go() {
+  const src = input.value.trim();
+  if (!src) return;
+  entry(src);
+  input.value = "";
+}
+document.getElementById("repl-go").onclick = go;
+document.getElementById("repl-clear").onclick = () => log.replaceChildren();
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); go(); }
+});
+go();
+</script>
+</body>
+</html>
