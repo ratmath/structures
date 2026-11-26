@@ -183,3 +183,284 @@ export function isSymmetric(f: MPoly<any>): boolean;
 export function toElementary<C>(f: MPoly<C>, options?: { prefix?: string }): { polynomial: MPoly<C>; ring: PolyRing<C> };
 
 export { primeField, galoisField, NumberField } from "@ratmath/algebraic";
+
+// ---- finite groups -------------------------------------------------------------------------------
+
+import type { PermGroup } from "@ratmath/algebraic";
+export { PermGroup, cycleString, fromCycles, cycleType } from "@ratmath/algebraic";
+
+/** A permutation of {0, …, n−1}: p[i] is the image of i. */
+export type Perm = number[];
+/** A square matrix over F_p, entries 0 … p−1. */
+export type Matrix = number[][];
+/** An element given by value, by printed label ("r²s", "(1 2 3)", "-i"), or by element number as { index }. */
+export type ElementLike<E> = E | string | { index: number };
+
+export interface ConjugacyClass<E> {
+  readonly representative: E;
+  readonly elements: E[];
+  readonly indices: number[];
+  readonly size: number;
+  /** The order of each element in the class. */
+  readonly order: number;
+}
+
+export interface SubgroupClassInfo<E> {
+  readonly group: Group<E>;
+  readonly order: number;
+  readonly index: number;
+  readonly conjugates: number;
+  readonly normal: boolean;
+  readonly members: Group<E>[];
+}
+
+export interface CosetInfo<E> {
+  readonly representative: E;
+  readonly elements: E[];
+  readonly indices: number[];
+}
+
+export interface CayleyTable<E> {
+  readonly labels: string[];
+  readonly elements: E[];
+  /** table[i][j] is the position (in `elements`) of the product of elements i and j. */
+  readonly table: number[][];
+  toString(): string;
+}
+
+export interface GroupSpec<E> {
+  generators: E[];
+  mul: (a: E, b: E) => E;
+  identity?: E;
+  key?: (x: E) => string;
+  format?: (x: E) => string;
+  name?: string | null;
+  maxOrder?: number;
+  labels?: Record<string, E> | null;
+}
+
+export class Group<E = any> {
+  static generate<E>(spec: GroupSpec<E>): Group<E>;
+  static fromElements<E>(elements: E[], mul: (a: E, b: E) => E, options?: { key?: (x: E) => string; format?: (x: E) => string; name?: string | null; generators?: E[] | null; identity?: E; labels?: Record<string, E> | null }): Group<E>;
+  static fromTable<L = number>(table: number[][], options?: { labels?: L[] | null; name?: string | null; check?: boolean }): Group<L>;
+
+  readonly elements: readonly E[];
+  readonly order: number;
+  name: string | null;
+  /** For a subgroup: the group it was taken in. */
+  readonly parent: Group<E> | null;
+  /** Element numbers of the generators. */
+  readonly gens: Int32Array;
+  readonly generators: E[];
+  readonly identity: E;
+  /** Set on the named groups: their natural action (vertices, points, vectors). */
+  natural?: Action<E, any>;
+  /** Permutation groups: the degree, and the same group as algebraic's PermGroup. */
+  degree?: number;
+  toPermGroup?: () => PermGroup;
+  /** Direct products: the factors. */
+  factors?: Group<any>[];
+  /** Quotients G/N: the coset of an element of G, the group G and the subgroup N. */
+  cosetOf?: (x: any) => E;
+  over?: Group<any>;
+  normal?: Group<any>;
+
+  indexOf(x: ElementLike<E>): number;
+  element(x: ElementLike<E>): E;
+  has(x: ElementLike<E>): boolean;
+  key(x: E): string;
+  format(x: E): string;
+  mul(...xs: ElementLike<E>[]): E;
+  inv(x: ElementLike<E>): E;
+  pow(x: ElementLike<E>, k: number | bigint): E;
+  /** g·x·g⁻¹. */
+  conjugate(x: ElementLike<E>, g: ElementLike<E>): E;
+  /** [a, b] = a⁻¹b⁻¹ab. */
+  commutator(a: ElementLike<E>, b: ElementLike<E>): E;
+  equal(a: ElementLike<E>, b: ElementLike<E>): boolean;
+  mulIndex(i: number, j: number): number;
+  invIndex(i: number): number;
+  powIndex(i: number, k: number): number;
+  orderIndex(i: number): number;
+
+  elementOrder(x: ElementLike<E>): number;
+  orderStatistics(): Map<number, number>;
+  readonly exponent: number;
+  readonly isAbelian: boolean;
+  readonly isCyclic: boolean;
+  readonly isTrivial: boolean;
+  readonly isPGroup: boolean;
+  readonly isSolvable: boolean;
+  readonly isNilpotent: boolean;
+  readonly nilpotencyClass: number | null;
+  readonly isSimple: boolean;
+  readonly isPerfect: boolean;
+  cayleyTable(options?: { order?: ElementLike<E>[] | null }): CayleyTable<E>;
+
+  subgroup(generators: ElementLike<E>[], options?: { name?: string | null }): Group<E>;
+  trivialSubgroup(): Group<E>;
+  subgroupFromIndices(list: number[], gens?: number[] | null, name?: string | null): Group<E>;
+  closeIndices(gens: number[]): { list: number[]; inside: Uint8Array };
+  maskOf(H: Group<E>): Uint8Array;
+  parentIndices(): number[];
+  toParentIndex(i: number): number;
+  isSubgroup(H: Group<E>): boolean;
+  equals(H: Group<E>): boolean;
+  contains(H: Group<E>): boolean;
+  index(H: Group<E> | ElementLike<E>[]): number;
+  intersection(H: Group<E> | ElementLike<E>[], K: Group<E> | ElementLike<E>[]): Group<E>;
+  join(...Hs: Array<Group<E> | ElementLike<E>[]>): Group<E>;
+  product(H: Group<E> | ElementLike<E>[], K: Group<E> | ElementLike<E>[]): E[];
+
+  centre(): Group<E>;
+  center(): Group<E>;
+  centraliser(S: ElementLike<E> | ElementLike<E>[] | Group<E>): Group<E>;
+  centralizer(S: ElementLike<E> | ElementLike<E>[] | Group<E>): Group<E>;
+  normaliser(H: Group<E> | ElementLike<E>[]): Group<E>;
+  normalizer(H: Group<E> | ElementLike<E>[]): Group<E>;
+  isNormal(H: Group<E> | ElementLike<E>[]): boolean;
+  conjugateSubgroup(H: Group<E> | ElementLike<E>[], g: ElementLike<E>): Group<E>;
+  normalClosure(S: ElementLike<E>[] | Group<E>): Group<E>;
+
+  conjugacyClasses(): readonly ConjugacyClass<E>[];
+  classEquation(): { order: number; centre: number; terms: number[]; toString(): string };
+
+  derivedSubgroup(): Group<E>;
+  commutatorSubgroup(): Group<E>;
+  commutatorOf(H: Group<E> | ElementLike<E>[], K: Group<E> | ElementLike<E>[]): Group<E>;
+  derivedSeries(): Group<E>[];
+  lowerCentralSeries(): Group<E>[];
+  upperCentralSeries(): Group<E>[];
+  compositionSeries(): { series: Group<E>[]; factors: number[]; toString(): string };
+
+  subgroups(options?: { maxOrder?: number }): readonly Group<E>[];
+  subgroupClasses(options?: { maxOrder?: number }): readonly SubgroupClassInfo<E>[];
+  normalSubgroups(): readonly Group<E>[];
+
+  cosets(H: Group<E> | ElementLike<E>[], options?: { side?: "left" | "right" }): CosetInfo<E>[];
+  quotient(N: Group<E> | ElementLike<E>[], options?: { name?: string | null }): Group<Coset>;
+
+  sylowSubgroup(p: number): Group<E>;
+  sylowSubgroups(p: number): Group<E>[];
+  sylowCount(p: number): number;
+
+  spanningTree(): { order: number[]; from: Int32Array; by: Int32Array };
+  describe(): string;
+  toString(): string;
+}
+
+/** An element of a quotient group: a coset gN. */
+export class Coset {
+  readonly id: number;
+  /** Element number of the representative, in the group the quotient was taken of. */
+  readonly repIndex: number;
+  readonly indices: number[];
+  readonly text: string;
+  toString(): string;
+}
+
+/** Dihedral elements rᵏsᶠ and dicyclic elements aᵏxᶠ are pairs [k, f]. */
+export type PowerPair = [number, 0 | 1];
+
+export function cyclic(n: number): Group<number>;
+export function dihedral(n: number): Group<PowerPair>;
+export function dicyclic(n: number): Group<PowerPair>;
+export function quaternion(): Group<PowerPair>;
+export function kleinFour(): Group<[number, number]>;
+export function permutationGroup(generators: Array<Perm | string> | PermGroup, n?: number, options?: { name?: string | null; maxOrder?: number }): Group<Perm>;
+export function fromPermGroup(P: PermGroup, options?: { name?: string | null; maxOrder?: number }): Group<Perm>;
+export function symmetric(n: number): Group<Perm>;
+export function alternating(n: number): Group<Perm>;
+export function matrixGroup(generators: Matrix[], p: number, options?: { name?: string | null; maxOrder?: number }): Group<Matrix>;
+export function GL(n: number, p: number): Group<Matrix>;
+export function SL(n: number, p: number): Group<Matrix>;
+export function PSL(n: number, p: number): Group<Coset>;
+export function heisenberg(p: number): Group<Matrix>;
+export function directProduct(...groups: Array<Group<any> | { name?: string }>): Group<any[]>;
+export function semidirectProduct<N, H>(N: Group<N>, H: Group<H>, act: (h: H) => (n: N) => N, options?: { name?: string | null }): Group<[N, H]>;
+export function metacyclic(m: number, k: number, r: number, options?: { name?: string | null }): Group<[number, number]>;
+
+export class Homomorphism<A = any, B = any> {
+  constructor(source: Group<A>, target: Group<B>, map: ArrayLike<number>, options?: { name?: string | null });
+  readonly source: Group<A>;
+  readonly target: Group<B>;
+  name: string | null;
+  apply(x: ElementLike<A>): B;
+  applyIndex(i: number): number;
+  readonly table: number[];
+  kernel(): Group<A>;
+  image(): Group<B>;
+  preimage(K: Group<B>): Group<A>;
+  readonly isInjective: boolean;
+  readonly isSurjective: boolean;
+  readonly isIsomorphism: boolean;
+  /** First this map, then g. */
+  then<C>(g: Homomorphism<B, C>): Homomorphism<A, C>;
+  inverse(): Homomorphism<B, A>;
+  toString(): string;
+}
+
+export type HomSpec<A, B> = ((x: A) => B) | Array<ElementLike<B>> | Map<ElementLike<A>, ElementLike<B>>;
+export function homomorphism<A, B>(G: Group<A>, H: Group<B>, f: HomSpec<A, B>, options?: { name?: string | null }): Homomorphism<A, B>;
+export function tryHomomorphism<A, B>(G: Group<A>, H: Group<B>, f: HomSpec<A, B>, options?: { name?: string | null }): Homomorphism<A, B> | null;
+export function identityMap<A>(G: Group<A>): Homomorphism<A, A>;
+export function trivialMap<A, B>(G: Group<A>, H: Group<B>): Homomorphism<A, B>;
+export function inclusion<A>(H: Group<A>, G: Group<A>): Homomorphism<A, A>;
+export function projection(Q: Group<Coset>): Homomorphism<any, Coset>;
+export function isomorphism<A, B>(G: Group<A>, H: Group<B>): Homomorphism<A, B> | null;
+export function isIsomorphic(G: Group<any>, H: Group<any>): boolean;
+export function automorphisms<A>(G: Group<A>, options?: { max?: number }): Homomorphism<A, A>[];
+export function automorphismGroup<A>(G: Group<A>, options?: { max?: number }): Group<Homomorphism<A, A>> & { inner: Group<Homomorphism<A, A>>; of: Group<A> };
+export function innerAutomorphism<A>(G: Group<A>, g: ElementLike<A>): Homomorphism<A, A>;
+export function firstIsomorphism<A, B>(f: Homomorphism<A, B>): { kernel: Group<A>; quotient: Group<Coset>; image: Group<B>; iso: Homomorphism<Coset, B> };
+export function secondIsomorphism<E>(G: Group<E>, H: Group<E>, N: Group<E>): { HN: Group<E>; HcapN: Group<E>; left: Group<Coset>; right: Group<Coset>; iso: Homomorphism<Coset, Coset> };
+export function thirdIsomorphism<E>(G: Group<E>, N: Group<E>, K: Group<E>): { GN: Group<Coset>; KN: Group<Coset>; left: Group<Coset>; right: Group<Coset>; iso: Homomorphism<Coset, Coset> };
+
+export interface OrbitCount<E> {
+  readonly count: number;
+  /** Σ_g |Fix(g)|. */
+  readonly total: bigint;
+  readonly order: number;
+  readonly byClass: { representative: E; size: number; fixed: number }[];
+  toString(): string;
+}
+
+export class Action<E = any, X = any> {
+  constructor(group: Group<E>, points: X[], act: (g: E, x: X) => X, options?: { key?: (x: X) => string; format?: ((x: X) => string) | null; name?: string | null; check?: boolean });
+  readonly group: Group<E>;
+  readonly points: readonly X[];
+  readonly act: (g: E, x: X) => X;
+  readonly name: string | null;
+  readonly degree: number;
+  formatPoint(x: X): string;
+  pointIndex(x: X): number;
+  permutation(g: ElementLike<E>): number[];
+  permutationIndex(i: number): Int32Array;
+  apply(g: ElementLike<E>, x: X): X;
+  orbit(x: X): X[];
+  orbits(): X[][];
+  stabiliser(x: X): Group<E>;
+  stabilizer(x: X): Group<E>;
+  fixedPoints(g: ElementLike<E>): X[];
+  kernel(): Group<E>;
+  readonly isTransitive: boolean;
+  readonly isFaithful: boolean;
+  readonly isFree: boolean;
+  countOrbits(): OrbitCount<E>;
+  toPermGroup(): PermGroup;
+  onSubsets(k: number): Action<E, X[]>;
+  onColourings<C = number>(colours: number | C[]): Action<E, C[]>;
+  onColorings<C = number>(colours: number | C[]): Action<E, C[]>;
+  toString(): string;
+}
+
+export function action<E, X>(group: Group<E>, points: X[], act: (g: E, x: X) => X, options?: { key?: (x: X) => string; format?: ((x: X) => string) | null; name?: string | null; check?: boolean }): Action<E, X>;
+export function regularAction<E>(G: Group<E>): Action<E, E>;
+export function conjugationAction<E>(G: Group<E>): Action<E, E>;
+export function cosetAction<E>(G: Group<E>, H: Group<E>): Action<E, number> & { cosets: CosetInfo<E>[] };
+export function burnside<E>(A: Action<E, any>): OrbitCount<E>;
+
+export const SMALL_ORDER_LIMIT: 20;
+export function smallGroups(n: number): Group<any>[];
+export function numberOfGroups(n: number): number;
+export function identify<E>(G: Group<E>): { name: string; group: Group<any>; iso: Homomorphism<E, any> } | null;

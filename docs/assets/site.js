@@ -2,17 +2,26 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=39861edd55";
-import { makeLang } from "./lang.js?v=39861edd55";
-import { mountRunboxes } from "./runbox.js?v=39861edd55";
+import * as A from "./structures.js?v=f408e7fbe3";
+import { makeLang } from "./lang.js?v=f408e7fbe3";
+import { mountRunboxes } from "./runbox.js?v=f408e7fbe3";
+import { makeGroups } from "./groups.js?v=f408e7fbe3";
 
 const { run } = makeLang(A);
-export { A, run };
+const groups = makeGroups(A);
+export { A, run, groups };
 
 export const PAGES = [
   { href: "index.html", title: "Overview" },
   { href: "reference.html", title: "Reference" },
   { href: "explore.html", title: "Explore" },
+  { group: "Groups" },
+  { href: "groups.html", title: "Groups and how to build them", blurb: "Cyclic, dihedral, symmetric, quaternion and matrix groups; products; Cayley tables" },
+  { href: "classes.html", title: "Conjugacy classes and commutators", blurb: "The centre, the class equation, solvable and nilpotent groups" },
+  { href: "subgroups.html", title: "Subgroups and quotients", blurb: "Lagrange's theorem, normal subgroups, cosets, quotient groups" },
+  { href: "sylow.html", title: "Sylow subgroups", blurb: "Subgroups of prime-power order and how many there are" },
+  { href: "homomorphisms.html", title: "Homomorphisms and isomorphism", blurb: "Kernels, the isomorphism theorems, automorphisms, the groups of order up to 20" },
+  { href: "actions.html", title: "Actions and counting", blurb: "Orbits, stabilisers, and counting necklaces and cubes up to symmetry" },
   { group: "Polynomials" },
   { href: "polynomials.html", title: "Polynomials in several variables", blurb: "Rings, exact coefficients, reading and printing" },
   { href: "orders.html", title: "Monomial orders and division", blurb: "lex, grlex, grevlex and dividing by several polynomials" },
@@ -79,7 +88,7 @@ function chrome() {
     (group ?? sel).append(h("option", { value: p.href, selected: p.href === here }, p.title));
   }
   aside.append(
-    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Polynomials in several variables")),
+    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Groups and polynomials, exactly")),
     sel, nav, theme(),
   );
 }
@@ -155,6 +164,41 @@ export function exprDemo(el, { expr, examples = [], title = null, rows = 1 }) {
   go();
 }
 
+/** A group explorer: a group's name in, its invariants (and, if small, its Cayley table) out. */
+export function groupDemo(el, { group, examples = [], title = null, table = false }) {
+  const input = h("input", { class: "text grow", value: group, spellcheck: "false", "aria-label": "Group" });
+  const out = h("div", { class: "out" });
+  const go = () => later(out, () => {
+    const G = groups.parse(input.value);
+    const { rows } = groups.report(G);
+    const kids = [h("div", { class: "big" }, String(G)), h("dl", { class: "kv" }, rows.flatMap(([k, x]) => [h("dt", {}, k), h("dd", {}, x)]))];
+    if (table && G.order <= 24) kids.push(cayley(G));
+    return h("div", {}, kids);
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); go(); }
+  });
+  el.classList.add("demo");
+  el.replaceChildren(...[
+    title ? h("div", { class: "demo-title" }, title) : null,
+    h("div", { class: "demo-row" }, input, h("button", { onclick: go }, "Show")),
+    examples.length ? h("div", { class: "demo-row" }, examples.map((x) => h("button", { class: "chipbtn", onclick: () => { input.value = x; go(); } }, x))) : null,
+    out,
+  ].filter(Boolean));
+  go();
+}
+
+/** A Cayley table with one colour per element, so patterns show. */
+function cayley(G) {
+  const T = G.cayleyTable();
+  const n = T.labels.length;
+  const colour = (j) => `hsl(${Math.round((360 * j) / n)} 70% 50% / .22)`;
+  const tbl = h("table", { class: "data cayley" });
+  tbl.append(h("tr", {}, h("th", {}, "·"), T.labels.map((l) => h("th", {}, l))));
+  T.table.forEach((row, i) => tbl.append(h("tr", {}, h("th", {}, T.labels[i]), row.map((j) => h("td", { style: `background:${colour(j)}` }, T.labels[j])))));
+  return h("div", { class: "tablewrap" }, tbl);
+}
+
 // ---- boot -------------------------------------------------------------------------
 
 chrome();
@@ -164,6 +208,14 @@ for (const el of document.querySelectorAll("[data-expr]")) {
     examples: el.dataset.examples ? el.dataset.examples.split("|") : [],
     title: el.dataset.title ?? null,
     rows: el.dataset.rows ? Number(el.dataset.rows) : 1,
+  });
+}
+for (const el of document.querySelectorAll("[data-group]")) {
+  groupDemo(el, {
+    group: el.dataset.group,
+    examples: el.dataset.groups ? el.dataset.groups.split("|") : [],
+    title: el.dataset.title ?? null,
+    table: "table" in el.dataset,
   });
 }
 mountRunboxes(document, { scope: A });

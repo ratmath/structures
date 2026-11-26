@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { renderMath, seedOf, runboxHtml, stampAssets, stampLinks, KATEX_LINK } from "./docs-kit.js";
 import { runCode } from "../docs/assets/runbox.js";
 import { makeLang } from "../docs/assets/lang.js";
+import { makeGroups } from "../docs/assets/groups.js";
 
 const out = await Bun.build({ entrypoints: ["./scripts/docs-entry.js"], outdir: "./docs/assets", naming: "structures.js", target: "browser", format: "esm", minify: { whitespace: true, syntax: true, identifiers: true, keepNames: true } });
 if (!out.success) {
@@ -26,6 +27,7 @@ const SITE_LINKS = `<footer class="sitelinks"><a href="https://github.com/ratmat
 const v = stampAssets("docs/assets");
 const seeds = [];
 const exprs = [];
+const groupNames = [];
 const attr = (s) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 let formulas = 0;
 const files = readdirSync("docs/src").filter((f) => f.endsWith(".html")).sort();
@@ -34,10 +36,11 @@ for (const file of files) {
   seeds.push({ page: file, seed });
   // every expression a page offers (data-expr, data-examples, and chips listed in a data-check attribute)
   for (const m of html.matchAll(/data-(?:expr|examples|check)="([^"]*)"/g)) for (const x of attr(m[1]).split("|")) if (x.trim()) exprs.push({ page: file, expr: x });
+  for (const m of html.matchAll(/data-groups?="([^"]*)"/g)) for (const x of attr(m[1]).split("|")) if (x.trim()) groupNames.push({ page: file, name: x });
   const box = runboxHtml(seed, { lib: "<code>@ratmath/structures</code> and Core's <code>Rational</code>" });
   if (!html.includes("</article>")) throw new Error(`${file}: no </article> to put the code box in`);
   const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? "RatMath Structures";
-  const og = `<meta property="og:title" content="${title}">\n<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">\n<meta property="og:type" content="website">\n<meta property="og:url" content="https://ratmath.com/structures/${file === "index.html" ? "" : file}">`;
+  const og = `<meta property="og:title" content="${title}">\n<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">\n<meta property="og:type" content="website">\n<meta property="og:url" content="https://ratmath.com/structures/${file === "index.html" ? "" : file}">`;
   const math = renderMath(html.replace("</title>", `</title>\n${og}`).replace("</article>", `${box}\n${SITE_LINKS}\n</article>`));
   formulas += math.count;
   const page = math.count ? math.html.replace('<link rel="stylesheet" href="assets/style.css">', `${KATEX_LINK}\n<link rel="stylesheet" href="assets/style.css">`) : math.html;
@@ -68,7 +71,16 @@ for (const { page, expr } of exprs) {
     console.error(`✗ ${page}: ${expr}: ${e.message}`);
   }
 }
-console.log(`${exprs.length} page expressions checked`);
+const grp = makeGroups(scope);
+for (const { page, name } of groupNames) {
+  try {
+    grp.report(grp.parse(name));
+  } catch (e) {
+    failed++;
+    console.error(`✗ ${page}: group ${name}: ${e.message}`);
+  }
+}
+console.log(`${exprs.length} page expressions and ${groupNames.length} group names checked`);
 if (failed) {
   console.error(`${failed} example(s) failed`);
   process.exit(1);

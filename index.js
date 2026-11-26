@@ -1,7 +1,8 @@
 // @ratmath/structures: abstract algebra for RatMath.
 //
-// This first part is polynomials in several variables and the rational
-// functions built from them, over any exact field.
+// Finite groups (named groups, subgroups, quotients, Sylow subgroups,
+// homomorphisms, actions), and polynomials in several variables with the
+// rational functions built from them, over any exact field.
 
 export { ring, PolyRing, MPoly } from "./src/mpoly.js";
 export { QQ } from "./src/field.js";
@@ -14,3 +15,19 @@ export { elementary, powerSum, completeHomogeneous, isSymmetric, toElementary } 
 
 // the fields polynomials are most often wanted over, from @ratmath/algebraic
 export { primeField, galoisField, NumberField } from "@ratmath/algebraic";
+
+// finite groups
+export { Group, Coset } from "./src/group.js";
+export {
+  cyclic, dihedral, dicyclic, quaternion, kleinFour, symmetric, alternating, permutationGroup, fromPermGroup,
+  matrixGroup, GL, SL, PSL, heisenberg, directProduct, semidirectProduct, metacyclic,
+} from "./src/named.js";
+export {
+  Homomorphism, homomorphism, tryHomomorphism, identityMap, trivialMap, inclusion, projection,
+  isomorphism, isIsomorphic, automorphisms, automorphismGroup, innerAutomorphism,
+  firstIsomorphism, secondIsomorphism, thirdIsomorphism,
+} from "./src/hom.js";
+export { Action, action, regularAction, conjugationAction, cosetAction, burnside } from "./src/action.js";
+export { smallGroups, numberOfGroups, identify, SMALL_ORDER_LIMIT } from "./src/small.js";
+// algebraic's permutation groups (Galois groups are computed with them), re-exported
+export { PermGroup, cycleString, fromCycles, cycleType } from "@ratmath/algebraic";

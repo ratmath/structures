@@ -145,3 +145,4 @@ table.data .big { font-size: .88rem; }
 /* structures */
 canvas.curves { width: 100%; max-width: 26rem; aspect-ratio: 1; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
 table.data td.wrap { white-space: normal; overflow-wrap: anywhere; }
+table.cayley td, table.cayley th { padding: .2rem .35rem; text-align: center; font: .8rem var(--font-mono); }
