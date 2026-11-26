@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `@ratmath/core` is now a peer dependency (`>=0.10.0 <0.12.0`): the package
+  uses the program's own copy of Core instead of bringing its own, so Core 0.11
+  works and there is never a second copy whose `Rational` is not the same class.
+
 First version: polynomials in several variables.
 
 - Polynomial rings over Q or any RatMath field object, with lex, grlex,
