@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=bd5c616f93">
-<script type="module" src="assets/site.js?v=bd5c616f93"></script>
+<link rel="stylesheet" href="assets/style.css?v=db6a9c11c9">
+<script type="module" src="assets/site.js?v=db6a9c11c9"></script>
 </head>
 <body>
 <div class="shell">
@@ -92,6 +92,11 @@
 <tr><td>A.isFinite, A.isCyclic, A.isTrivial, A.equals(B), A.times(B), A.toGroup(), String(A)</td><td>Tests, comparison, products, the finite group as a Group, and &quot;Z/2 × Z/12 × Z^2&quot; (toString({ primary: true }) by elementary divisors).</td></tr>
 <tr><td>abelianGroups(n)</td><td>One of each abelian group of order n.</td></tr>
 <tr><td>smithForm(A, domain), ZZ, polynomialDomain(&quot;x&quot;)</td><td>Smith normal form { D, U, V, Vinv, diagonal, rank } with U·A·V = D over the integers or Q[x] (or any Euclidean domain object).</td></tr>
+<tr class="grp"><th colspan="2"><a href="homology.html">Chain complexes and homology</a></th></tr>
+<tr><td>chainComplex([∂1, ∂2, …], { sizes })</td><td>A ChainComplex from boundary matrices (∂k: a row per (k−1)-cell, a column per k-cell); checks ∂∂ = 0. sizes gives the cell counts where a map is empty.</td></tr>
+<tr><td>C.homology(k, { coefficients }), C.homologyGroups(), C.reducedHomology(k)</td><td>H_k as an AbelianGroup over Z (with torsion), or a vector space { dimension } over &quot;Q&quot; or &quot;Z/p&quot;.</td></tr>
+<tr><td>C.betti({ coefficients }), C.torsion, C.eulerCharacteristic, C.sizes</td><td>Betti numbers, torsion of each H_k, χ = Σ(−1)^k n_k, cells per dimension.</td></tr>
+<tr><td>C.invariantFactors(k), C.rank(k, p), C.boundary(k), String(C)</td><td>Smith invariants and rank of ∂k (mod p when given), the matrix, and &quot;H0 = Z, H1 = Z/2, H2 = 0&quot;.</td></tr>
 <tr class="grp"><th colspan="2"><a href="modules.html">Modules over Q[x]</a></th></tr>
 <tr><td>matrixModule(A)</td><td>Qⁿ as a Q[x]-module with x acting as A: { invariantFactors, elementaryDivisors, minimalPolynomial, characteristicPolynomial, rationalCanonical, blocks, isCyclic, smith }.</td></tr>
 <tr><td>companionMatrix(f)</td><td>The companion matrix of a monic polynomial.</td></tr>

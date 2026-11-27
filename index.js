@@ -40,6 +40,7 @@ export { AbelianGroup, abelianGroup, cyclicProduct, fromRelations, abelianGroups
 export { smithForm, ZZ, polynomialDomain } from "./src/smith.js";
 export { matrixModule, companionMatrix, integerModule } from "./src/modules.js";
 export { abelianInvariants } from "./src/abelianise.js";
+export { ChainComplex, chainComplex } from "./src/chain.js";
 
 // Gröbner bases, ideals, quotient rings and polynomial systems
 export { groebner, GroebnerBasis, sPolynomial, eliminationOrder } from "./src/groebner.js";

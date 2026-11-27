@@ -1,6 +1,6 @@
 # @ratmath/structures 0.5.0: full documentation
 
-> Abstract algebra for RatMath: finite groups, exact polynomials in several variables, Gröbner bases, ideals, quotient rings, polynomial systems solved exactly, the integers mod n and quadratic integer rings, presentations, abelian groups and modules over Q[x]. From https://ratmath.com/structures/, commit 356cf38. Each page ends with a runnable example; in it, PRINT(...) prints.
+> Abstract algebra for RatMath: finite groups, exact polynomials in several variables, Gröbner bases, ideals, quotient rings, polynomial systems solved exactly, the integers mod n and quadratic integer rings, presentations, abelian groups and modules over Q[x]. From https://ratmath.com/structures/, commit de6732b. Each page ends with a runnable example; in it, PRINT(...) prints.
 
 
 ---
@@ -295,6 +295,16 @@ Every export of `@ratmath/structures`: groups first, then polynomials, ideals an
 | abelianGroups(n) | One of each abelian group of order n. |
 
 | smithForm(A, domain), ZZ, polynomialDomain("x") | Smith normal form { D, U, V, Vinv, diagonal, rank } with U·A·V = D over the integers or Q[x] (or any Euclidean domain object). |
+
+| Chain complexes and homology |
+
+| chainComplex([∂1, ∂2, …], { sizes }) | A ChainComplex from boundary matrices (∂k: a row per (k−1)-cell, a column per k-cell); checks ∂∂ = 0. sizes gives the cell counts where a map is empty. |
+
+| C.homology(k, { coefficients }), C.homologyGroups(), C.reducedHomology(k) | H_k as an AbelianGroup over Z (with torsion), or a vector space { dimension } over "Q" or "Z/p". |
+
+| C.betti({ coefficients }), C.torsion, C.eulerCharacteristic, C.sizes | Betti numbers, torsion of each H_k, χ = Σ(−1)^k n_k, cells per dimension. |
+
+| C.invariantFactors(k), C.rank(k, p), C.boundary(k), String(C) | Smith invariants and rank of ∂k (mod p when given), the matrix, and "H0 = Z, H1 = Z/2, H2 = 0". |
 
 | Modules over Q[x] |
 
@@ -1875,6 +1885,83 @@ for (const [name, A] of Object.entries(cases)) {
 const M = matrixModule([[1, 2, 0], [0, 1, 3], [1, 0, 1]]);
 PRINT("invariant factors:", M.invariantFactors.map(String));
 M.rationalCanonical.map((r) => r.map(String).join("  "))
+```
+
+---
+
+Page: https://ratmath.com/structures/homology.html
+
+Modules
+
+## Chain complexes and homology
+
+Homology turns a space built from cells into a list of abelian groups. Once the cells and their boundaries are written down, everything is integer linear algebra: the Smith normal form of each boundary matrix gives the free part and the torsion.
+
+### Chain complexes
+
+A cell complex has nk​ cells in dimension k. The chain group Ck​=Znk​ has one generator per k-cell, and the boundary map ∂k​:Ck​→Ck−1​ sends a cell to the signed sum of the cells on its boundary. The boundary of a boundary is empty, so ∂k−1​∂k​=0, and the cycles ker∂k​ contain the boundaries im∂k+1​. The homology is the quotient
+
+Hk​=ker∂k​/im∂k+1​.
+`chainComplex` takes the list [∂1​,∂2​,…]. Each ∂k​ has one column per k-cell holding its boundary, and one row per (k−1)-cell. It checks ∂∂=0 and refuses a list that is not a chain complex.
+
+```js
+import { chainComplex } from "@ratmath/structures";
+
+// The torus: one vertex v, edges a, b, one face glued along a b a⁻¹ b⁻¹.
+// ∂a = v − v = 0, ∂b = 0, ∂(face) = a + b − a − b = 0.
+const T = chainComplex([[[0, 0]], [[0], [0]]]);
+String(T);                 // "H0 = Z, H1 = Z^2, H2 = Z"
+T.eulerCharacteristic;     // 0 = 1 − 2 + 1
+
+// The projective plane: face glued along a a, so ∂(face) = 2a.
+const P = chainComplex([[[0]], [[2]]]);
+String(P);                 // "H0 = Z, H1 = Z/2, H2 = 0"
+```
+
+### Homology from the Smith normal form
+
+Invertible integer row and column operations bring ∂k​ to the diagonal form diag(d1​,…,drk​​,0,…) with d1​∣d2​∣⋯ (see [abelian groups](https://ratmath.com/structures/abelian.html)). Then ker∂k​ is free of rank nk​−rk​, and inside it im∂k+1​ is spanned by di​ei​ for the invariant factors of ∂k+1​. So
+
+Hk​≅Znk​−rk​−rk+1​⊕di​>1⨁​Z/di​,
+where the di​ are those of ∂k+1​. For the Klein bottle, glued along aba−1b, ∂2​=2b and H1​=Z⊕Z/2.
+
+```js
+const K = chainComplex([[[0, 0]], [[0], [2]]]);
+String(K.homology(1));          // "Z/2 × Z"
+chainComplex([[[0, 0]], [[2, 6], [4, 8]]]).homology(1).toString();   // "Z/2 × Z/4": Smith form diag(2, 4)
+```
+
+### Betti numbers, χ and other coefficients
+
+The Betti number bk​ is the rank of Hk​, the number of copies of Z. Over a field the same recipe gives a vector space: over Q its dimension is bk​, and over Z/p the ranks are counted mod p, so torsion divisible by p shows up twice (the universal coefficient theorem: dimHk​(Z/p)=bk​+tk​+tk−1​, with tk​ the number of invariant factors of Hk​ divisible by p). In every case the alternating sum of Betti numbers is the Euler characteristic χ=∑(−1)knk​, which needs no homology at all.
+
+```js
+P.betti();                              // [1, 0, 0]
+P.betti({ coefficients: "Z/2" });       // [1, 1, 1]: the Z/2 in H1 is counted in H1 and in H2
+String(P.homology(2, { coefficients: "Z/2" }));   // "Z/2"
+P.eulerCharacteristic;                  // 1
+```
+
+Glued polygons, simplicial complexes and their homology are in [@ratmath/geo](https://ratmath.com/geo/), which builds these boundary matrices for you.
+
+### Try it
+
+```js
+// Real projective spaces RPⁿ: one cell per dimension, ∂k = 0 for k odd, 2 for k even
+for (let n = 1; n <= 5; n += 1) {
+  const mats = Array.from({ length: n }, (_, i) => [[(i + 1) % 2 === 0 ? 2 : 0]]);
+  const C = chainComplex(mats);
+  PRINT(`RP${n}:`, String(C), "  mod 2:", C.betti({ coefficients: "Z/2" }).join(" "), "  χ =", C.eulerCharacteristic);
+}
+// The boundary of a tetrahedron is a sphere: build ∂1 and ∂2 by hand
+const edges = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
+const faces = [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]];
+const d1 = [1, 2, 3, 4].map((v) => edges.map(([a, b]) => (v === b ? 1 : v === a ? -1 : 0)));
+const d2 = edges.map((e) => faces.map((f) => {
+  const i = f.findIndex((_, t) => f.filter((_, s) => s !== t).join() === e.join());
+  return i < 0 ? 0 : i % 2 ? -1 : 1;
+}));
+chainComplex([d1, d2]).toString()
 ```
 
 ---

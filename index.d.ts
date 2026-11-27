@@ -535,7 +535,7 @@ export class AbelianGroup {
   equals(H: AbelianGroup): boolean;
   times(H: AbelianGroup): AbelianGroup;
   toGroup(): Group<any>;
-  toString(options?: { primary?: boolean }): string;
+  toString(options?: { primary?: boolean; additive?: boolean }): string;
 }
 
 export function abelianGroup(invariants?: Array<bigint | number>, rank?: number): AbelianGroup;
@@ -543,6 +543,37 @@ export function cyclicProduct(orders: Array<bigint | number>, rank?: number): Ab
 export function fromRelations(relations: Array<Array<bigint | number>>, n?: number, extraRank?: number): AbelianGroup;
 export function abelianGroups(n: number): AbelianGroup[];
 export function abelianInvariants(G: Group<any> | Presentation): AbelianGroup;
+
+/** Coefficients for homology: the integers, the rationals, or Z/p for a prime p. */
+export type HomologyCoefficients = "Z" | "Q" | `Z/${number}` | number | bigint;
+/** Homology over a field, known by its dimension. */
+export interface FieldHomology {
+  readonly field: string;
+  readonly dimension: number;
+  readonly rank: number;
+  readonly isTrivial: boolean;
+  toString(): string;
+}
+export class ChainComplex {
+  constructor(boundaries: Array<Array<Array<bigint | number>>>, options?: { sizes?: number[]; check?: boolean });
+  /** n_0, n_1, …: the number of cells in each dimension. */
+  readonly sizes: readonly number[];
+  readonly dimension: number;
+  /** ∂_1, ∂_2, …, each with a row per (k−1)-cell and a column per k-cell. */
+  readonly boundaries: ReadonlyArray<ReadonlyArray<ReadonlyArray<bigint>>>;
+  boundary(k: number): ReadonlyArray<ReadonlyArray<bigint>> | null;
+  invariantFactors(k: number): readonly bigint[];
+  rank(k: number, p?: bigint | null): number;
+  homology(k: number, options?: { coefficients?: "Z" }): AbelianGroup;
+  homology(k: number, options: { coefficients: HomologyCoefficients }): AbelianGroup | FieldHomology;
+  homologyGroups(options?: { coefficients?: HomologyCoefficients }): Array<AbelianGroup | FieldHomology>;
+  reducedHomology(k: number, options?: { coefficients?: HomologyCoefficients }): AbelianGroup | FieldHomology;
+  betti(options?: { coefficients?: HomologyCoefficients }): number[];
+  readonly torsion: AbelianGroup[];
+  readonly eulerCharacteristic: number;
+  toString(): string;
+}
+export function chainComplex(boundaries: Array<Array<Array<bigint | number>>>, options?: { sizes?: number[]; check?: boolean }): ChainComplex;
 
 /** A Euclidean domain, as smithForm uses it. */
 export interface EuclideanDomain<T> {

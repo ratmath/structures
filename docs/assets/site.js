@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=bd5c616f93";
-import { makeLang } from "./lang.js?v=bd5c616f93";
-import { mountRunboxes } from "./runbox.js?v=bd5c616f93";
-import { makeGroups, splitList } from "./groups.js?v=bd5c616f93";
+import * as A from "./structures.js?v=db6a9c11c9";
+import { makeLang } from "./lang.js?v=db6a9c11c9";
+import { mountRunboxes } from "./runbox.js?v=db6a9c11c9";
+import { makeGroups, splitList } from "./groups.js?v=db6a9c11c9";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);
@@ -29,6 +29,7 @@ export const PAGES = [
   { group: "Modules" },
   { href: "abelian.html", title: "Abelian groups", blurb: "The structure theorem through the Smith normal form" },
   { href: "modules.html", title: "Modules over Q[x]", blurb: "A matrix as a module; invariant factors and the rational canonical form" },
+  { href: "homology.html", title: "Chain complexes and homology", blurb: "Homology with torsion from boundary matrices; Betti numbers, χ, coefficients Z, Q, Z/p" },
   { group: "Polynomials" },
   { href: "polynomials.html", title: "Polynomials in several variables", blurb: "Rings, exact coefficients, reading and printing" },
   { href: "orders.html", title: "Monomial orders and division", blurb: "lex, grlex, grevlex and dividing by several polynomials" },

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- `chainComplex([∂1, ∂2, …], { sizes })` / `ChainComplex`: checks ∂∂ = 0;
+  `homology(k, { coefficients: "Z" | "Q" | "Z/p" })` with torsion over Z,
+  `betti()`, `torsion`, `eulerCharacteristic`, `reducedHomology`,
+  `invariantFactors(k)`, `rank(k, p)`. Course Test batch A11 (topology T1).
+- `AbelianGroup#toString({ additive: true })`: "⊕" and "0", as for homology.
+- Docs: a "Chain complexes and homology" page.
 - `sign(p, n?)`, `isEven`, `isOdd` and `inversions` for a single
   permutation (array of images or cycle text).
 - `constructible` decides polynomials of degree 8 and more when they are,
