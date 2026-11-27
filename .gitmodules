@@ -1,3 +1,6 @@
 [submodule "vendor/algebraic"]
 	path = vendor/algebraic
 	url = https://github.com/ratmath/algebraic.git
+[submodule "vendor/linalg"]
+	path = vendor/linalg
+	url = https://github.com/ratmath/linalg.git

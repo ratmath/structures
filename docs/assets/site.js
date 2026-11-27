@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=ad472c7629";
-import { makeLang } from "./lang.js?v=ad472c7629";
-import { mountRunboxes } from "./runbox.js?v=ad472c7629";
-import { makeGroups } from "./groups.js?v=ad472c7629";
+import * as A from "./structures.js?v=a54cf3100f";
+import { makeLang } from "./lang.js?v=a54cf3100f";
+import { mountRunboxes } from "./runbox.js?v=a54cf3100f";
+import { makeGroups, splitList } from "./groups.js?v=a54cf3100f";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);
@@ -22,9 +22,13 @@ export const PAGES = [
   { href: "sylow.html", title: "Sylow subgroups", blurb: "Subgroups of prime-power order and how many there are" },
   { href: "homomorphisms.html", title: "Homomorphisms and isomorphism", blurb: "Kernels, the isomorphism theorems, automorphisms, the groups of order up to 20" },
   { href: "actions.html", title: "Actions and counting", blurb: "Orbits, stabilisers, and counting necklaces and cubes up to symmetry" },
+  { href: "presentations.html", title: "Presentations and coset enumeration", blurb: "Groups from generators and relations; Todd–Coxeter" },
   { href: "characters.html", title: "Character tables", blurb: "Irreducible characters with exact cyclotomic values, orthogonality, the Burnside–Dixon method" },
   { href: "class-functions.html", title: "Working with characters", blurb: "Products, restriction and induction, permutation characters, the Frobenius–Schur indicator" },
   { href: "large-groups.html", title: "Large permutation groups", blurb: "Schreier–Sims: the Rubik's cube group, membership and words without listing elements" },
+  { group: "Modules" },
+  { href: "abelian.html", title: "Abelian groups", blurb: "The structure theorem through the Smith normal form" },
+  { href: "modules.html", title: "Modules over Q[x]", blurb: "A matrix as a module; invariant factors and the rational canonical form" },
   { group: "Polynomials" },
   { href: "polynomials.html", title: "Polynomials in several variables", blurb: "Rings, exact coefficients, reading and printing" },
   { href: "orders.html", title: "Monomial orders and division", blurb: "lex, grlex, grevlex and dividing by several polynomials" },
@@ -230,7 +234,7 @@ for (const el of document.querySelectorAll("[data-expr]")) {
 for (const el of document.querySelectorAll("[data-group]")) {
   groupDemo(el, {
     group: el.dataset.group,
-    examples: el.dataset.groups ? el.dataset.groups.split("|") : [],
+    examples: el.dataset.groups ? splitList(el.dataset.groups) : [],
     title: el.dataset.title ?? null,
     table: "table" in el.dataset,
   });

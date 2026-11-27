@@ -27,6 +27,7 @@ export function makeGroups(A) {
     throw new Error(`unknown group ${t}: try C6, D4, Dic3, Q8, V4, S4, A5, GL(2,3), SL(2,3), PSL(2,7), Heis(3), SmallGroup(16,4), or products like S3 × C2`);
   };
   function parse(text) {
+    if (String(text).includes("|")) return A.presentation(String(text).trim()).toGroup({ maxCosets: 100000 });
     const parts = splitTop(String(text));
     const gs = parts.map(one);
     return gs.length === 1 ? gs[0] : A.directProduct(...gs);
@@ -65,6 +66,21 @@ export function makeGroups(A) {
   }
 
   return { parse, report };
+}
+
+/** Splits a data-groups list on "|", except inside ⟨ … ⟩ (a presentation). */
+export function splitList(text) {
+  const out = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of String(text)) {
+    if (ch === "⟨") depth += 1;
+    if (ch === "⟩") depth -= 1;
+    if (ch === "|" && depth === 0) { out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((x) => x.trim()).filter(Boolean);
 }
 
 function factor(n) {

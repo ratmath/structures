@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abelian Groups</title>
+<meta name="description" content="Finitely generated abelian groups from generators and relations, the structure theorem through the Smith normal form, invariant factors and elementary divisors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Modules</div>
+<h1>Abelian groups</h1>
+<p class="lede">Every finitely generated abelian group is a product of cyclic groups, in exactly one standard way. Finding that product from generators and relations is integer linear algebra: the Smith normal form.</p>
+
+<h2>The structure theorem</h2>
+<p>A finitely generated abelian group is isomorphic to</p>
+\[ \mathbb Z/d_1 \times \mathbb Z/d_2 \times \cdots \times \mathbb Z/d_k \times \mathbb Z^r, \qquad d_1 \mid d_2 \mid \cdots \mid d_k,\ d_i &gt; 1, \]
+<p>and the <em>invariant factors</em> \(d_i\) and the <em>rank</em> \(r\) are determined by the group. Splitting each \(d_i\) into prime powers gives the other standard form, by <em>elementary divisors</em>: \(\mathbb Z/12 \cong \mathbb Z/4 \times \mathbb Z/3\) by the Chinese remainder theorem. So the abelian groups of order \(n = \prod p_i^{a_i}\) correspond to choosing a partition of each \(a_i\), and there are \(\prod p(a_i)\) of them: six of order \(72 = 2^3 3^2\).</p>
+<pre><code>import { abelianGroup, cyclicProduct, abelianGroups } from "@ratmath/structures";
+
+String(cyclicProduct([4, 6]));                       // "Z/2 × Z/12"
+cyclicProduct([4, 6]).toString({ primary: true });   // "Z/2 × Z/4 × Z/3"
+cyclicProduct([3, 5]).isCyclic;                      // true: Z/3 × Z/5 ≅ Z/15
+abelianGroups(72).map(String);
+// ["Z/72", "Z/3 × Z/24", "Z/2 × Z/36", "Z/6 × Z/12", "Z/2 × Z/2 × Z/18", "Z/2 × Z/6 × Z/6"]
+abelianGroup([2, 4]).order;                          // 8n</code></pre>
+
+<h2>From generators and relations</h2>
+<p>Write the group additively, with generators \(x_1, \dots, x_n\) and relations \(\sum_j r_{ij}x_j = 0\). It is \(\mathbb Z^n / L\), where \(L\) is spanned by the rows of the relation matrix \(R\). Row operations on \(R\) (with integer multipliers, and swaps) change the relations but not \(L\); column operations change the generators. The <strong>Smith normal form</strong> uses both to reach</p>
+\[ U R V = \operatorname{diag}(d_1, d_2, \dots), \qquad d_1 \mid d_2 \mid \cdots, \]
+<p>with \(U\), \(V\) integer matrices of determinant \(\pm 1\). The new generators \(y = V^{-1}x\) then satisfy just \(d_i y_i = 0\): the structure theorem, computed. The algorithm brings the smallest entry to the corner, divides it into its row and column, and if it fails to divide some other entry, adds that row in and goes again; the corner entry gets smaller each time, so it stops.</p>
+<pre><code>import { fromRelations, smithForm } from "@ratmath/structures";
+
+// three generators, three relations
+const R = [[2, 4, 4], [-6, 6, 12], [10, -4, -16]];
+smithForm(R).diagonal;              // [2n, 6n, 12n]
+const G = fromRelations(R);
+String(G);                          // "Z/2 × Z/6 × Z/12"
+G.order;                            // 144n
+G.generators.map((g) =&gt; `${g.order}: ${g.vector}`);   // ["2: 1,2,2", "6: 0,3,4", "12: 0,1,1"]
+
+String(fromRelations([[2, 0, 0]], 3));   // "Z/2 × Z^2": no relation on two of the generators</code></pre>
+<p>The last line reads: the element \(x_1 + 2x_2 + 2x_3\) has order 2, \(3x_2 + 4x_3\) has order 6, \(x_2 + x_3\) has order 12, and together they generate the group as a direct product. The tests check the Smith forms against @ratmath/linalg's own, and that each listed generator has exactly the stated order.</p>
+
+<h2>Abelianising a group</h2>
+<p>For any group, \(G/G'\) is abelian, the largest abelian quotient. Given a presentation, it is the abelian group with the same generators and the relators read additively (count how many times each generator appears, with signs). So <code>abelianInvariants</code> works for infinite groups too, and for a finite group (through a presentation of it) it agrees with <a href="classes.html">G.quotient(G.derivedSubgroup())</a>.</p>
+<pre><code>import { abelianInvariants, presentation, GL, symmetric } from "@ratmath/structures";
+
+String(abelianInvariants(GL(2, 3)));                            // "Z/2"
+String(abelianInvariants(presentation("a, b | a^2, b^3, (ab)^3")));   // "Z/3"
+String(abelianInvariants(presentation("a, b | [a, b]")));       // "Z^2"</code></pre>
+<template data-runbox>
+// how many abelian groups of each order up to 32, and the biggest families
+const counts = [];
+for (let n = 1; n &lt;= 32; n += 1) counts.push(abelianGroups(n).length);
+PRINT("abelian groups of order 1 … 32:", counts.join(" "));
+PRINT("order 32:", abelianGroups(32).map(String).join(", "));
+
+// a random relation matrix and the group it presents
+const R = [[3, 6, 9, 0], [2, 4, 8, 6], [0, 6, 0, 12]];
+const S = smithForm(R);
+PRINT("Smith form diagonal:", S.diagonal);
+PRINT("group:", fromRelations(R), " in prime powers:", fromRelations(R).toString({ primary: true }));
+abelianInvariants(directProduct(symmetric(3), cyclic(4)))
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

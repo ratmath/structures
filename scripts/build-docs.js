@@ -13,7 +13,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { renderMath, seedOf, runboxHtml, stampAssets, stampLinks, KATEX_LINK } from "./docs-kit.js";
 import { runCode } from "../docs/assets/runbox.js";
 import { makeLang } from "../docs/assets/lang.js";
-import { makeGroups } from "../docs/assets/groups.js";
+import { makeGroups, splitList } from "../docs/assets/groups.js";
 
 const out = await Bun.build({ entrypoints: ["./scripts/docs-entry.js"], outdir: "./docs/assets", naming: "structures.js", target: "browser", format: "esm", minify: { whitespace: true, syntax: true, identifiers: true, keepNames: true } });
 if (!out.success) {
@@ -36,7 +36,7 @@ for (const file of files) {
   seeds.push({ page: file, seed });
   // every expression a page offers (data-expr, data-examples, and chips listed in a data-check attribute)
   for (const m of html.matchAll(/data-(?:expr|examples|check)="([^"]*)"/g)) for (const x of attr(m[1]).split("|")) if (x.trim()) exprs.push({ page: file, expr: x });
-  for (const m of html.matchAll(/data-groups?="([^"]*)"/g)) for (const x of attr(m[1]).split("|")) if (x.trim()) groupNames.push({ page: file, name: x });
+  for (const m of html.matchAll(/data-groups?="([^"]*)"/g)) for (const x of splitList(attr(m[1]))) groupNames.push({ page: file, name: x });
   const box = runboxHtml(seed, { lib: "<code>@ratmath/structures</code> and Core's <code>Rational</code>" });
   if (!html.includes("</article>")) throw new Error(`${file}: no </article> to put the code box in`);
   const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? "RatMath Structures";
