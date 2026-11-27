@@ -188,6 +188,14 @@ export { primeField, galoisField, NumberField } from "@ratmath/algebraic";
 
 import type { PermGroup } from "@ratmath/algebraic";
 export { PermGroup, cycleString, fromCycles, cycleType } from "@ratmath/algebraic";
+/** A permutation: an array of 0-based images, or cycle text such as "(1 2 3 4)" (with n points). */
+export type PermutationLike = number[] | string;
+/** The sign of a permutation: 1 even, −1 odd ((−1)^(n − number of cycles)). */
+export function sign(p: PermutationLike, n?: number): 1 | -1;
+export function isEven(p: PermutationLike, n?: number): boolean;
+export function isOdd(p: PermutationLike, n?: number): boolean;
+/** Pairs i < j with p(i) > p(j); its parity is the sign's. */
+export function inversions(p: PermutationLike, n?: number): number;
 
 /** A permutation of {0, …, n−1}: p[i] is the image of i. */
 export type Perm = number[];
@@ -1191,13 +1199,17 @@ export function solveByRadicals(polynomial: UnivariateLike, options?: { expressi
 export function rootOfUnityByRadicals(n: number): RadicalExpression;
 /** The regular n-gon: constructible exactly when φ(n) is a power of 2; cos(2π/n) in radicals where found. */
 export function regularPolygon(n: number): { n: number; constructible: boolean; totient: number; reason: string; cos: RadicalExpression | null };
+/** The same as regularPolygon(n): Gauss–Wantzel. */
+export function constructiblePolygon(n: number): { n: number; constructible: boolean; totient: number; reason: string; cos: RadicalExpression | null };
 /** Can the roots be constructed with ruler and compass? true, false, "some", or null when undecided. */
 export function constructible(polynomial: UnivariateLike): {
   polynomial: bigint[];
   text: string;
   constructible: boolean | "some" | null;
   reason: string;
-  factors: Array<{ text: string; degree: number; group: string | null; order: number | null; constructible: boolean | null; reason: string; roots: Array<{ value: unknown; expression: RadicalExpression }> | null }>;
+  factors: Array<{ text: string; degree: number; group: string | null; order: number | null; constructible: boolean | null; reason: string; roots: Array<{ value: unknown; expression: RadicalExpression }> | null;
+    /** Set when the factor is proven to be the minimal polynomial of cos(2π/n) (scale 1) or 2cos(2π/n) (scale 2): Gauss–Wantzel decides it. */
+    cosine?: { n: number; scale: 1 | 2 } }>;
 };
 export interface ClassicalProblem { problem: string; possible: boolean; polynomial: string | null; reason: string; roots?: Array<{ value: unknown; expression: RadicalExpression }> | null }
 export const classicalProblems: {

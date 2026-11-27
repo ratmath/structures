@@ -61,6 +61,10 @@ p.cos.check(50);          // { agrees: true, digits: 50 }
 regularPolygon(7).reason; // "φ(7) = 6 is not a power of 2, so cos(2π/7) has degree 3 over Q …"
 regularPolygon(257).cos.size;   // 66: the 257-gon takes 66 square roots</code></pre>
 <p>The formula for 17 is Gauss's own, up to the order of the terms. The 65537-gon is constructible too, but its formula is left to the patient.</p>
+<p><code>constructiblePolygon(n)</code> is another name for <code>regularPolygon(n)</code>. The theorem also reaches <code>constructible</code>: when a factor has degree 8 or more (beyond the Galois groups computed directly) but is, coefficient for coefficient, the minimal polynomial of \(\cos(2\pi/n)\) or of \(2\cos(2\pi/n)\) from algebraic's <code>cosMinimal</code>, its splitting field is \(\mathbb Q(\cos 2\pi/n)\), abelian of degree \(\varphi(n)/2\), and the answer is decided. Only the finitely many \(n\) with \(\varphi(n) = 2\deg\) can match. Any other polynomial of such a degree is still left undecided.</p>
+<pre><code>import { cosMinimal } from "@ratmath/algebraic";
+constructible(cosMinimal(17)).constructible;   // true: it is the minimal polynomial of cos(2π/17)
+constructible("x^8 - 2").constructible;        // null: degree 8, not a cosine, left undecided</code></pre>
 <template data-runbox>
 // Which regular polygons up to 30 sides can be constructed?
 const yes = [], no = [];
@@ -83,6 +87,9 @@ for (const q of [classicalProblems.doublingTheCube(), classicalProblems.trisecti
 // Degree a power of 2 is not enough
 const c = constructible("x^4 + x + 1");
 PRINT(c.reason);
+
+// Degree 8: decided by Gauss–Wantzel once it is recognised as cos(2π/17)'s minimal polynomial
+PRINT(constructible(cosMinimal(17)).reason);
 regularPolygon(257).cos.size + " square roots in the formula for the 257-gon"
 </template>
 </article>

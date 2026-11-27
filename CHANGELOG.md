@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `sign(p, n?)`, `isEven`, `isOdd` and `inversions` for a single
+  permutation (array of images or cycle text).
+- `constructible` decides polynomials of degree 8 and more when they are,
+  coefficient for coefficient, the minimal polynomial of cos(2π/n) or
+  2cos(2π/n) (Gauss–Wantzel); the factor carries `cosine: { n, scale }`.
+- `constructiblePolygon(n)`, another name for `regularPolygon(n)`.
+
 ## 0.5.0
 
 Presentations, abelian groups and modules (roadmap phase 5).

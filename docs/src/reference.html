@@ -30,6 +30,7 @@
 <tr><td>Group.generate({ generators, mul, identity, key, format, name }), Group.fromElements(list, mul), Group.fromTable(table, { labels })</td><td>Any group: from generators and a multiplication (key tells elements apart, default JSON), from a list of all elements, or from a multiplication table (axioms checked).</td></tr>
 <tr><td>G.natural</td><td>The named groups&#x27; own action: polygon vertices, the points 1 … n, or the vectors of F_pⁿ.</td></tr>
 <tr><td>PermGroup, cycleString, fromCycles, cycleType</td><td>Re-exported from @ratmath/algebraic, where Galois groups are computed.</td></tr>
+<tr><td>sign(p, n?), isEven, isOdd, inversions</td><td>The sign of one permutation (an array of 0-based images, or cycle text such as "(1 2 3 4)" with n points): 1 even, −1 odd; inversions counts out-of-order pairs.</td></tr>
 <tr class="grp"><th colspan="2"><a href="groups.html">Elements</a></th></tr>
 <tr><td>G.elements, G.order, G.identity, G.generators, G.name</td><td>All elements (identity first), their number, the identity, a generating list, the name.</td></tr>
 <tr><td>G.mul(a, b, …), G.inv(x), G.pow(x, k), G.conjugate(x, g), G.commutator(a, b)</td><td>Products left to right; inverse; powers (negative too); gxg⁻¹; [a, b] = a⁻¹b⁻¹ab. Elements may be given by value or by printed label (&quot;r²s&quot;, &quot;r^2 s&quot;, &quot;(1 2)&quot;, &quot;-i&quot;).</td></tr>
@@ -249,6 +250,7 @@
 <tr class="grp"><th colspan="2"><a href="constructions.html">Ruler and compass</a></th></tr>
 <tr><td>constructible(polynomial)</td><td>{ constructible: true | false | "some" | null, reason, factors: [{ text, degree, group, order, constructible, reason, roots }] }.</td></tr>
 <tr><td>regularPolygon(n)</td><td>{ n, constructible, totient, reason, cos }: cos(2π/n) in square roots when φ(n) is a power of 2, else null.</td></tr>
+<tr><td>constructiblePolygon(n)</td><td>The same as regularPolygon(n) (Gauss–Wantzel). <code>constructible</code> also decides a proven minimal polynomial of cos(2π/n) of any degree.</td></tr>
 <tr><td>classicalProblems.doublingTheCube(), .trisecting(cosine), .squaringTheCircle()</td><td>{ problem, possible, polynomial, reason }.</td></tr>
 <tr class="grp"><th colspan="2"><a href="conway.html">Conway polynomials</a></th></tr>
 <tr><td>conwayPolynomial(p, n, { limit })</td><td>The Conway polynomial of GF(pⁿ) as BigInt coefficients, constant first, found by search.</td></tr>
