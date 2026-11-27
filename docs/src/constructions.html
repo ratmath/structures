@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruler and Compass</title>
+<meta name="description" content="Which lengths and regular polygons can be constructed with ruler and compass: the degree test, Gauss and Wantzel&#x27;s theorem, Gauss&#x27;s formula for the 17-gon, and the three classical problems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Fields</div>
+<h1>Ruler and compass</h1>
+<p class="lede">For two thousand years nobody could double a cube, trisect an angle or draw a regular heptagon with ruler and compass. Field theory shows why in a few lines: a constructible length lives in a tower of square roots, so its degree is a power of 2. The same theory says exactly which regular polygons can be drawn, and writes the square roots down.</p>
+<div data-expr="polygon(17)" data-title="Can it be constructed?" data-examples="polygon(5)|polygon(7)|polygon(9)|polygon(15)|polygon(51)|polygon(257)|constructible(x^3 - 2)|constructible(x^4 - 2)|constructible(x^4 + x + 1)|constructible(8x^3 - 6x - 1)|constructible(x^4 - 10x^2 + 1)"></div>
+
+<h2>Constructible numbers</h2>
+<p>Start with two points a unit apart. A ruler draws the line through two known points, a compass the circle about one known point through another, and new points appear where lines and circles cross. A real number is <em>constructible</em> if a segment of that length can be reached. Sums, differences, products and quotients of constructible numbers are constructible (by similar triangles), and so is the square root of one (by a semicircle). Conversely, intersecting lines and circles only ever solves linear and quadratic equations. So:</p>
+<p style="margin-left:1.5em">\(x\) is constructible exactly when it lies in a field \(K_m\) at the top of a tower \(\mathbb{Q} = K_0 \subset K_1 \subset \dots \subset K_m\) with every step of degree 2.</p>
+<p>By the <a href="towers.html">tower law</a> such a number has degree \(2^k\) over \(\mathbb{Q}\). That necessary condition already settles the classical problems. It is not quite sufficient: a root of \(x^4 + x + 1\) has degree 4, but there is no field of degree 2 below it. The complete criterion, used by <code>constructible</code>, is that the <em>splitting field</em> has degree a power of 2, that is, the Galois group is a 2-group.</p>
+<pre><code>import { constructible } from "@ratmath/structures";
+
+constructible("x^4 - 2").constructible;       // true: group D4 of order 8
+constructible("x^3 - 2").constructible;       // false: degree 3
+constructible("x^4 + x + 1").constructible;   // false: degree 4, but the group is S4 of order 24
+constructible("x^4 + x + 1").reason;          // says so in words</code></pre>
+<p>When the answer is yes, each root comes with an expression in square roots alone, from <a href="radicals.html">solving by radicals</a>.</p>
+
+<h2>The three classical problems</h2>
+<ul>
+  <li><strong>Doubling the cube</strong> asks for \(\sqrt[3]{2}\), a root of the irreducible \(x^3 - 2\): degree 3, impossible.</li>
+  <li><strong>Trisecting an angle</strong> \(\theta\) asks for \(\cos(\theta/3)\) given \(c = \cos\theta\). The triple-angle formula \(\cos\theta = 4\cos^3(\theta/3) - 3\cos(\theta/3)\) makes it a root of \(4x^3 - 3x - c\). For \(\theta = 60°\) that is \(8x^3 - 6x - 1\), irreducible, so the 60° angle cannot be trisected and there is no general method. Some angles can: for \(\theta = 90°\) the cubic factors.</li>
+  <li><strong>Squaring the circle</strong> asks for \(\sqrt\pi\). Constructible numbers are algebraic and \(\pi\) is not (Lindemann, 1882). This one is quoted, not computed.</li>
+</ul>
+<pre><code>import { classicalProblems } from "@ratmath/structures";
+
+classicalProblems.doublingTheCube().possible;     // false
+classicalProblems.trisecting("1/2").reason;       // "8x³ − 6x − 1 is irreducible, so cos(θ/3) has degree 3 over Q, …"
+classicalProblems.trisecting("0").possible;       // true: a right angle can be trisected
+classicalProblems.squaringTheCircle().reason;</code></pre>
+
+<h2>Regular polygons</h2>
+<p>Drawing a regular \(n\)-gon means constructing \(\cos(2\pi/n)\), which generates a field of degree \(\varphi(n)/2\) inside the cyclotomic field. That field is Galois with an abelian group, so the degree test is the whole story. Gauss (sufficiency, 1796) and Wantzel (necessity, 1837):</p>
+<p style="margin-left:1.5em">The regular \(n\)-gon is constructible exactly when \(\varphi(n)\) is a power of 2, that is, when \(n\) is a power of 2 times a product of distinct Fermat primes \(3, 5, 17, 257, 65537\).</p>
+<p>So the 7-gon, 9-gon, 11-gon and 13-gon are impossible, and the 17-gon is possible, which Gauss found at nineteen. For a Fermat prime \(p\) the Galois group of the \(p\)-th roots of unity is cyclic of order \(p - 1 = 2^m\). Halving the group \(m\) times splits the roots into sums called <em>Gaussian periods</em>; each period satisfies a quadratic whose coefficients are periods from the level before. <code>regularPolygon</code> follows that chain and then combines prime factors by the addition formula for cosines and powers of 2 by the half-angle formula.</p>
+<pre><code>import { regularPolygon } from "@ratmath/structures";
+
+const p = regularPolygon(17);
+p.constructible;          // true
+p.cos.inline();           // "(−1 + √17 + √(34 − 2·√17) + 2·√(17 + 3·√17 − √(170 + 38·√17)))/16"
+p.cos.usesOnlySquareRoots; // true
+p.cos.check(50);          // { agrees: true, digits: 50 }
+
+regularPolygon(7).reason; // "φ(7) = 6 is not a power of 2, so cos(2π/7) has degree 3 over Q …"
+regularPolygon(257).cos.size;   // 66: the 257-gon takes 66 square roots</code></pre>
+<p>The formula for 17 is Gauss's own, up to the order of the terms. The 65537-gon is constructible too, but its formula is left to the patient.</p>
+<template data-runbox>
+// Which regular polygons up to 30 sides can be constructed?
+const yes = [], no = [];
+for (let n = 3; n <= 30; n++) (regularPolygon(n).constructible ? yes : no).push(n);
+PRINT("constructible:", yes.join(", "));
+PRINT("not:", no.join(", "));
+
+// Gauss's heptadecagon
+const p = regularPolygon(17);
+PRINT("cos(2π/17) =", p.cos.inline());
+PRINT("  =", p.cos.evaluate(40).re, "  agrees with the cosine to 60 digits:", p.cos.check(60).agrees);
+
+// Smaller cases
+for (const n of [5, 8, 12, 15, 16, 20, 24]) PRINT(`cos(2π/${n}) =`, regularPolygon(n).cos.inline());
+
+// The classical problems
+for (const q of [classicalProblems.doublingTheCube(), classicalProblems.trisecting("1/2"), classicalProblems.trisecting("0"), classicalProblems.squaringTheCircle()])
+  PRINT(q.possible ? "possible:  " : "impossible:", q.problem, "—", q.reason);
+
+// Degree a power of 2 is not enough
+const c = constructible("x^4 + x + 1");
+PRINT(c.reason);
+regularPolygon(257).cos.size + " square roots in the formula for the 257-gon"
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

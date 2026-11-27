@@ -349,6 +349,7 @@ export class Extension {
     const r = this.names.length;
     const steps = [];
     for (let k = r; k >= 1; k -= 1) steps.push(`[${name(k)} : ${name(k - 1)}]`);
+    if (r === 1) return `[${name(1)} : Q] = ${this.degree}`;
     return `[${name(r)} : Q] = ${steps.join("·")} = ${[...this.degrees].reverse().join("·")} = ${this.degree}`;
   }
 

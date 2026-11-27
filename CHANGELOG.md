@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.4.0
+
+Fields and large groups (roadmap phase 6).
+
+- `schreierSims(generators)` and `PermChain`: permutation groups held by a
+  base and strong generating set (deterministic Schreier–Sims), with order,
+  membership, words in the generators, random elements, orbits, stabilisers,
+  subgroup comparisons, normal closures, the derived series, block systems
+  and primitivity. `largeGroups` has Sₙ, Aₙ, the Mathieu groups and the
+  Rubik's cube and pocket cube groups.
+- `extension({ … })`: towers of field extensions of Q with exact elements,
+  degrees and the tower law, minimal polynomials over Q or a level of the
+  tower, norm and trace, primitive elements, roots and factors over the
+  field, automorphisms, `galoisGroup()` and `fixedField()`.
+- `solveByRadicals(poly)`: Galois group, solvability and, when solvable, the
+  roots as nested radicals for irreducible factors up to degree 7, each
+  formula checked against its root. `RadicalExpression` prints in steps, in
+  one line or as TeX. `rootOfUnityByRadicals(n)`.
+- `constructible(poly)`, `regularPolygon(n)` (Gauss–Wantzel, with cos(2π/n)
+  in square roots) and `classicalProblems`.
+- `conwayPolynomial(p, n)` and `conwayField(p, n)` with compatible
+  embeddings.
+- Docs: six new topic pages (large permutation groups, field extensions and
+  towers, automorphisms and the Galois correspondence, solving by radicals,
+  ruler and compass, Conway polynomials), and `large`, `tower`, `galois`,
+  `radicals`, `unity`, `polygon`, `constructible` and `conway` in the
+  explorer.
+
 ## 0.3.0
 
 Rings, ideals and Gröbner bases (roadmap phases 3 and 4).

@@ -18,7 +18,7 @@
 <article>
 <div class="eyebrow">@ratmath/structures</div>
 <h1>Groups, rings and polynomials, held exactly</h1>
-<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions. Polynomials in several variables with exact coefficients, their greatest common divisors, factors and resultants. Ideals and Gröbner bases, quotient rings, and systems of polynomial equations solved exactly. The integers mod n and quadratic integer rings with their ideals and class groups. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
+<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions. Polynomials in several variables with exact coefficients, their greatest common divisors, factors and resultants. Ideals and Gröbner bases, quotient rings, and systems of polynomial equations solved exactly. The integers mod n and quadratic integer rings with their ideals and class groups. Field extensions with their Galois groups, formulas in radicals, and what ruler and compass can reach. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
 
 <div data-group="S4" data-title="Look at a group" data-groups="D4|Q8|A5|GL(2,3)|PSL(2,7)|S3 × C3|SmallGroup(16,8)"></div>
 
@@ -57,6 +57,10 @@ const A = I.quotientRing();                // Q[x, y]/I: arithmetic modulo the e
 <h2>Rings of numbers</h2>
 <p>The <a href="modular.html">integers mod n</a> show units, zero divisors, idempotents and the Chinese remainder theorem in a ring small enough to list. <a href="quadratic.html">Quadratic integer rings</a> such as \(\mathbb Z[i]\) and \(\mathbb Z[\sqrt{-5}]\) show what happens to prime factorisation when a square root is adjoined: sometimes it survives, sometimes \(6 = 2 \cdot 3 = (1 + \sqrt{-5})(1 - \sqrt{-5})\), and then ideals and the class group take over.</p>
 <div data-expr="qfactor(-5, 6)" data-title="Rings of numbers" data-examples="quadratic(-5)|quadratic(-163)|quadratic(94)|qfactor(-1, 30)|zmod(12)|zmod(60)|crt(2, 3, 3, 5, 2, 7)"></div>
+
+<h2>Fields</h2>
+<p>A <a href="towers.html">tower of field extensions</a> is built one root at a time, and its <a href="galois.html">automorphisms</a> match subgroups with the fields in between. The Galois group of a polynomial decides whether it can be <a href="radicals.html">solved by radicals</a>, and when it can the formula is produced and checked; the same theory says which regular polygons <a href="constructions.html">ruler and compass</a> can draw. <a href="conway.html">Conway polynomials</a> give the finite fields a standard form, and <a href="large-groups.html">Schreier–Sims</a> handles permutation groups far too large to list.</p>
+<div data-expr="radicals(x^3 + x + 1)" data-title="Fields" data-examples="radicals(x^5 - x - 1)|radicals(x^5 - 5x + 12)|polygon(17)|polygon(7)|galois(c^3 - 2, w^2 + w + 1)|tower(a^2 - 2, b^3 - a)|conway(2, 8)|large(rubik)"></div>
 
 <h2>A first program</h2>
 <pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
