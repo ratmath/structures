@@ -1,8 +1,10 @@
 // @ratmath/structures: abstract algebra for RatMath.
 //
 // Finite groups (named groups, subgroups, quotients, Sylow subgroups,
-// homomorphisms, actions), and polynomials in several variables with the
-// rational functions built from them, over any exact field.
+// homomorphisms, actions); polynomials in several variables with the
+// rational functions built from them, over any exact field; Gröbner bases,
+// ideals, quotient rings and polynomial systems; the integers mod n and
+// quadratic integer rings.
 
 export { ring, PolyRing, MPoly } from "./src/mpoly.js";
 export { QQ } from "./src/field.js";
@@ -31,3 +33,12 @@ export { Action, action, regularAction, conjugationAction, cosetAction, burnside
 export { smallGroups, numberOfGroups, identify, SMALL_ORDER_LIMIT } from "./src/small.js";
 // algebraic's permutation groups (Galois groups are computed with them), re-exported
 export { PermGroup, cycleString, fromCycles, cycleType } from "@ratmath/algebraic";
+
+// Gröbner bases, ideals, quotient rings and polynomial systems
+export { groebner, GroebnerBasis, sPolynomial, eliminationOrder } from "./src/groebner.js";
+export { ideal, Ideal, chineseRemainder, QuotientRing, QuotientElement, solve } from "./src/ideal.js";
+
+// the integers mod n and quadratic integer rings
+export {
+  crt, Zn, ZnRing, quadraticRing, QuadraticRing, QuadraticInteger, QuadraticIdeal, gaussianIntegers, eisensteinIntegers,
+} from "./src/rings.js";

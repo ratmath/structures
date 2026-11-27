@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Structures Explorer</title>
 <meta property="og:title" content="Structures Explorer">
-<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">
+<meta property="og:description" content="Finite groups, polynomials in several variables, ideals, Gröbner bases and rings of numbers, exact, in JavaScript.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratmath.com/structures/explore.html">
 <meta name="description" content="A free-form exact calculator for polynomials in several variables and rational functions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=f408e7fbe3">
-<script type="module" src="assets/site.js?v=f408e7fbe3"></script>
+<link rel="stylesheet" href="assets/style.css?v=234d6a2f16">
+<script type="module" src="assets/site.js?v=234d6a2f16"></script>
 </head>
 <body>
 <div class="shell">
@@ -29,9 +29,9 @@
     <div class="demo-row"><button class="ghost" id="repl-clear">Clear</button><span class="small muted">Click an entry to edit it again.</span></div>
     <div class="repl-log" id="repl-log" aria-live="polite"></div>
   </div>
-  <div class="palette" id="palette" data-check="(x + y + z)^3|f = (x + y)^3 - 8|diff(x^3 y^2 - 2xy, x)|subs(x^2 + y^2, x, t + 1)|homogenize(x^3 + xy + 1)|degree(x^3 y^2 - 2xy, y)|order lex|order grevlex|lead(x y^2 + x^2 + y^3)|divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)|rem(x^3 + y^3, x + y)|gcd(x^3 - y^3, x^2 - y^2)|lcm(x^2 - y^2, x^2 + 2xy + y^2)|content((y^2 - 1)x^2 + (y + 1)x, x)|sqfree((x + y)^3 (x - y)^2)|factor(x^3 + y^3 + z^3 - 3xyz)|factor(x^4 + 4y^4)|factor(x^6 - y^6)|irreducible(x^2 + y^2 - 1)|resultant(x^2 + y^2 - 1, y - x^2, y)|disc(a x^2 + b x + c, x)|disc(x^3 + p x + q, x)|det(1, x, x^2; 1, y, y^2; 1, z, z^2)|jacobian(x^2 - y^2, 2xy)|hessian(x^3 - 3x y^2)|1/(x + y) + 1/(x - y)|(x^2 - y^2)/(x - y)|inverse(a, b; c, d)|inverse(1, t; t, 1)|diff(x/(x^2 + y^2), x)|symmetric(x^3 + y^3 + z^3)|symmetric((x - y)^2 (x - z)^2 (y - z)^2)|elementary(2, x, y, z)|powersum(3, x, y, z)|complete(2, x, y, z)">
+  <div class="palette" id="palette" data-check="(x + y + z)^3|f = (x + y)^3 - 8|diff(x^3 y^2 - 2xy, x)|subs(x^2 + y^2, x, t + 1)|homogenize(x^3 + xy + 1)|degree(x^3 y^2 - 2xy, y)|order lex|order grevlex|lead(x y^2 + x^2 + y^3)|divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)|rem(x^3 + y^3, x + y)|gcd(x^3 - y^3, x^2 - y^2)|lcm(x^2 - y^2, x^2 + 2xy + y^2)|content((y^2 - 1)x^2 + (y + 1)x, x)|sqfree((x + y)^3 (x - y)^2)|factor(x^3 + y^3 + z^3 - 3xyz)|factor(x^4 + 4y^4)|factor(x^6 - y^6)|irreducible(x^2 + y^2 - 1)|resultant(x^2 + y^2 - 1, y - x^2, y)|disc(a x^2 + b x + c, x)|disc(x^3 + p x + q, x)|det(1, x, x^2; 1, y, y^2; 1, z, z^2)|jacobian(x^2 - y^2, 2xy)|hessian(x^3 - 3x y^2)|1/(x + y) + 1/(x - y)|(x^2 - y^2)/(x - y)|inverse(a, b; c, d)|inverse(1, t; t, 1)|diff(x/(x^2 + y^2), x)|groebner(x^2 + y^2 - 1, x y - 1/2)|member(x + y, x^2, y^3)|eliminate(t, x - t^2, y - t^3)|radical(x^2 y, x y^2)|solve(x^2 + y^2 - 1, y - x^2)|solve(x + y + z - 6, x^2 + y^2 + z^2 - 14, x^3 + y^3 + z^3 - 36)|zmod(12)|crt(2, 3, 3, 5, 2, 7)|quadratic(-5)|quadratic(94)|qfactor(-5, 6)|qfactor(-1, 7, 9)|symmetric(x^3 + y^3 + z^3)|symmetric((x - y)^2 (x - z)^2 (y - z)^2)|elementary(2, x, y, z)|powersum(3, x, y, z)|complete(2, x, y, z)">
     <details class="help" open><summary>How to write things</summary>
-      <p class="small">Variables are single letters, and the ring is made from the letters you use. Products can be written side by side: <code>3xy^2</code>, <code>(x + 1)(x - 1)</code>. Fractions and decimals are exact. Rows of a matrix are separated by <code>;</code> as in <code>det(a, b; c, d)</code>. <code>order lex</code> (or <code>grlex</code>, <code>grevlex</code>) changes how terms are ordered and how division runs. A kept name such as <code>f</code> can be used in later lines: <code>factor(f)</code>, <code>gcd(f, diff(f, x))</code>.</p>
+      <p class="small">Variables are single letters, and the ring is made from the letters you use. Products can be written side by side: <code>3xy^2</code>, <code>(x + 1)(x - 1)</code>. Fractions and decimals are exact. Rows of a matrix are separated by <code>;</code> as in <code>det(a, b; c, d)</code>. <code>order lex</code> (or <code>grlex</code>, <code>grevlex</code>) changes how terms are ordered and how division runs. <code>groebner</code>, <code>member</code>, <code>eliminate</code>, <code>radical</code> and <code>solve</code> take a list of polynomials (each set to zero); <code>zmod(n)</code>, <code>crt(a, m, b, n)</code>, <code>quadratic(d)</code> and <code>qfactor(d, x, y)</code> (which factors x + y√d) work with whole numbers. A kept name such as <code>f</code> can be used in later lines: <code>factor(f)</code>, <code>gcd(f, diff(f, x))</code>.</p>
     </details>
   </div>
 </div>
@@ -62,11 +62,11 @@ fractions(R).of(f, R.poly("x + y - 2"))</textarea>
 </main>
 </div>
 <script type="module">
-import { h, run, render, later } from "./assets/site.js?v=f408e7fbe3";
+import { h, run, render, later } from "./assets/site.js?v=234d6a2f16";
 const env = {};
 const input = document.getElementById("repl-in");
 const log = document.getElementById("repl-log");
-const GROUPS = [["Polynomials", ["(x + y + z)^3", "f = (x + y)^3 - 8", "diff(x^3 y^2 - 2xy, x)", "subs(x^2 + y^2, x, t + 1)", "homogenize(x^3 + xy + 1)", "degree(x^3 y^2 - 2xy, y)"]], ["Orders and division", ["order lex", "order grevlex", "lead(x y^2 + x^2 + y^3)", "divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)", "rem(x^3 + y^3, x + y)"]], ["Gcd", ["gcd(x^3 - y^3, x^2 - y^2)", "lcm(x^2 - y^2, x^2 + 2xy + y^2)", "content((y^2 - 1)x^2 + (y + 1)x, x)", "sqfree((x + y)^3 (x - y)^2)"]], ["Factoring", ["factor(x^3 + y^3 + z^3 - 3xyz)", "factor(x^4 + 4y^4)", "factor(x^6 - y^6)", "irreducible(x^2 + y^2 - 1)"]], ["Elimination", ["resultant(x^2 + y^2 - 1, y - x^2, y)", "disc(a x^2 + b x + c, x)", "disc(x^3 + p x + q, x)", "det(1, x, x^2; 1, y, y^2; 1, z, z^2)", "jacobian(x^2 - y^2, 2xy)", "hessian(x^3 - 3x y^2)"]], ["Fractions", ["1/(x + y) + 1/(x - y)", "(x^2 - y^2)/(x - y)", "inverse(a, b; c, d)", "inverse(1, t; t, 1)", "diff(x/(x^2 + y^2), x)"]], ["Symmetric", ["symmetric(x^3 + y^3 + z^3)", "symmetric((x - y)^2 (x - z)^2 (y - z)^2)", "elementary(2, x, y, z)", "powersum(3, x, y, z)", "complete(2, x, y, z)"]]];
+const GROUPS = [["Polynomials", ["(x + y + z)^3", "f = (x + y)^3 - 8", "diff(x^3 y^2 - 2xy, x)", "subs(x^2 + y^2, x, t + 1)", "homogenize(x^3 + xy + 1)", "degree(x^3 y^2 - 2xy, y)"]], ["Orders and division", ["order lex", "order grevlex", "lead(x y^2 + x^2 + y^3)", "divide(x^2 y + x y^2 + y^2, x y - 1, y^2 - 1)", "rem(x^3 + y^3, x + y)"]], ["Gcd", ["gcd(x^3 - y^3, x^2 - y^2)", "lcm(x^2 - y^2, x^2 + 2xy + y^2)", "content((y^2 - 1)x^2 + (y + 1)x, x)", "sqfree((x + y)^3 (x - y)^2)"]], ["Factoring", ["factor(x^3 + y^3 + z^3 - 3xyz)", "factor(x^4 + 4y^4)", "factor(x^6 - y^6)", "irreducible(x^2 + y^2 - 1)"]], ["Elimination", ["resultant(x^2 + y^2 - 1, y - x^2, y)", "disc(a x^2 + b x + c, x)", "disc(x^3 + p x + q, x)", "det(1, x, x^2; 1, y, y^2; 1, z, z^2)", "jacobian(x^2 - y^2, 2xy)", "hessian(x^3 - 3x y^2)"]], ["Fractions", ["1/(x + y) + 1/(x - y)", "(x^2 - y^2)/(x - y)", "inverse(a, b; c, d)", "inverse(1, t; t, 1)", "diff(x/(x^2 + y^2), x)"]], ["Ideals and systems", ["groebner(x^2 + y^2 - 1, x y - 1/2)", "member(x + y, x^2, y^3)", "eliminate(t, x - t^2, y - t^3)", "radical(x^2 y, x y^2)", "solve(x^2 + y^2 - 1, y - x^2)", "solve(x + y + z - 6, x^2 + y^2 + z^2 - 14, x^3 + y^3 + z^3 - 36)"]], ["Rings of numbers", ["zmod(12)", "crt(2, 3, 3, 5, 2, 7)", "quadratic(-5)", "quadratic(94)", "qfactor(-5, 6)", "qfactor(-1, 7, 9)"]], ["Symmetric", ["symmetric(x^3 + y^3 + z^3)", "symmetric((x - y)^2 (x - z)^2 (y - z)^2)", "elementary(2, x, y, z)", "powersum(3, x, y, z)", "complete(2, x, y, z)"]]];
 const palette = document.getElementById("palette");
 for (const [name, xs] of GROUPS) {
   palette.append(h("div", { class: "grp" }, h("span", {}, name), h("div", { class: "btns" }, xs.map((x) => h("button", { class: "chipbtn", onclick: () => { input.value = x; go(); } }, x)))));

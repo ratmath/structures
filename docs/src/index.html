@@ -17,8 +17,8 @@
 <main>
 <article>
 <div class="eyebrow">@ratmath/structures</div>
-<h1>Groups and polynomials, held exactly</h1>
-<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions; and the algebra of x, y and z together: polynomials with exact coefficients, the fractions built from them, greatest common divisors, factoring, and the resultants that eliminate a variable. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
+<h1>Groups, rings and polynomials, held exactly</h1>
+<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions. Polynomials in several variables with exact coefficients, their greatest common divisors, factors and resultants. Ideals and Gröbner bases, quotient rings, and systems of polynomial equations solved exactly. The integers mod n and quadratic integer rings with their ideals and class groups. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
 
 <div data-group="S4" data-title="Look at a group" data-groups="D4|Q8|A5|GL(2,3)|PSL(2,7)|S3 × C3|SmallGroup(16,8)"></div>
 
@@ -40,7 +40,23 @@ dihedral(6).natural.onColourings(2).countOrbits().count;   // 13 bracelets with 
 <h2>Polynomials</h2>
 <p>A polynomial in several variables is a finite sum of terms, each a coefficient times a product of powers of the variables: \(x^2y - \tfrac32 xz + 1\). The polynomials in fixed variables with coefficients in a field \(K\) form a ring, written \(K[x, y, z]\): they can be added, subtracted and multiplied, and sometimes divided.</p>
 <p>This library holds such a polynomial as the list of its nonzero terms, with every coefficient exact (a fraction of whole numbers by default). The coefficients can instead come from any exact field in RatMath: the integers modulo a prime, a finite field GF(pᵏ), or a number field such as Q(√2).</p>
-<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Rings and ideals, Gröbner bases, presentations of groups, and character tables are planned for the same package and will build on what is here.</p>
+<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Larger permutation groups, towers of fields, and character tables are planned for the same package and will build on what is here.</p>
+
+<h2>Ideals and equations</h2>
+<p>A system of polynomial equations generates an <a href="ideals.html">ideal</a>: everything that follows from the equations by adding and multiplying. A <a href="groebner.html">Gröbner basis</a> of the ideal makes questions about the system mechanical. Does this equation follow from those? Are there solutions, and how many? What is left after eliminating a variable? When there are finitely many solutions, <a href="systems.html">solve</a> finds all of them as exact algebraic numbers.</p>
+<div data-expr="solve(x^2 + y^2 - 1, y - x^2)" data-title="Systems and ideals" data-examples="groebner(x^2 + y^2 - 1, x y - 1/2)|solve(x^2 + y^2 - 5, x y - 2)|eliminate(t, x - t^2, y - t^3)|member(x + y, x^2, y^3)|radical(x^2 y, x y^2)"></div>
+<pre><code>import { ring, ideal, solve } from "@ratmath/structures";
+
+const R = ring("x, y");
+const I = ideal(R, ["x^2 + y^2 - 5", "x y - 2"]);
+I.basis.map(String);                       // the reduced Gröbner basis
+I.contains("x^4 - 5 x^2 + 4");             // true: it follows from the two equations
+I.solve().real.map(String);                // ["(x = -2, y = -1)", "(x = -1, y = -2)", "(x = 1, y = 2)", "(x = 2, y = 1)"]
+const A = I.quotientRing();                // Q[x, y]/I: arithmetic modulo the equations</code></pre>
+
+<h2>Rings of numbers</h2>
+<p>The <a href="modular.html">integers mod n</a> show units, zero divisors, idempotents and the Chinese remainder theorem in a ring small enough to list. <a href="quadratic.html">Quadratic integer rings</a> such as \(\mathbb Z[i]\) and \(\mathbb Z[\sqrt{-5}]\) show what happens to prime factorisation when a square root is adjoined: sometimes it survives, sometimes \(6 = 2 \cdot 3 = (1 + \sqrt{-5})(1 - \sqrt{-5})\), and then ideals and the class group take over.</p>
+<div data-expr="qfactor(-5, 6)" data-title="Rings of numbers" data-examples="quadratic(-5)|quadratic(-163)|quadratic(94)|qfactor(-1, 30)|zmod(12)|zmod(60)|crt(2, 3, 3, 5, 2, 7)"></div>
 
 <h2>A first program</h2>
 <pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
@@ -71,6 +87,12 @@ String(F.parse("1/(x + y) + 1/(x - y)"));     // "2x/(x² − y²)"</code></pre>
   <li><strong>Factoring</strong> into irreducible polynomials over the rationals.</li>
   <li><strong>Determinants, resultants and discriminants</strong> of polynomials, plus Jacobians and Hessians.</li>
   <li><strong>Rational functions</strong>: the field of fractions, usable as the entries of a matrix with parameters.</li>
+  <li><strong>Gröbner bases</strong> by Buchberger's algorithm over any exact field, with certificates: any member of an ideal written out in terms of the generators.</li>
+  <li><strong>Ideals</strong>: membership, sums, products, intersections, quotients, saturation, elimination, radicals, dimension, prime and maximal tests.</li>
+  <li><strong>Polynomial systems</strong> solved exactly: every solution with its multiplicity, coordinates as algebraic numbers.</li>
+  <li><strong>Quotient rings</strong> with inverses, zero divisors, nilpotents, minimal polynomials, and the Chinese remainder theorem.</li>
+  <li><strong>The integers mod n</strong>: units, zero divisors, idempotents, ideals, the unit group, primitive roots.</li>
+  <li><strong>Quadratic integer rings</strong>: units and Pell's equation, Euclidean division, every factorisation of an element, prime ideals, class groups.</li>
   <li><strong>Symmetric polynomials</strong>: the elementary ones, power sums, and rewriting any symmetric polynomial in terms of them.</li>
 </ul>
 

@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.3.0
+
+Rings, ideals and Gröbner bases (roadmap phases 3 and 4).
+
+- `groebner(polys, { order, certificates, maxPairs })`: Buchberger's
+  algorithm with the normal selection strategy and Gebauer and Möller's
+  criteria, fraction-free over Q and by field arithmetic elsewhere. The
+  result has the reduced basis, `reduce`, `divide`, `contains`,
+  `express(f)` (a member of the ideal as a combination of the original
+  generators, multiplied out to confirm), `verify()` (Buchberger's criterion
+  re-checked), `dimension`, `standardMonomials()`, `quotientDimension` and
+  `stats`. Also `sPolynomial` and `eliminationOrder`.
+- `ideal(R, generators)`: membership, equality, `add`, `mul`, `pow`,
+  `intersect`, `quotient`, `saturate`, `eliminate`, `radicalContains` (with
+  a certificate fᵏ = Σ cᵢfᵢ on request), `exponentOf`, `radical`,
+  `isRadical`, `dimension`, `degree`, `minimalPolynomial`, `isMaximal`,
+  `isPrime`, and `chineseRemainder(I, J)`.
+- `solve(R, polys, { complex })` and `I.solve()`: exact solutions of systems
+  with finitely many solutions over Q, by a separating linear form and a
+  rational univariate representation. Real solutions as algebraic numbers
+  with float approximations, complex ones on request, multiplicity, and the
+  components with their number fields.
+- Quotient rings `I.quotientRing()`: elements in normal form with `inverse`,
+  `isUnit`, `isZeroDivisor`, `isNilpotent`, `minimalPolynomial`, `matrix`;
+  `isField`, `isIntegralDomain`, `isReduced`, `asField`.
+- `Zn(n)`: arithmetic, units, zero divisors, nilpotents, idempotents, ideals,
+  the unit group, primitive roots, `decompose()`; `crt(residues, moduli)`
+  (moduli need not be coprime).
+- `quadraticRing(d)`, `gaussianIntegers()`, `eisensteinIntegers()`: elements,
+  units and the fundamental unit, `divmod` and `gcd`, `elementsOfNorm`,
+  `isIrreducible` against `isPrimeElement`, `factorizations` (all of them),
+  `factor` (when unique), ideals with `mul`, `isPrincipal`, `generator`,
+  `factor`, `splitting(p)`, and `classGroup()`.
+- Docs: six new topic pages (Gröbner bases, ideals, solving polynomial
+  systems, quotient rings, the integers mod n, quadratic integer rings), and
+  `groebner`, `member`, `eliminate`, `radical`, `solve`, `zmod`, `crt`,
+  `quadratic` and `qfactor` in the explorer.
+
 ## 0.2.0
 
 Finite groups (roadmap phase 1).

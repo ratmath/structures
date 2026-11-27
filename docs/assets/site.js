@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=f408e7fbe3";
-import { makeLang } from "./lang.js?v=f408e7fbe3";
-import { mountRunboxes } from "./runbox.js?v=f408e7fbe3";
-import { makeGroups } from "./groups.js?v=f408e7fbe3";
+import * as A from "./structures.js?v=234d6a2f16";
+import { makeLang } from "./lang.js?v=234d6a2f16";
+import { mountRunboxes } from "./runbox.js?v=234d6a2f16";
+import { makeGroups } from "./groups.js?v=234d6a2f16";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);
@@ -30,6 +30,14 @@ export const PAGES = [
   { group: "Elimination" },
   { href: "resultants.html", title: "Resultants and discriminants", blurb: "Eliminating a variable; where curves meet" },
   { href: "rational-functions.html", title: "Rational functions", blurb: "The field Q(x, y) and matrices with parameters" },
+  { group: "Ideals and Gröbner bases" },
+  { href: "groebner.html", title: "Gröbner bases", blurb: "Buchberger's algorithm, S-polynomials, certificates of membership" },
+  { href: "ideals.html", title: "Ideals", blurb: "Sums, intersections, quotients, elimination, radicals and the Nullstellensatz" },
+  { href: "systems.html", title: "Solving polynomial systems", blurb: "Every solution, exactly, with multiplicity and algebraic coordinates" },
+  { href: "quotients.html", title: "Quotient rings", blurb: "Units, zero divisors, nilpotents, fields as quotients, Chinese remainders" },
+  { group: "Rings of numbers" },
+  { href: "modular.html", title: "The integers mod n", blurb: "Units, zero divisors, idempotents, ideals and the unit group of Z/n" },
+  { href: "quadratic.html", title: "Quadratic integer rings", blurb: "Gaussian integers, Pell units, lost unique factorisation, class groups" },
   { group: "Symmetry" },
   { href: "symmetric.html", title: "Symmetric polynomials", blurb: "Elementary symmetric polynomials and Newton's identities" },
 ];
@@ -88,7 +96,7 @@ function chrome() {
     (group ?? sel).append(h("option", { value: p.href, selected: p.href === here }, p.title));
   }
   aside.append(
-    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Groups and polynomials, exactly")),
+    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Groups, rings and polynomials, exactly")),
     sel, nav, theme(),
   );
 }

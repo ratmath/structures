@@ -1,7 +1,7 @@
 {
   "name": "@ratmath/structures",
-  "version": "0.2.0",
-  "description": "Abstract algebra for RatMath: finite groups (subgroups, quotients, Sylow, homomorphisms, actions) and exact polynomials in several variables and rational functions over the rationals, finite fields and number fields",
+  "version": "0.3.0",
+  "description": "Abstract algebra for RatMath: finite groups, exact polynomials in several variables, Gröbner bases, ideals, quotient rings, polynomial systems solved exactly, the integers mod n and quadratic integer rings",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -21,7 +21,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "test": "bun test ./tests",
+    "test": "bun test --timeout 60000 ./tests",
     "docs:build": "bun scripts/build-docs.js"
   },
   "keywords": [
@@ -35,7 +35,12 @@
     "group-theory",
     "finite-groups",
     "sylow",
-    "burnside"
+    "burnside",
+    "groebner-basis",
+    "ideals",
+    "polynomial-systems",
+    "quadratic-integers",
+    "class-group"
   ],
   "license": "MIT",
   "repository": {

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gröbner Bases</title>
+<meta name="description" content="Gröbner bases by Buchberger's algorithm: S-polynomials, the criterion, certificates of membership, and how the monomial order shapes the answer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Ideals and Gröbner bases</div>
+<h1>Gröbner bases</h1>
+<p class="lede">A Gröbner basis is a set of generators for which division with remainder works. With one in hand, questions about a system of polynomial equations become mechanical: is this polynomial a consequence of those, are there solutions, how many.</p>
+<div data-expr="groebner(x^2 + y^2 - 1, x y - 1/2)" data-title="A Gröbner basis" data-examples="groebner(x y - 1, y^2 - 1)|groebner(y - x^2, z - x^3)|groebner(x + y + z - 6, x^2 + y^2 + z^2 - 14, x^3 + y^3 + z^3 - 36)|groebner(x^2 - y, x^3 - z, x y - z)|groebner(x^2 + 1, x - 1)|member(x^3 - x y, x^2 - y, x y - 1)|member(x - y, x y - 1, y^2 - 1)"></div>
+
+<h2>The trouble with division</h2>
+<p>With one variable, dividing \(f\) by \(g\) answers the question "is \(f\) a multiple of \(g\)?": yes exactly when the remainder is zero. With several variables and several divisors, the question becomes "is \(f\) a combination \(q_1 g_1 + \dots + q_s g_s\)?", that is, does \(f\) lie in the <a href="ideals.html">ideal</a> the \(g_i\) generate. <a href="orders.html">Division by a list</a> still produces a remainder, but the remainder depends on the order in which the divisors are tried, and it can be nonzero for a polynomial that is in the ideal.</p>
+<pre><code>import { ring, groebner } from "@ratmath/structures";
+
+const R = ring("x, y");
+const g1 = R.poly("x y - 1");
+const g2 = R.poly("y^2 - 1");
+const f = R.poly("x^2 y + x y^2 + y^2");
+String(f.rem([g1, g2]));           // "x + y + 1"
+String(f.rem([g2, g1]));           // "2x + 1": a different remainder
+String(R.poly("x - y").rem([g1, g2]));   // "x − y", yet x − y = y·g1 − x·g2 is in the ideal</code></pre>
+
+<p>The cure is to replace the generators by a better set that generates the same ideal.</p>
+
+<h2>What a Gröbner basis is</h2>
+<p>Fix a <a href="orders.html">monomial order</a>, and write \(\operatorname{LM}(f)\) for the leading monomial of \(f\). A finite set \(G\) inside an ideal \(I\) is a <em>Gröbner basis</em> of \(I\) when</p>
+\[ \text{for every nonzero } f \in I, \quad \operatorname{LM}(f) \text{ is divisible by } \operatorname{LM}(g) \text{ for some } g \in G . \]
+<p>Division by such a set behaves the way division should. The remainder no longer depends on the order of the divisors; it is the unique representative of \(f\) modulo \(I\) built from monomials that no leading monomial of \(G\) divides (the <em>normal form</em> of \(f\)). In particular</p>
+\[ f \in I \iff \text{the remainder of } f \text{ on division by } G \text{ is } 0 . \]
+<p>Every ideal has one (this is Hilbert's basis theorem at work), and once the basis is <em>reduced</em>, meaning each element has leading coefficient 1 and no term divisible by another element's leading monomial, it is unique. So two ideals are equal exactly when their reduced Gröbner bases are the same list.</p>
+<pre><code>const G = groebner([g1, g2]);
+G.basis.map(String);              // ["x − y", "y² − 1"]
+String(G.reduce(f));              // "2y + 1", whatever the order of division
+G.contains(R.poly("x - y"));      // true</code></pre>
+
+
+<h2>Buchberger's algorithm</h2>
+<p>Division gets stuck because leading terms can cancel. The simplest cancellation between two polynomials is their <em>S-polynomial</em>: multiply each by the smallest monomial that makes the leading terms equal, and subtract.</p>
+\[ S(f, g) = \frac{L}{\operatorname{LT}(f)}\, f - \frac{L}{\operatorname{LT}(g)}\, g, \qquad L = \operatorname{lcm}\bigl(\operatorname{LM}(f), \operatorname{LM}(g)\bigr). \]
+<p><strong>Buchberger's criterion.</strong> \(G\) is a Gröbner basis of the ideal it generates exactly when every \(S(g_i, g_j)\) leaves remainder zero on division by \(G\).</p>
+<p>That is a finite test, and it is also an algorithm: whenever an S-polynomial leaves a nonzero remainder, add the remainder to the set and continue. The ideal of leading monomials grows each time, and such a chain cannot grow for ever, so the process stops.</p>
+<p>Most pairs never need to be reduced. If two leading monomials share no variable, the S-polynomial always reduces to zero. And a pair can be skipped when a third element's leading monomial divides their lcm and both pairs with it are dealt with. This library applies both tests (in the form due to Gebauer and Möller), takes the pair with the smallest lcm first, and over the rationals works with whole-number coefficients so that no fractions are carried. <code>G.stats</code> says how much work was done.</p>
+<pre><code>import { sPolynomial } from "@ratmath/structures";
+
+String(sPolynomial(g1, g2));      // "x − y": y·g1 − x·g2
+G.stats;                          // { pairs: 2, zero: 1, skipped: 1, added: 3 }</code></pre>
+
+
+<h2>Certificates</h2>
+<p>An answer of this kind should be checkable without trusting the algorithm. Two checks are built in.</p>
+<ul>
+  <li><code>G.express(f)</code> writes a member of the ideal as a combination of the <em>original</em> generators, \(f = \sum q_i f_i\), and multiplies it out to confirm. That is a proof of membership anyone can verify by expanding.</li>
+  <li><code>G.verify()</code> re-runs Buchberger's criterion from scratch on the finished basis, and checks that the basis and the generators define the same ideal.</li>
+</ul>
+<pre><code>const ex = G.express(R.poly("x - y"));
+ex.cofactors.map(String);         // ["y", "−x"]:  x − y = y·(xy − 1) − x·(y² − 1)
+ex.check;                         // true
+G.verify();   // { generatorsReduce: true, sPairsReduce: true, basisInIdeal: true, sPairsChecked: 2, ok: true }</code></pre>
+
+
+<h2>The order matters</h2>
+<p>The basis depends on the monomial order, and different orders are good for different things.</p>
+<ul>
+  <li><strong>lex</strong> eliminates: the basis contains polynomials in the last variable alone, then in the last two, and so on, like a triangular linear system. It is also the slowest and its polynomials are the largest.</li>
+  <li><strong>grevlex</strong> (the default) usually gives the smallest basis in the least time. Use it for membership, dimension, and counting solutions.</li>
+  <li><code>eliminationOrder(n, [i, j])</code> is the middle way: it ranks the listed variables above the rest and is grevlex within each block. This is what <a href="ideals.html">elimination</a> uses.</li>
+</ul>
+<pre><code>const L = ring("x, y, z", { order: "lex" });
+const twisted = ["y - x^2", "z - x^3"];           // the twisted cubic (t, t², t³)
+groebner(twisted.map((t) =&gt; L.poly(t))).basis.map(String);
+      // ["y³ − z²", "xz − y²", "xy − z", "x² − y"]: the first involves y and z only
+const V = ring("x, y, z");                        // grevlex
+groebner(twisted.map((t) =&gt; V.poly(t))).basis.map(String);
+      // ["y² − xz", "xy − z", "x² − y"]: the three quadrics that cut out the curve</code></pre>
+
+
+<h2>What the basis tells you at once</h2>
+<p>The leading monomials alone carry a good deal of information.</p>
+<ul>
+  <li>The basis is \(\{1\}\) exactly when the equations have no common solution, even over the complex numbers (<code>G.isTrivial</code>).</li>
+  <li>The monomials that no leading monomial divides are the <em>standard monomials</em>. They form a basis of the <a href="quotients.html">quotient ring</a> as a vector space.</li>
+  <li>There are finitely many standard monomials exactly when the system has finitely many solutions, and then their number is the number of solutions counted with multiplicity (<code>G.quotientDimension</code>).</li>
+  <li><code>G.dimension</code> is the dimension of the solution set: 0 for points, 1 for curves, 2 for surfaces.</li>
+</ul>
+<pre><code>const C = groebner([R.poly("x^2 + y^2 - 1"), R.poly("x y - 1/2")]);
+C.dimension;                             // 0
+C.standardMonomials().map(String);       // ["1", "y", "x", "y²"]
+C.quotientDimension;                     // 4: a circle and a hyperbola meet in 4 points, with multiplicity</code></pre>
+
+
+<h2>How far it goes</h2>
+<p>The worst case for Gröbner bases is very bad (degrees can grow doubly exponentially in the number of variables), but the systems that come up in practice are usually far from it. As a guide, on standard benchmarks this implementation takes about 20 ms for cyclic-5 (5 variables, 70 solutions), 50 ms for katsura-5 (6 variables, 32 solutions) and a few seconds for cyclic-6 (156 solutions). The option <code>maxPairs</code> stops a run that is going nowhere. Coefficients may come from any exact field: the rationals, a prime field, a finite field or a number field.</p>
+<template data-runbox>
+// Three symmetric equations: power sums 6, 14, 36
+const L = ring("x, y, z", { order: "lex" });
+const sys = ["x + y + z - 6", "x^2 + y^2 + z^2 - 14", "x^3 + y^3 + z^3 - 36"].map((t) =&gt; L.poly(t));
+const G = groebner(sys);
+PRINT("lex basis:");
+for (const g of G.basis) PRINT("  ", g);
+PRINT("last one factors:", factor(G.basis[0]).factors.map((t) =&gt; `(${t.factor})`).join(""));
+PRINT("solutions with multiplicity:", G.quotientDimension, " verified:", G.verify().ok);
+
+// A certificate: e₃ − 6 is in the ideal, so xyz = 6 follows from the three equations
+const f = L.poly("x y z - 6");
+const ex = G.express(f);
+PRINT("xyz − 6 =", ex.cofactors.map((q, i) =&gt; `(${q})·f${i + 1}`).join(" + "));
+PRINT("multiplied out and compared:", ex.check);
+
+// The same ideal in grevlex, and the work each order took
+const V = ring("x, y, z");
+const H = groebner(sys.map((p) =&gt; p.into(V)));
+PRINT("grevlex basis:", H.basis.map(String).join(",  "));
+[G.stats, H.stats]
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

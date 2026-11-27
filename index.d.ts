@@ -464,3 +464,401 @@ export const SMALL_ORDER_LIMIT: 20;
 export function smallGroups(n: number): Group<any>[];
 export function numberOfGroups(n: number): number;
 export function identify<E>(G: Group<E>): { name: string; group: Group<any>; iso: Homomorphism<E, any> } | null;
+
+// ---- Gröbner bases ------------------------------------------------------------
+
+export interface GroebnerOptions {
+  /** A monomial order to use in place of the ring's own. */
+  order?: MonomialOrder;
+  /** Track each basis element as a combination of the generators while computing. */
+  certificates?: boolean;
+  /** Give up after this many S-pairs (default 200000). */
+  maxPairs?: number;
+}
+
+export interface GroebnerStats {
+  pairs: number;
+  zero: number;
+  skipped: number;
+  added: number;
+}
+
+export class GroebnerBasis<C = Rational> {
+  readonly ring: PolyRing<C>;
+  readonly generators: MPoly<C>[];
+  /** The reduced Gröbner basis: monic, sorted by leading monomial. */
+  readonly basis: MPoly<C>[];
+  readonly stats: GroebnerStats;
+  readonly length: number;
+  readonly leadingExponents: number[][];
+  readonly leadingMonomials: MPoly<C>[];
+  /** The ideal is the whole ring (the basis is {1}). */
+  readonly isTrivial: boolean;
+  readonly isZero: boolean;
+  /** The remainder on division by the basis: the normal form of f modulo the ideal. */
+  reduce(f: PolyLike<C>): MPoly<C>;
+  divide(f: PolyLike<C>): { quotients: MPoly<C>[]; remainder: MPoly<C> };
+  contains(f: PolyLike<C>): boolean;
+  /** Each basis element as a combination of the generators (rows match basis). */
+  readonly cofactors: MPoly<C>[][];
+  /** f = Σ cofactors[i]·generators[i], for f in the ideal; throws otherwise. */
+  express(f: PolyLike<C>): { cofactors: MPoly<C>[]; check: boolean };
+  /** Buchberger's criterion, re-checked from scratch. */
+  verify(): { generatorsReduce: boolean; sPairsReduce: boolean; basisInIdeal: boolean; sPairsChecked: number; ok: boolean };
+  /** The dimension of the solution set; −1 for the whole ring. */
+  readonly dimension: number;
+  readonly isZeroDimensional: boolean;
+  /** The monomials no leading monomial divides: a basis of the quotient (zero-dimensional ideals). */
+  standardMonomials(options?: { limit?: number }): MPoly<C>[];
+  /** How many standard monomials there are; Infinity when the ideal is not zero-dimensional. */
+  readonly quotientDimension: number;
+  toString(): string;
+}
+
+export function groebner<C = Rational>(polys: MPoly<C>[], options?: GroebnerOptions): GroebnerBasis<C>;
+export function sPolynomial<C = Rational>(f: MPoly<C>, g: MPoly<C>): MPoly<C>;
+/** A block order that puts the listed variable indices above all others, so a Gröbner basis eliminates them. */
+export function eliminationOrder(n: number, eliminate: number[]): (a: number[], b: number[]) => number;
+
+// ---- ideals and quotient rings ---------------------------------------------------
+
+export type RadicalCertificate<C = Rational> =
+  | { holds: false }
+  | {
+      holds: true;
+      /** f^power = Σ cofactors[i]·generators[i] */
+      power: number;
+      cofactors: MPoly<C>[];
+      check: boolean;
+      extended: { ring: PolyRing<C>; generators: MPoly<C>[]; cofactors: MPoly<C>[] };
+    };
+
+export class Ideal<C = Rational> {
+  constructor(ring: PolyRing<C>, generators: MPoly<C>[]);
+  readonly ring: PolyRing<C>;
+  readonly generators: MPoly<C>[];
+  readonly groebner: GroebnerBasis<C>;
+  readonly basis: MPoly<C>[];
+  readonly isZero: boolean;
+  readonly isWhole: boolean;
+  readonly isProper: boolean;
+  contains(f: PolyLike<C>): boolean;
+  reduce(f: PolyLike<C>): MPoly<C>;
+  express(f: PolyLike<C>): { cofactors: MPoly<C>[]; check: boolean };
+  isSubsetOf(J: Ideal<C>): boolean;
+  equals(J: Ideal<C>): boolean;
+  add(J: Ideal<C> | PolyLike<C>): Ideal<C>;
+  mul(J: Ideal<C> | PolyLike<C>): Ideal<C>;
+  pow(n: number): Ideal<C>;
+  intersect(J: Ideal<C> | PolyLike<C>): Ideal<C>;
+  /** I : J, the polynomials that multiply J into I. */
+  quotient(J: Ideal<C> | PolyLike<C>): Ideal<C>;
+  /** I : f^∞ (or I : J^∞). */
+  saturate(f: Ideal<C> | PolyLike<C>): Ideal<C>;
+  /** Whether some power of f lies in the ideal (f vanishes wherever the generators do). */
+  radicalContains(f: PolyLike<C>): boolean;
+  radicalContains(f: PolyLike<C>, options: { certificate: true }): RadicalCertificate<C>;
+  exponentOf(f: PolyLike<C>, options?: { limit?: number }): number | null;
+  eliminate(vars: string | number | Array<string | number>): Ideal<C>;
+  readonly dimension: number;
+  readonly isZeroDimensional: boolean;
+  /** dim of R/I as a vector space: solutions counted with multiplicity. */
+  readonly degree: number;
+  standardMonomials(options?: { limit?: number }): MPoly<C>[];
+  /** Minimal polynomial of f modulo the ideal, constant first (zero-dimensional ideals). */
+  minimalPolynomial(f: PolyLike<C>): C[];
+  radical(): Ideal<C>;
+  isRadical(): boolean;
+  isMaximal(): boolean;
+  /** null when the test implemented here cannot decide. */
+  isPrime(): boolean | null;
+  quotientRing(): QuotientRing<C>;
+  solve(options?: SolveOptions): Solutions;
+  toString(): string;
+}
+
+export function ideal<C = Rational>(ring: PolyRing<C>, generators: Array<PolyLike<C>>): Ideal<C>;
+export function ideal<C = Rational>(generators: MPoly<C>[]): Ideal<C>;
+
+export interface ChineseRemainder<C = Rational> {
+  comaximal: boolean;
+  /** a ∈ I and b ∈ J with a + b = 1 (when comaximal). */
+  a?: MPoly<C>;
+  b?: MPoly<C>;
+  /** I + J, when the ideals are not comaximal. */
+  sum?: Ideal<C>;
+  intersection?: Ideal<C>;
+  productIsIntersection?: boolean;
+  /** A polynomial congruent to f mod I and to g mod J. */
+  lift?(f: PolyLike<C>, g: PolyLike<C>): MPoly<C>;
+}
+export function chineseRemainder<C = Rational>(I: Ideal<C>, J: Ideal<C>): ChineseRemainder<C>;
+
+export class QuotientElement<C = Rational> {
+  readonly parent: QuotientRing<C>;
+  /** The normal form: the representative no leading monomial divides. */
+  readonly rep: MPoly<C>;
+  add(o: QuotientElement<C> | PolyLike<C>): QuotientElement<C>;
+  sub(o: QuotientElement<C> | PolyLike<C>): QuotientElement<C>;
+  neg(): QuotientElement<C>;
+  mul(o: QuotientElement<C> | PolyLike<C>): QuotientElement<C>;
+  pow(n: number): QuotientElement<C>;
+  equals(o: QuotientElement<C> | PolyLike<C>): boolean;
+  isZero(): boolean;
+  isUnit(): boolean;
+  inverse(): QuotientElement<C>;
+  div(o: QuotientElement<C> | PolyLike<C>): QuotientElement<C>;
+  isZeroDivisor(): boolean;
+  isNilpotent(): boolean;
+  minimalPolynomial(): C[];
+  /** Multiplication by this element on the standard monomials (finite quotients). */
+  matrix(): C[][];
+  toString(): string;
+}
+
+export class QuotientRing<C = Rational> {
+  constructor(I: Ideal<C>);
+  readonly ring: PolyRing<C>;
+  readonly ideal: Ideal<C>;
+  readonly gens: QuotientElement<C>[];
+  readonly zero: QuotientElement<C>;
+  readonly one: QuotientElement<C>;
+  of(x: QuotientElement<C> | PolyLike<C>): QuotientElement<C>;
+  /** Vector-space dimension over the field; Infinity when not finite. */
+  readonly dimension: number;
+  readonly isFinite: boolean;
+  readonly basis: MPoly<C>[];
+  readonly isZeroRing: boolean;
+  isField(): boolean;
+  isIntegralDomain(): boolean | null;
+  isReduced(): boolean;
+  /** The quotient as a Field, usable as the coefficients of a new ring (the ideal must be maximal). */
+  asField(options?: { name?: string | null }): Field;
+  toString(): string;
+}
+
+export interface SolveOptions {
+  /** Also list the solutions that are not real. */
+  complex?: boolean;
+}
+
+export interface Solution {
+  real: boolean;
+  /** The root of the component's minimal polynomial this solution belongs to. */
+  theta: any;
+  field: any;
+  /** Each coordinate as an element of the number field Q(θ). */
+  coordinates: Record<string, any>;
+  /** Each coordinate as an exact algebraic number (computed on first use). */
+  readonly values: Record<string, any>;
+  /** Floating-point coordinates (real solutions). */
+  approx?: Record<string, number>;
+  toString(): string;
+}
+
+export interface SolutionComponent {
+  field: any;
+  minimalPolynomial: bigint[];
+  degree: number;
+  realCount: number;
+  coordinates: Record<string, any>;
+}
+
+export interface Solutions {
+  finite: boolean;
+  /** 0 for finitely many solutions, −1 for none because the ideal is everything, otherwise the dimension of the solution set. */
+  dimension: number;
+  variables: string[];
+  /** Distinct solutions over the complex numbers. */
+  count?: number;
+  /** Solutions counted with multiplicity. */
+  multiplicity?: number;
+  radical?: boolean;
+  real?: Solution[];
+  complex?: Solution[];
+  components?: SolutionComponent[];
+  parametrization?: {
+    form: Record<string, number>;
+    minimalPolynomial: Rational[];
+    coordinates: Record<string, Rational[]>;
+  };
+}
+
+export function solve(ring: PolyRing, polys: Array<PolyLike>, options?: SolveOptions): Solutions;
+export function solve(polys: MPoly[], options?: SolveOptions): Solutions;
+export function solve(ideal: Ideal, options?: SolveOptions): Solutions;
+
+// ---- the integers mod n -------------------------------------------------------
+
+export type IntLike = number | bigint;
+
+/** Solve x ≡ residues[i] (mod moduli[i]); null when the congruences contradict each other. */
+export function crt(residues: IntLike[], moduli: IntLike[]): { value: bigint; modulus: bigint } | null;
+
+export interface ZnIdeal {
+  generator: bigint;
+  size: bigint;
+  quotient: string;
+  isMaximal: boolean;
+  isPrime: boolean;
+}
+
+export class ZnRing {
+  constructor(n: IntLike);
+  readonly n: bigint;
+  readonly characteristic: bigint;
+  readonly size: bigint;
+  of(a: IntLike): bigint;
+  add(a: IntLike, b: IntLike): bigint;
+  sub(a: IntLike, b: IntLike): bigint;
+  mul(a: IntLike, b: IntLike): bigint;
+  neg(a: IntLike): bigint;
+  pow(a: IntLike, e: IntLike): bigint;
+  isUnit(a: IntLike): boolean;
+  inverse(a: IntLike): bigint;
+  div(a: IntLike, b: IntLike): bigint;
+  isZeroDivisor(a: IntLike): boolean;
+  readonly isField: boolean;
+  readonly isIntegralDomain: boolean;
+  readonly isReduced: boolean;
+  elements(): bigint[];
+  units(): bigint[];
+  readonly unitCount: bigint;
+  zeroDivisors(): bigint[];
+  nilpotents(): bigint[];
+  idempotents(): bigint[];
+  additiveOrder(a: IntLike): bigint;
+  /** The multiplicative order of a unit. */
+  orderOf(a: IntLike): bigint;
+  unitGroup(): { order: bigint; invariants: bigint[]; cyclic: boolean; text: string };
+  primitiveRoot(): bigint | null;
+  ideals(): ZnIdeal[];
+  /** Z/n as a product of rings Z/pᵏ, with the idempotent that picks out each factor. */
+  decompose(): { moduli: bigint[]; idempotents: bigint[]; to(a: IntLike): bigint[]; from(residues: IntLike[]): bigint };
+  table(op?: "add" | "mul"): bigint[][];
+  /** The field Z/p (n must be prime), for use as polynomial coefficients. */
+  asField(): Field;
+  toString(): string;
+}
+export function Zn(n: IntLike): ZnRing;
+
+// ---- quadratic integer rings ----------------------------------------------------
+
+export type QuadLike = QuadraticInteger | IntLike;
+
+export class QuadraticInteger {
+  readonly ring: QuadraticRing;
+  /** The element is a + bω. */
+  readonly a: bigint;
+  readonly b: bigint;
+  add(o: QuadLike): QuadraticInteger;
+  sub(o: QuadLike): QuadraticInteger;
+  neg(): QuadraticInteger;
+  mul(o: QuadLike): QuadraticInteger;
+  /** Negative powers are allowed for units. */
+  pow(k: IntLike): QuadraticInteger;
+  conj(): QuadraticInteger;
+  norm(): bigint;
+  trace(): bigint;
+  isZero(): boolean;
+  equals(o: QuadLike): boolean;
+  isUnit(): boolean;
+  inverse(): QuadraticInteger;
+  /** The quotient when o divides this exactly, otherwise null. */
+  divExact(o: QuadLike): QuadraticInteger | null;
+  isDivisibleBy(o: QuadLike): boolean;
+  isAssociateOf(o: QuadLike): boolean;
+  /** The sign of the real number (real quadratic rings). */
+  sign(): number;
+  toNumber(): number;
+  toString(): string;
+}
+
+export class QuadraticIdeal {
+  readonly ring: QuadraticRing;
+  readonly norm: bigint;
+  /** Two elements that generate the ideal. */
+  readonly generators: QuadraticInteger[];
+  readonly isWhole: boolean;
+  contains(x: QuadLike): boolean;
+  equals(o: QuadraticIdeal): boolean;
+  isSubsetOf(o: QuadraticIdeal): boolean;
+  add(o: QuadraticIdeal): QuadraticIdeal;
+  mul(o: QuadraticIdeal): QuadraticIdeal;
+  pow(k: number): QuadraticIdeal;
+  conj(): QuadraticIdeal;
+  /** A single generator, or null when the ideal is not principal. */
+  generator(): QuadraticInteger | null;
+  isPrincipal(): boolean;
+  isPrime(): boolean;
+  /** Same ideal class: the ideals differ by a principal factor. */
+  isEquivalentTo(o: QuadraticIdeal): boolean;
+  factor(): Array<{ prime: QuadraticIdeal; exponent: number }>;
+  toString(): string;
+}
+
+export interface QuadraticUnits {
+  finite: boolean;
+  list?: QuadraticInteger[];
+  count?: number;
+  fundamental?: QuadraticInteger;
+  norm?: bigint;
+  text?: string;
+}
+
+export interface ClassGroup {
+  classNumber: number;
+  representatives: QuadraticIdeal[];
+  /** The order of each representative's class. */
+  orders: number[];
+  /** Prime-power cyclic factors. */
+  invariants: number[];
+  cyclic: boolean;
+  text: string;
+  minkowskiBound: number;
+  primesChecked: QuadraticIdeal[];
+}
+
+export class QuadraticRing {
+  /** The ring of integers of Q(√d), for square-free d other than 0 and 1. */
+  constructor(d: IntLike);
+  readonly d: bigint;
+  readonly discriminant: bigint;
+  readonly zero: QuadraticInteger;
+  readonly one: QuadraticInteger;
+  /** ω = √d, or (1 + √d)/2 when d ≡ 1 mod 4. */
+  readonly omega: QuadraticInteger;
+  readonly isReal: boolean;
+  /** a + bω. */
+  of(a: QuadLike, b?: IntLike): QuadraticInteger;
+  /** x + y√d (which must be an integer of the ring). */
+  sqrt(x: IntLike, y: IntLike): QuadraticInteger;
+  readonly units: QuadraticUnits;
+  readonly fundamentalUnit: QuadraticInteger | null;
+  readonly isNormEuclidean: boolean;
+  divmod(a: QuadLike, b: QuadLike): { quotient: QuadraticInteger; remainder: QuadraticInteger; euclidean: boolean };
+  gcd(a: QuadLike, b: QuadLike): { gcd: QuadraticInteger; s: QuadraticInteger; t: QuadraticInteger; steps: unknown[] };
+  /** The preferred associate of x. */
+  canonical(x: QuadLike): QuadraticInteger;
+  /** Elements of norm m (−m too with bothSigns), one from each class of associates. */
+  elementsOfNorm(m: IntLike, options?: { bothSigns?: boolean; limit?: number }): QuadraticInteger[];
+  isIrreducible(x: QuadLike): boolean;
+  isPrimeElement(x: QuadLike): boolean;
+  irreducibleDivisors(x: QuadLike): QuadraticInteger[];
+  /** Every way to write x as a unit times irreducibles, up to order and associates. */
+  factorizations(x: QuadLike, options?: { limit?: number }): Array<{ unit: QuadraticInteger; factors: QuadraticInteger[] }>;
+  ideal(...generators: QuadLike[]): QuadraticIdeal;
+  splitting(p: IntLike): { prime: IntLike; kind: "split" | "inert" | "ramified"; primes: QuadraticIdeal[]; principal: boolean };
+  primesAbove(p: IntLike): QuadraticIdeal[];
+  readonly minkowskiBound: number;
+  classGroup(): ClassGroup;
+  classNumber(): number;
+  readonly isPID: boolean;
+  readonly isUFD: boolean;
+  /** The factorisation into primes; throws when the ring does not have unique factorisation. */
+  factor(x: QuadLike): { unit: QuadraticInteger; factors: Array<{ prime: QuadraticInteger; exponent: number }> };
+  toString(): string;
+}
+export function quadraticRing(d: IntLike): QuadraticRing;
+export function gaussianIntegers(): QuadraticRing;
+export function eisensteinIntegers(): QuadraticRing;

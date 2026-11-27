@@ -1,0 +1,692 @@
+// Ideals of polynomial rings, their quotient rings, and exact solutions of
+// polynomial systems.
+//
+//   const R = ring("x, y");
+//   const I = ideal(R, ["x^2 + y^2 - 5", "x*y - 2"]);
+//   I.contains(f); I.add(J); I.intersect(J); I.quotient(J); I.eliminate(["x"]);
+//   I.dimension;            // 0: finitely many solutions
+//   I.degree;               // 4: that many, counted with multiplicity
+//   I.solve().real;         // (−2, −1), (−1, −2), (1, 2), (2, 1), exactly
+//   const A = I.quotientRing();   // Q[x, y]/I, with inverses where they exist
+//
+// Everything is decided through Gröbner bases (groebner.js): membership by
+// normal forms, intersection and quotients by elimination with an extra
+// variable, solving by linear algebra in the finite-dimensional quotient.
+
+import { MPoly, PolyRing } from "./mpoly.js";
+import { QQ } from "./field.js";
+import { keyOf } from "./monomial.js";
+import { GroebnerBasis, groebner, eliminationOrder } from "./groebner.js";
+import { squareFreePart } from "./gcd.js";
+import { factor as factorQ } from "./factor.js";
+import { factor as factorZ, NumberField, AlgebraicReal, isolate, roots as rootsOf } from "@ratmath/algebraic";
+
+// ---- a little linear algebra over the coefficient field ------------------------------------
+
+/** Vectors (maps key → coefficient) added one at a time, with the relation found when one depends on the earlier ones. */
+class Span {
+  constructor(K) {
+    this.K = K;
+    this.rows = [];
+    this.count = 0;
+  }
+  /** v = Σ coefficients[i]·(vector i) + residual; residual is empty exactly when v is in the span */
+  reduce(v) {
+    const K = this.K;
+    const w = new Map(v);
+    const comb = new Array(this.count).fill(K.zero);
+    for (const row of this.rows) {
+      const f = w.get(row.pivot);
+      if (f === undefined) continue;
+      for (const [k, c] of row.vec) {
+        const cur = w.get(k);
+        const nv = cur === undefined ? K.neg(K.mul(f, c)) : K.sub(cur, K.mul(f, c));
+        if (K.sign(nv) === 0) w.delete(k);
+        else w.set(k, nv);
+      }
+      row.comb.forEach((c, i) => {
+        if (K.sign(c) !== 0) comb[i] = K.add(comb[i], K.mul(f, c));
+      });
+    }
+    return { residual: w, comb };
+  }
+  /** Add a vector: null when it was independent, otherwise the coefficients writing it in terms of the earlier ones. */
+  add(v) {
+    const K = this.K;
+    const { residual, comb } = this.reduce(v);
+    if (!residual.size) return comb;
+    const [pivot, lead] = residual.entries().next().value;
+    const inv = K.inv(lead);
+    const vec = new Map();
+    for (const [k, c] of residual) vec.set(k, K.mul(c, inv));
+    // this row = (v − Σ comb[i]·vᵢ)/lead
+    const rc = comb.map((c) => K.neg(K.mul(c, inv)));
+    rc.push(inv);
+    this.rows.push({ pivot, vec, comb: rc });
+    this.count += 1;
+    return null;
+  }
+}
+const vecOf = (f) => {
+  const v = new Map();
+  for (const [k, t] of f._m) v.set(k, t.c);
+  return v;
+};
+
+// ---- ideals --------------------------------------------------------------------------------
+
+const TEMP = "t_";
+const freshName = (R, base = TEMP) => {
+  let name = base;
+  while (R.vars.includes(name)) name += "_";
+  return name;
+};
+
+export class Ideal {
+  /** Use ideal(ring, generators). */
+  constructor(R, generators) {
+    if (!(R instanceof PolyRing)) throw new TypeError("an ideal needs a polynomial ring: ideal(ring(\"x, y\"), [...])");
+    this.ring = R;
+    this.generators = Object.freeze(generators.map((g) => R.from(g)).filter((g) => !g.isZero()));
+    this._gb = null;
+  }
+  /** The reduced Gröbner basis in the ring's order, with its certificate. */
+  get groebner() {
+    if (!this._gb) this._gb = this.generators.length ? groebner([...this.generators]) : new GroebnerBasis(this.ring, [], {});
+    return this._gb;
+  }
+  /** The reduced Gröbner basis: a canonical set of generators. */
+  get basis() {
+    return this.groebner.basis;
+  }
+  get isZero() {
+    return this.generators.length === 0;
+  }
+  /** Is this the whole ring (does it contain 1)? */
+  get isWhole() {
+    return this.groebner.isTrivial;
+  }
+  get isProper() {
+    return !this.isWhole;
+  }
+  contains(f) {
+    return this.groebner.contains(f);
+  }
+  /** The normal form of f: the canonical representative of f + I. */
+  reduce(f) {
+    return this.groebner.reduce(f);
+  }
+  /** f as a combination of the generators: { cofactors, check }. */
+  express(f) {
+    if (this.isZero) throw new RangeError("the zero ideal contains only 0");
+    return this.groebner.express(f);
+  }
+  isSubsetOf(J) {
+    return this.generators.every((g) => J.contains(g));
+  }
+  equals(J) {
+    return this.isSubsetOf(J) && J.isSubsetOf(this);
+  }
+  _same(J) {
+    if (!(J instanceof Ideal)) return new Ideal(this.ring, Array.isArray(J) ? J : [J]);
+    if (J.ring !== this.ring && !J.ring.equals(this.ring)) return new Ideal(this.ring, J.generators.map((g) => g.into(this.ring)));
+    return J;
+  }
+  /** I + J: generated by both sets of generators. */
+  add(J) {
+    J = this._same(J);
+    return new Ideal(this.ring, [...this.generators, ...J.generators]);
+  }
+  /** I·J: generated by the products. */
+  mul(J) {
+    J = this._same(J);
+    return new Ideal(this.ring, this.generators.flatMap((f) => J.generators.map((g) => f.mul(g))));
+  }
+  pow(n) {
+    if (!Number.isInteger(n) || n < 1) throw new RangeError("the power must be a positive whole number");
+    let out = this;
+    for (let k = 1; k < n; k += 1) out = out.mul(this);
+    return out;
+  }
+  /** the ring with one more variable, which an elimination order removes first */
+  _extended() {
+    const R = this.ring;
+    const t = freshName(R);
+    const S = new PolyRing([t, ...R.vars], { field: R.field, order: eliminationOrder(R.n + 1, [0]) });
+    return { S, t: S.gens[0] };
+  }
+  _dropT(S, gens) {
+    const R = this.ring;
+    return gens.filter((g) => g.degree(0) === 0).map((g) => g.into(R));
+  }
+  /** I ∩ J, by eliminating t from t·I + (1 − t)·J. */
+  intersect(J) {
+    J = this._same(J);
+    if (this.isZero || J.isZero) return new Ideal(this.ring, []);
+    const { S, t } = this._extended();
+    const one = S.one;
+    const gens = [...this.generators.map((f) => t.mul(f.into(S))), ...J.generators.map((g) => one.sub(t).mul(g.into(S)))];
+    return new Ideal(this.ring, this._dropT(S, groebner(gens).basis));
+  }
+  /** The ideal quotient I : J = { f : f·J ⊆ I }; J may be one polynomial. */
+  quotient(J) {
+    J = this._same(J);
+    let out = null;
+    for (const g of J.generators) {
+      // I : (g) = (I ∩ (g)) / g
+      const meet = this.intersect(new Ideal(this.ring, [g]));
+      const part = new Ideal(this.ring, meet.basis.map((h) => h.div(g)));
+      out = out ? out.intersect(part) : part;
+    }
+    return out ?? new Ideal(this.ring, [this.ring.one]);
+  }
+  /** The saturation I : f^∞ = { g : fᵏ·g ∈ I for some k }, by eliminating t from I + (1 − t·f). For an ideal J, I : J^∞. */
+  saturate(f) {
+    if (f instanceof Ideal) {
+      let out = null;
+      for (const g of f.generators) {
+        const part = this.saturate(g);
+        out = out ? out.intersect(part) : part;
+      }
+      return out ?? new Ideal(this.ring, [this.ring.one]);
+    }
+    const F = this.ring.from(f);
+    const { S, t } = this._extended();
+    const gens = [...this.generators.map((g) => g.into(S)), S.one.sub(t.mul(F.into(S)))];
+    return new Ideal(this.ring, this._dropT(S, groebner(gens).basis));
+  }
+  /**
+   * Is some power of f in the ideal (does f vanish wherever the generators
+   * do, over the algebraic closure)? Rabinowitsch: exactly when
+   * 1 ∈ I + (1 − t·f). With { certificate: true } the answer carries the
+   * combination that proves it.
+   */
+  radicalContains(f, { certificate = false } = {}) {
+    const F = this.ring.from(f);
+    const { S, t } = this._extended();
+    const gens = [...this.generators.map((g) => g.into(S)), S.one.sub(t.mul(F.into(S)))];
+    const G = groebner(gens, { certificates: certificate });
+    if (!certificate) return G.isTrivial;
+    if (!G.isTrivial) return { holds: false };
+    const ex = G.express(S.one);
+    // 1 = Σ aᵢ(t, x) gᵢ + b·(1 − t f): put t = 1/f and clear denominators to get fᵏ = Σ cᵢ gᵢ
+    const R = this.ring;
+    const parts = ex.cofactors.slice(0, this.generators.length).map((a) => a.coefficients(0));
+    const power = Math.max(0, ...parts.map((cs) => cs.length - 1));
+    const powers = [R.one];
+    for (let k = 1; k <= power; k += 1) powers.push(powers[k - 1].mul(F));
+    const cofactors = parts.map((cs) => cs.reduce((sum, c, j) => sum.add(c.into(R).mul(powers[power - j])), R.zero));
+    const total = cofactors.reduce((sum, c, i) => sum.add(c.mul(this.generators[i])), R.zero);
+    return { holds: true, power, cofactors, check: ex.check && total.equals(powers[power]), extended: { ring: S, generators: gens, cofactors: ex.cofactors } };
+  }
+  /** The smallest k with fᵏ ∈ I, or null when no power is. */
+  exponentOf(f, { limit = 64 } = {}) {
+    if (!this.radicalContains(f)) return null;
+    let p = this.ring.one;
+    const F = this.reduce(f);
+    for (let k = 1; k <= limit; k += 1) {
+      p = this.reduce(p.mul(F));
+      if (p.isZero()) return k;
+    }
+    throw new RangeError(`no power up to ${limit} is in the ideal, though some power is`);
+  }
+  /** The polynomials of the ideal that do not involve the given variables: I ∩ K[the others], as an ideal of the same ring. */
+  eliminate(vars) {
+    const R = this.ring;
+    const idx = (Array.isArray(vars) ? vars : [vars]).map((v) => R.indexOf(v));
+    if (this.isZero) return this;
+    const S = R.withOrder(eliminationOrder(R.n, idx));
+    const G = groebner(this.generators.map((g) => g.into(S)));
+    return new Ideal(R, G.basis.filter((g) => idx.every((i) => g.degree(i) === 0)).map((g) => g.into(R)));
+  }
+  /** The dimension of the solution set (−1 for the whole ring; 0 means finitely many solutions). */
+  get dimension() {
+    return this.isZero ? this.ring.n : this.groebner.dimension;
+  }
+  get isZeroDimensional() {
+    return !this.isZero && this.groebner.isZeroDimensional;
+  }
+  /** The dimension of R/I as a vector space: the number of solutions over the algebraic closure, with multiplicity. Infinity when not finite. */
+  get degree() {
+    return this.isZero ? Infinity : this.groebner.quotientDimension;
+  }
+  standardMonomials(options) {
+    return this.groebner.standardMonomials(options);
+  }
+  _needFinite(what) {
+    if (!this.isZeroDimensional && !this.isWhole) throw new RangeError(`${what} needs an ideal with finitely many solutions; this one has dimension ${this.dimension}`);
+  }
+  /**
+   * The minimal polynomial of f modulo the ideal: the monic p of least
+   * degree with p(f) ∈ I. Coefficients constant first.
+   */
+  minimalPolynomial(f) {
+    this._needFinite("the minimal polynomial");
+    const K = this.ring.K;
+    const F = this.reduce(f);
+    const span = new Span(K);
+    let p = this.reduce(this.ring.one);
+    for (;;) {
+      const rel = span.add(vecOf(p));
+      if (rel) return [...rel.map((c) => K.toPublic(K.neg(c))), K.toPublic(K.one)];
+      p = this.reduce(p.mul(F));
+    }
+  }
+  /**
+   * The radical: the polynomials some power of which is in the ideal. For
+   * an ideal with finitely many solutions over a field of characteristic 0
+   * (Seidenberg: add the square-free part of each variable's minimal
+   * polynomial), for an ideal with one generator, and for one generated by
+   * monomials.
+   */
+  radical() {
+    const R = this.ring;
+    if (this.isZero || this.isWhole) return this;
+    if (R.K.characteristic !== 0n && R.K.characteristic !== 0) throw new RangeError("the radical is computed over fields of characteristic 0");
+    if (this.basis.length === 1) return new Ideal(R, [squareFreePart(this.basis[0])]);
+    // generated by monomials: take the square-free part of each
+    if (this.basis.every((g) => g.isMonomial())) return new Ideal(R, this.basis.map((g) => R.monomial(g.leadingExponents().map((e) => Math.min(e, 1)))));
+    this._needFinite("the radical");
+    const extra = R.vars.map((_, i) => squareFreePart(this._minPolyIn(i)));
+    return new Ideal(R, [...this.basis, ...extra]);
+  }
+  _minPolyIn(i) {
+    const R = this.ring;
+    return R.fromUnivariate(this.minimalPolynomial(R.gens[i]), i);
+  }
+  isRadical() {
+    if (this.isZero || this.isWhole) return true;
+    if (this.basis.length !== 1 && !this.isZeroDimensional && !this.basis.every((g) => g.isMonomial())) return null;
+    return this.radical().isSubsetOf(this);
+  }
+  /**
+   * Is the quotient a field? Decided over Q for an ideal with finitely many
+   * solutions (true exactly when a separating element has an irreducible
+   * minimal polynomial of full degree); false for any ideal of positive
+   * dimension; null where this library cannot decide.
+   */
+  isMaximal() {
+    if (this.isWhole) return false;
+    if (this.isZero) return false;
+    if (!this.isZeroDimensional) return false;
+    if (this.ring.K !== QQ) return null;
+    const s = separating(this);
+    if (!s.radical) return false;
+    return factorZ(s.integerMinimal).factors.length === 1;
+  }
+  /**
+   * Is the quotient an integral domain? Decided over Q for ideals with
+   * finitely many solutions (prime = maximal there) and for ideals with one
+   * generator (prime exactly when it is irreducible); null otherwise.
+   */
+  isPrime() {
+    if (this.isWhole) return false;
+    if (this.isZero) return true;
+    if (this.isZeroDimensional) return this.isMaximal();
+    if (this.ring.K !== QQ) return null;
+    if (this.basis.length === 1) {
+      const fs = factorQ(this.basis[0]).factors;
+      return fs.length === 1 && fs[0].multiplicity === 1;
+    }
+    // linear generators: a prime ideal
+    if (this.basis.every((g) => g.degree() === 1)) return true;
+    return null;
+  }
+  /** The quotient ring R/I. */
+  quotientRing() {
+    return new QuotientRing(this);
+  }
+  /** The solutions of the system, exactly (see solve). */
+  solve(options) {
+    return solveIdeal(this, options);
+  }
+  toString() {
+    return this.isZero ? "(0)" : `(${this.generators.join(", ")})`;
+  }
+}
+
+/**
+ * The ideal generated by some polynomials: ideal(R, ["x^2 - y", "x*y - 1"]),
+ * or ideal([f, g]) for polynomials of one ring.
+ */
+export function ideal(R, generators) {
+  if (R instanceof PolyRing) return new Ideal(R, Array.isArray(generators) ? generators : generators === undefined ? [] : [generators]);
+  const list = Array.isArray(R) ? R : [R];
+  const first = list.find((p) => p instanceof MPoly);
+  if (!first) throw new TypeError("ideal(ring, generators), or ideal([f, g]) with polynomials of one ring");
+  return new Ideal(first.ring, list);
+}
+
+/**
+ * The Chinese remainder theorem for two ideals. When I + J is the whole
+ * ring, R/(I ∩ J) ≅ R/I × R/J, and lift(f, g) finds h with h ≡ f (mod I)
+ * and h ≡ g (mod J).
+ */
+export function chineseRemainder(I, J) {
+  const R = I.ring;
+  J = I._same(J);
+  const sum = I.add(J);
+  if (!sum.isWhole) return { comaximal: false, sum };
+  // 1 = a + b with a ∈ I and b ∈ J
+  const ex = sum.express(R.one);
+  let a = R.zero;
+  I.generators.forEach((g, k) => {
+    a = a.add(ex.cofactors[k].mul(g));
+  });
+  const b = R.one.sub(a);
+  const meet = I.intersect(J);
+  return {
+    comaximal: true,
+    a,
+    b,
+    intersection: meet,
+    /** for comaximal ideals the intersection is the product */
+    productIsIntersection: I.mul(J).equals(meet),
+    lift: (f, g) => meet.reduce(R.from(f).mul(b).add(R.from(g).mul(a))),
+  };
+}
+
+// ---- quotient rings ------------------------------------------------------------------------
+
+export class QuotientElement {
+  constructor(A, rep) {
+    this.parent = A;
+    /** the normal form: the canonical representative */
+    this.rep = rep;
+  }
+  add(o) {
+    return this.parent.of(this.rep.add(this.parent.of(o).rep));
+  }
+  sub(o) {
+    return this.parent.of(this.rep.sub(this.parent.of(o).rep));
+  }
+  neg() {
+    return new QuotientElement(this.parent, this.rep.neg());
+  }
+  mul(o) {
+    return this.parent.of(this.rep.mul(this.parent.of(o).rep));
+  }
+  pow(n) {
+    if (!Number.isInteger(n)) throw new RangeError("the power must be a whole number");
+    if (n < 0) return this.inverse().pow(-n);
+    let out = this.parent.one;
+    let base = this;
+    for (let k = n; k > 0; k >>= 1) {
+      if (k & 1) out = out.mul(base);
+      base = base.mul(base);
+    }
+    return out;
+  }
+  equals(o) {
+    return this.rep.equals(this.parent.of(o).rep);
+  }
+  isZero() {
+    return this.rep.isZero();
+  }
+  /** Is there an inverse? Exactly when the ideal together with this element is the whole ring. */
+  isUnit() {
+    return this.parent.ideal.add([this.rep]).isWhole;
+  }
+  /** The inverse, from the combination 1 = a·f + (an element of I). */
+  inverse() {
+    const A = this.parent;
+    const R = A.ring;
+    const J = new Ideal(R, [this.rep, ...A.ideal.generators]);
+    if (!J.isWhole) throw new RangeError(`${this} has no inverse in ${A}`);
+    return A.of(J.express(R.one).cofactors[0]);
+  }
+  div(o) {
+    return this.mul(this.parent.of(o).inverse());
+  }
+  /** Is this a zero divisor (some non-zero g with f·g = 0)? */
+  isZeroDivisor() {
+    if (this.isZero()) return !this.parent.ideal.isWhole;
+    const I = this.parent.ideal;
+    return !I.quotient(this.rep).isSubsetOf(I);
+  }
+  /** nilpotent: some power is zero */
+  isNilpotent() {
+    return this.parent.ideal.radicalContains(this.rep);
+  }
+  /** the minimal polynomial over the field, constant first (finite-dimensional quotients) */
+  minimalPolynomial() {
+    return this.parent.ideal.minimalPolynomial(this.rep);
+  }
+  /** The matrix of multiplication by this element on the standard monomials (columns are images). */
+  matrix() {
+    const A = this.parent;
+    const K = A.ring.K;
+    const basis = A.basis;
+    const index = new Map(basis.map((m, i) => [keyOf(m._lead().e), i]));
+    const M = basis.map(() => basis.map(() => K.toPublic(K.zero)));
+    basis.forEach((m, j) => {
+      const img = A.ideal.reduce(m.mul(this.rep));
+      for (const [k, t] of img._m) M[index.get(k)][j] = K.toPublic(t.c);
+    });
+    return M;
+  }
+  toString() {
+    return this.rep.toString();
+  }
+}
+
+/** The quotient ring R/I: its elements are normal forms modulo the ideal. */
+export class QuotientRing {
+  constructor(I) {
+    this.ideal = I;
+    this.ring = I.ring;
+    this.zero = new QuotientElement(this, this.ring.zero);
+    this.one = new QuotientElement(this, I.reduce(this.ring.one));
+    /** the classes of the variables */
+    this.gens = this.ring.gens.map((g) => this.of(g));
+  }
+  /** The class of a polynomial (given as a polynomial, text or a coefficient). */
+  of(x) {
+    if (x instanceof QuotientElement) {
+      if (x.parent !== this) throw new TypeError("that element belongs to another quotient ring");
+      return x;
+    }
+    return new QuotientElement(this, this.ideal.reduce(this.ring.from(x)));
+  }
+  /** The dimension as a vector space over the field (Infinity when not finite). */
+  get dimension() {
+    return this.ideal.degree;
+  }
+  get isFinite() {
+    return this.ideal.isWhole || this.ideal.isZeroDimensional;
+  }
+  /** The standard monomials: a basis of the quotient as a vector space. */
+  get basis() {
+    return this.ideal.standardMonomials();
+  }
+  get isZeroRing() {
+    return this.ideal.isWhole;
+  }
+  /** true, false, or null where it cannot be decided here (see Ideal.isMaximal) */
+  isField() {
+    return this.ideal.isMaximal();
+  }
+  isIntegralDomain() {
+    return this.ideal.isPrime();
+  }
+  /** no nilpotent elements: the ideal is radical */
+  isReduced() {
+    return this.ideal.isRadical();
+  }
+  /**
+   * The quotient as a field object { zero, one, add, sub, mul, div, neg,
+   * sign }, usable as the coefficient field of ring(…, { field }) and by
+   * linalg. Refused unless the ideal is known to be maximal.
+   */
+  asField({ name = null } = {}) {
+    if (this.isField() !== true) throw new RangeError(`${this} is not known to be a field`);
+    const of = (x) => this.of(x);
+    return {
+      name: name ?? this.toString(),
+      characteristic: this.ring.K.characteristic,
+      zero: this.zero,
+      one: this.one,
+      add: (a, b) => of(a).add(b),
+      sub: (a, b) => of(a).sub(b),
+      mul: (a, b) => of(a).mul(b),
+      div: (a, b) => of(a).div(b),
+      neg: (a) => of(a).neg(),
+      inv: (a) => of(a).inverse(),
+      sign: (a) => (of(a).isZero() ? 0 : 1),
+      equals: (a, b) => of(a).equals(b),
+      from: of,
+      format: (a) => `(${a})`,
+    };
+  }
+  toString() {
+    return `${this.ring}/${this.ideal}`;
+  }
+}
+
+// ---- solving -------------------------------------------------------------------------------
+
+const lcmInt = (a, b) => {
+  const g = (x, y) => (y ? g(y, x % y) : x < 0n ? -x : x);
+  return (a / g(a, b)) * b;
+};
+const toInts = (pairs) => {
+  let L = 1n;
+  for (const [, d] of pairs) L = lcmInt(L, d);
+  return pairs.map(([n, d]) => n * (L / d));
+};
+
+/**
+ * For a zero-dimensional ideal over Q: its radical, a linear form u that
+ * takes different values at different solutions, the minimal polynomial of
+ * u, and each variable as a polynomial in u.
+ */
+function separating(I) {
+  if (I._sep) return I._sep;
+  const R = I.ring;
+  const rad = I.radical();
+  const radical = rad.isSubsetOf(I);
+  const D = rad.degree;
+  const K = R.K;
+  const n = R.n;
+  // candidates: each variable alone, then (1, s, s², …) for s = 1, 2, …; only finitely many s can fail
+  const forms = [];
+  for (let i = n - 1; i >= 0; i -= 1) forms.push(R.vars.map((_, j) => (j === i ? 1 : 0)));
+  for (let s = 1; s <= 12 + D * D; s += 1) forms.push(R.vars.map((_, j) => s ** j));
+  for (const c of forms) {
+    let u = R.zero;
+    c.forEach((k, j) => {
+      if (k) u = u.add(R.gens[j].scale(k));
+    });
+    const span = new Span(K);
+    const powers = [];
+    let p = rad.reduce(R.one);
+    let rel = null;
+    while (powers.length <= D) {
+      rel = span.add(vecOf(p));
+      if (rel) break;
+      powers.push(p);
+      p = rad.reduce(p.mul(u));
+    }
+    if (powers.length !== D) continue;
+    const minimal = [...rel.map((x) => K.neg(x)), K.one]; // pairs
+    const coordinates = R.gens.map((g) => {
+      const { residual, comb } = span.reduce(vecOf(rad.reduce(g)));
+      if (residual.size) throw new Error("internal: the powers of the separating element do not span the quotient");
+      return comb;
+    });
+    return (I._sep = { radical, rad, degree: D, form: c, minimal, integerMinimal: toInts(minimal), coordinates });
+  }
+  throw new RangeError("no separating linear form was found");
+}
+
+const evalFloat = (coeffs, x) => coeffs.reduceRight((acc, [n, d]) => acc * x + Number(n) / Number(d), 0);
+
+/**
+ * Solve a polynomial system exactly. For a system with finitely many
+ * solutions over Q:
+ *
+ *   count          distinct solutions over the complex numbers
+ *   multiplicity   the same count with multiplicities (dim of R/I)
+ *   real           the real solutions, each { values, approx } with every
+ *                  coordinate an exact real algebraic number
+ *   components     the solutions grouped into Galois orbits: a number field
+ *                  Q(θ) and each coordinate as an element of it
+ *   parametrization   u = Σ cᵢxᵢ, its minimal polynomial, and each xᵢ as a
+ *                  polynomial in u (a rational univariate representation)
+ *
+ * A system with no solutions gives count 0; one with infinitely many gives
+ * { finite: false, dimension }.
+ */
+export function solveIdeal(I, { complex = false } = {}) {
+  const R = I.ring;
+  if (R.K !== QQ) throw new TypeError("solve works over the rationals");
+  const vars = R.vars;
+  if (I.isWhole) return { finite: true, dimension: -1, count: 0, multiplicity: 0, real: [], components: [], variables: [...vars] };
+  if (!I.isZeroDimensional) return { finite: false, dimension: I.dimension, variables: [...vars] };
+  const s = separating(I);
+  const QQx = (pairs) => pairs.map((c) => QQ.toPublic(c));
+  const components = [];
+  const real = [];
+  const complexSolutions = [];
+  for (const { factor: f } of factorZ(s.integerMinimal).factors) {
+    const deg = f.length - 1;
+    // coordinates as polynomials in θ, reduced modulo this factor
+    const base = new NumberField(f, { name: "θ", check: false });
+    const coords = s.coordinates.map((c) => base.of(c.length ? c : [[0n, 1n]]));
+    const field = (root) => new NumberField(f, { name: "θ", root, check: false });
+    const realRoots = isolate(f).map((theta) => ({ F: field(theta), theta }));
+    const others = complex ? rootsOf(f, { complex: true }).map((r) => r.value).filter((z) => !(z instanceof AlgebraicReal)).map((theta) => ({ F: field(theta), theta })) : [];
+    components.push({
+      field: base,
+      minimalPolynomial: f.map((c) => c),
+      degree: deg,
+      realCount: realRoots.length,
+      coordinates: Object.fromEntries(vars.map((v, i) => [v, coords[i]])),
+    });
+    const build = ({ F, theta }, isReal) => {
+      const cs = s.coordinates.map((c) => F.of(c.length ? c : [[0n, 1n]]));
+      const sol = { real: isReal, theta, field: F, coordinates: Object.fromEntries(vars.map((v, i) => [v, cs[i]])) };
+      let cache = null;
+      Object.defineProperty(sol, "values", {
+        enumerable: true,
+        get: () => (cache ??= Object.fromEntries(vars.map((v, i) => [v, cs[i].toAlgebraic()]))),
+      });
+      if (isReal) {
+        const t = theta.toNumber();
+        sol.approx = Object.fromEntries(vars.map((v, i) => [v, evalFloat(cs[i].c.length ? cs[i].c : [[0n, 1n]], t)]));
+      }
+      sol.toString = () => `(${vars.map((v) => `${v} = ${String(sol.values[v])}`).join(", ")})`;
+      return sol;
+    };
+    for (const r of realRoots) real.push(build(r, true));
+    for (const r of others) complexSolutions.push(build(r, false));
+  }
+  real.sort((a, b) => {
+    for (const v of vars) if (Math.abs(a.approx[v] - b.approx[v]) > 1e-12) return a.approx[v] - b.approx[v];
+    return 0;
+  });
+  const out = {
+    finite: true,
+    dimension: 0,
+    variables: [...vars],
+    count: s.degree,
+    multiplicity: I.degree,
+    radical: s.radical,
+    real,
+    components,
+    parametrization: {
+      form: Object.fromEntries(vars.map((v, i) => [v, s.form[i]])),
+      minimalPolynomial: QQx(s.minimal),
+      coordinates: Object.fromEntries(vars.map((v, i) => [v, QQx(s.coordinates[i].length ? s.coordinates[i] : [[0n, 1n]])])),
+    },
+  };
+  if (complex) out.complex = complexSolutions;
+  return out;
+}
+
+/** Solve a system of polynomial equations (each polynomial = 0) exactly: solve([f, g]) or solve(ring, ["x^2 - 2", "x*y - 1"]). */
+export function solve(R, polys, options) {
+  if (R instanceof Ideal) return solveIdeal(R, polys);
+  if (R instanceof PolyRing) return solveIdeal(ideal(R, polys), options);
+  return solveIdeal(ideal(R), polys);
+}

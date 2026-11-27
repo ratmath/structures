@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RatMath Structures</title>
 <meta property="og:title" content="RatMath Structures">
-<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">
+<meta property="og:description" content="Finite groups, polynomials in several variables, ideals, Gröbner bases and rings of numbers, exact, in JavaScript.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratmath.com/structures/">
 <meta name="description" content="Exact polynomials in several variables, rational functions, resultants and factoring in JavaScript.">
@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/style.css?v=f408e7fbe3">
-<script type="module" src="assets/site.js?v=f408e7fbe3"></script>
+<link rel="stylesheet" href="assets/style.css?v=234d6a2f16">
+<script type="module" src="assets/site.js?v=234d6a2f16"></script>
 </head>
 <body>
 <div class="shell">
@@ -22,8 +22,8 @@
 <main>
 <article>
 <div class="eyebrow">@ratmath/structures</div>
-<h1>Groups and polynomials, held exactly</h1>
-<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions; and the algebra of x, y and z together: polynomials with exact coefficients, the fractions built from them, greatest common divisors, factoring, and the resultants that eliminate a variable. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
+<h1>Groups, rings and polynomials, held exactly</h1>
+<p class="lede">A JavaScript library for abstract algebra. Finite groups with their subgroups, quotients, Sylow subgroups, homomorphisms and actions. Polynomials in several variables with exact coefficients, their greatest common divisors, factors and resultants. Ideals and Gröbner bases, quotient rings, and systems of polynomial equations solved exactly. The integers mod n and quadratic integer rings with their ideals and class groups. Nothing is rounded, so two answers are equal exactly when they print the same.</p>
 
 <div data-group="S4" data-title="Look at a group" data-groups="D4|Q8|A5|GL(2,3)|PSL(2,7)|S3 × C3|SmallGroup(16,8)"></div>
 
@@ -45,7 +45,56 @@ dihedral(6).natural.onColourings(2).countOrbits().count;   // 13 bracelets with 
 <h2>Polynomials</h2>
 <p>A polynomial in several variables is a finite sum of terms, each a coefficient times a product of powers of the variables: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>x</mi><mn>2</mn></msup><mi>y</mi><mo>−</mo><mstyle scriptlevel="0" displaystyle="false"><mfrac><mn>3</mn><mn>2</mn></mfrac></mstyle><mi>x</mi><mi>z</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x^2y - \tfrac32 xz + 1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0085em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1901em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal">x</span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>. The polynomials in fixed variables with coefficients in a field <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span></span></span></span> form a ring, written <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo stretchy="false">[</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo separator="true">,</mo><mi>z</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">K[x, y, z]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="mopen">[</span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mclose">]</span></span></span></span>: they can be added, subtracted and multiplied, and sometimes divided.</p>
 <p>This library holds such a polynomial as the list of its nonzero terms, with every coefficient exact (a fraction of whole numbers by default). The coefficients can instead come from any exact field in RatMath: the integers modulo a prime, a finite field GF(pᵏ), or a number field such as Q(√2).</p>
-<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Rings and ideals, Gröbner bases, presentations of groups, and character tables are planned for the same package and will build on what is here.</p>
+<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Larger permutation groups, towers of fields, and character tables are planned for the same package and will build on what is here.</p>
+
+<h2>Ideals and equations</h2>
+<p>A system of polynomial equations generates an <a href="ideals.html">ideal</a>: everything that follows from the equations by adding and multiplying. A <a href="groebner.html">Gröbner basis</a> of the ideal makes questions about the system mechanical. Does this equation follow from those? Are there solutions, and how many? What is left after eliminating a variable? When there are finitely many solutions, <a href="systems.html">solve</a> finds all of them as exact algebraic numbers.</p>
+<div data-expr="solve(x^2 + y^2 - 1, y - x^2)" data-title="Systems and ideals" data-examples="groebner(x^2 + y^2 - 1, x y - 1/2)|solve(x^2 + y^2 - 5, x y - 2)|eliminate(t, x - t^2, y - t^3)|member(x + y, x^2, y^3)|radical(x^2 y, x y^2)"></div>
+<pre><code>import { ring, ideal, solve } from "@ratmath/structures";
+
+const R = ring("x, y");
+const I = ideal(R, ["x^2 + y^2 - 5", "x y - 2"]);
+I.basis.map(String);                       // the reduced Gröbner basis
+I.contains("x^4 - 5 x^2 + 4");             // true: it follows from the two equations
+I.solve().real.map(String);                // ["(x = -2, y = -1)", "(x = -1, y = -2)", "(x = 1, y = 2)", "(x = 2, y = 1)"]
+const A = I.quotientRing();                // Q[x, y]/I: arithmetic modulo the equations</code></pre>
+
+<h2>Rings of numbers</h2>
+<p>The <a href="modular.html">integers mod n</a> show units, zero divisors, idempotents and the Chinese remainder theorem in a ring small enough to list. <a href="quadratic.html">Quadratic integer rings</a> such as <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="double-struck">Z</mi><mo stretchy="false">[</mo><mi>i</mi><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\mathbb Z[i]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">Z</span><span class="mopen">[</span><span class="mord mathnormal">i</span><span class="mclose">]</span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="double-struck">Z</mi><mo stretchy="false">[</mo><msqrt><mrow><mo>−</mo><mn>5</mn></mrow></msqrt><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\mathbb Z[\sqrt{-5}]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1156em;vertical-align:-0.25em;"></span><span class="mord mathbb">Z</span><span class="mopen">[</span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8656em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">−</span><span class="mord">5</span></span></span><span style="top:-2.8256em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1744em;"><span></span></span></span></span></span><span class="mclose">]</span></span></span></span> show what happens to prime factorisation when a square root is adjoined: sometimes it survives, sometimes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>=</mo><mn>2</mn><mo>⋅</mo><mn>3</mn><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><msqrt><mrow><mo>−</mo><mn>5</mn></mrow></msqrt><mo stretchy="false">)</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msqrt><mrow><mo>−</mo><mn>5</mn></mrow></msqrt><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">6 = 2 \cdot 3 = (1 + \sqrt{-5})(1 - \sqrt{-5})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">6</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">3</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1156em;vertical-align:-0.25em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8656em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">−</span><span class="mord">5</span></span></span><span style="top:-2.8256em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1744em;"><span></span></span></span></span></span><span class="mclose">)</span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1156em;vertical-align:-0.25em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8656em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">−</span><span class="mord">5</span></span></span><span style="top:-2.8256em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1744em;"><span></span></span></span></span></span><span class="mclose">)</span></span></span></span>, and then ideals and the class group take over.</p>
+<div data-expr="qfactor(-5, 6)" data-title="Rings of numbers" data-examples="quadratic(-5)|quadratic(-163)|quadratic(94)|qfactor(-1, 30)|zmod(12)|zmod(60)|crt(2, 3, 3, 5, 2, 7)"></div>
 
 <h2>A first program</h2>
 <pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
@@ -76,6 +125,12 @@ String(F.parse("1/(x + y) + 1/(x - y)"));     // "2x/(x² − y²)"</code></pre>
   <li><strong>Factoring</strong> into irreducible polynomials over the rationals.</li>
   <li><strong>Determinants, resultants and discriminants</strong> of polynomials, plus Jacobians and Hessians.</li>
   <li><strong>Rational functions</strong>: the field of fractions, usable as the entries of a matrix with parameters.</li>
+  <li><strong>Gröbner bases</strong> by Buchberger's algorithm over any exact field, with certificates: any member of an ideal written out in terms of the generators.</li>
+  <li><strong>Ideals</strong>: membership, sums, products, intersections, quotients, saturation, elimination, radicals, dimension, prime and maximal tests.</li>
+  <li><strong>Polynomial systems</strong> solved exactly: every solution with its multiplicity, coordinates as algebraic numbers.</li>
+  <li><strong>Quotient rings</strong> with inverses, zero divisors, nilpotents, minimal polynomials, and the Chinese remainder theorem.</li>
+  <li><strong>The integers mod n</strong>: units, zero divisors, idempotents, ideals, the unit group, primitive roots.</li>
+  <li><strong>Quadratic integer rings</strong>: units and Pell's equation, Euclidean division, every factorisation of an element, prime ideals, class groups.</li>
   <li><strong>Symmetric polynomials</strong>: the elementary ones, power sums, and rewriting any symmetric polynomial in terms of them.</li>
 </ul>
 
@@ -107,7 +162,7 @@ fractions(R).parse("1/(x + y) + 1/(x - y)")</textarea>
 </main>
 </div>
 <script type="module">
-import { topicCards } from "./assets/site.js?v=f408e7fbe3";
+import { topicCards } from "./assets/site.js?v=234d6a2f16";
 topicCards(document.getElementById("cards"));
 </script>
 </body>
