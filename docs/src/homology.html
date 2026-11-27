@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chain Complexes and Homology</title>
+<meta name="description" content="Chain complexes of free abelian groups from boundary matrices, homology with torsion through the Smith normal form, Betti numbers, Euler characteristic, and coefficients in Q and Z/p.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Modules</div>
+<h1>Chain complexes and homology</h1>
+<p class="lede">Homology turns a space built from cells into a list of abelian groups. Once the cells and their boundaries are written down, everything is integer linear algebra: the Smith normal form of each boundary matrix gives the free part and the torsion.</p>
+
+<h2>Chain complexes</h2>
+<p>A cell complex has \(n_k\) cells in dimension \(k\). The <em>chain group</em> \(C_k = \mathbb Z^{n_k}\) has one generator per \(k\)-cell, and the <em>boundary map</em> \(\partial_k : C_k \to C_{k-1}\) sends a cell to the signed sum of the cells on its boundary. The boundary of a boundary is empty, so \(\partial_{k-1}\partial_k = 0\), and the cycles \(\ker \partial_k\) contain the boundaries \(\operatorname{im}\partial_{k+1}\). The homology is the quotient</p>
+\[ H_k = \ker \partial_k \,/\, \operatorname{im} \partial_{k+1}. \]
+<p><code>chainComplex</code> takes the list \([\partial_1, \partial_2, \dots]\). Each \(\partial_k\) has one <em>column</em> per \(k\)-cell holding its boundary, and one row per \((k-1)\)-cell. It checks \(\partial\partial = 0\) and refuses a list that is not a chain complex.</p>
+<pre><code>import { chainComplex } from "@ratmath/structures";
+
+// The torus: one vertex v, edges a, b, one face glued along a b a⁻¹ b⁻¹.
+// ∂a = v − v = 0, ∂b = 0, ∂(face) = a + b − a − b = 0.
+const T = chainComplex([[[0, 0]], [[0], [0]]]);
+String(T);                 // "H0 = Z, H1 = Z^2, H2 = Z"
+T.eulerCharacteristic;     // 0 = 1 − 2 + 1
+
+// The projective plane: face glued along a a, so ∂(face) = 2a.
+const P = chainComplex([[[0]], [[2]]]);
+String(P);                 // "H0 = Z, H1 = Z/2, H2 = 0"</code></pre>
+
+<h2>Homology from the Smith normal form</h2>
+<p>Invertible integer row and column operations bring \(\partial_k\) to the diagonal form \(\operatorname{diag}(d_1, \dots, d_{r_k}, 0, \dots)\) with \(d_1 \mid d_2 \mid \cdots\) (see <a href="abelian.html">abelian groups</a>). Then \(\ker\partial_k\) is free of rank \(n_k - r_k\), and inside it \(\operatorname{im}\partial_{k+1}\) is spanned by \(d_i e_i\) for the invariant factors of \(\partial_{k+1}\). So</p>
+\[ H_k \cong \mathbb Z^{\,n_k - r_k - r_{k+1}} \oplus \bigoplus_{d_i &gt; 1} \mathbb Z/d_i, \]
+<p>where the \(d_i\) are those of \(\partial_{k+1}\). For the Klein bottle, glued along \(a b a^{-1} b\), \(\partial_2 = 2b\) and \(H_1 = \mathbb Z \oplus \mathbb Z/2\).</p>
+<pre><code>const K = chainComplex([[[0, 0]], [[0], [2]]]);
+String(K.homology(1));          // "Z/2 × Z"
+chainComplex([[[0, 0]], [[2, 6], [4, 8]]]).homology(1).toString();   // "Z/2 × Z/4": Smith form diag(2, 4)</code></pre>
+
+<h2>Betti numbers, χ and other coefficients</h2>
+<p>The <em>Betti number</em> \(b_k\) is the rank of \(H_k\), the number of copies of \(\mathbb Z\). Over a field the same recipe gives a vector space: over \(\mathbb Q\) its dimension is \(b_k\), and over \(\mathbb Z/p\) the ranks are counted mod \(p\), so torsion divisible by \(p\) shows up twice (the universal coefficient theorem: \(\dim H_k(\mathbb Z/p) = b_k + t_k + t_{k-1}\), with \(t_k\) the number of invariant factors of \(H_k\) divisible by \(p\)). In every case the alternating sum of Betti numbers is the Euler characteristic \(\chi = \sum (-1)^k n_k\), which needs no homology at all.</p>
+<pre><code>P.betti();                              // [1, 0, 0]
+P.betti({ coefficients: "Z/2" });       // [1, 1, 1]: the Z/2 in H1 is counted in H1 and in H2
+String(P.homology(2, { coefficients: "Z/2" }));   // "Z/2"
+P.eulerCharacteristic;                  // 1</code></pre>
+<p>Glued polygons, simplicial complexes and their homology are in <a href="https://ratmath.com/geo/">@ratmath/geo</a>, which builds these boundary matrices for you.</p>
+
+<template data-runbox>
+// Real projective spaces RPⁿ: one cell per dimension, ∂k = 0 for k odd, 2 for k even
+for (let n = 1; n &lt;= 5; n += 1) {
+  const mats = Array.from({ length: n }, (_, i) =&gt; [[(i + 1) % 2 === 0 ? 2 : 0]]);
+  const C = chainComplex(mats);
+  PRINT(`RP${n}:`, String(C), "  mod 2:", C.betti({ coefficients: "Z/2" }).join(" "), "  χ =", C.eulerCharacteristic);
+}
+// The boundary of a tetrahedron is a sphere: build ∂1 and ∂2 by hand
+const edges = [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]];
+const faces = [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]];
+const d1 = [1, 2, 3, 4].map((v) =&gt; edges.map(([a, b]) =&gt; (v === b ? 1 : v === a ? -1 : 0)));
+const d2 = edges.map((e) =&gt; faces.map((f) =&gt; {
+  const i = f.findIndex((_, t) =&gt; f.filter((_, s) =&gt; s !== t).join() === e.join());
+  return i &lt; 0 ? 0 : i % 2 ? -1 : 1;
+}));
+chainComplex([d1, d2]).toString()
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

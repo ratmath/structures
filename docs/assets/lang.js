@@ -8,7 +8,7 @@
 // Variables are single letters; a ring is made from whichever letters occur.
 // makeLang(A) takes the library (so the build can check every example).
 
-import { makeGroups } from "./groups.js?v=a54cf3100f";
+import { makeGroups } from "./groups.js?v=db6a9c11c9";
 
 export function makeLang(A) {
   const groups = makeGroups(A);

@@ -69,11 +69,15 @@ export class AbelianGroup {
     return cs.length === 1 ? cs[0] : directProduct(...cs, { name: this.toString() });
   }
 
-  /** "Z/2 × Z/12 × Z²", or "1" for the trivial group. With { primary: true }, by elementary divisors. */
-  toString({ primary = false } = {}) {
+  /**
+   * "Z/2 × Z/12 × Z²", or "1" for the trivial group. With { primary: true },
+   * by elementary divisors; with { additive: true }, "⊕" and "0" as for
+   * modules and homology.
+   */
+  toString({ primary = false, additive = false } = {}) {
     const parts = primary ? this.elementaryDivisors.map((e) => fmt(e.order)) : this.invariants.map(fmt);
     if (this.rank) parts.push(this.rank === 1 ? "Z" : `Z^${this.rank}`);
-    return parts.length ? parts.join(" × ") : "1";
+    return parts.length ? parts.join(additive ? " ⊕ " : " × ") : additive ? "0" : "1";
   }
 }
 

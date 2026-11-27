@@ -65,6 +65,14 @@ G.order;                              // 48
 G.centre().elements.map((x) =&gt; G.format(x));   // ["[1 0; 0 1]", "[2 0; 0 2]"]</code></pre>
 <p>Elements can be named by the way they print: <code>"r²s"</code> or <code>"r^2 s"</code>, <code>"(1 2 3)"</code>, <code>"-i"</code>. Products of permutations follow the rule for composing functions: <code>mul(a, b)</code> means first \(b\), then \(a\), the same convention as algebraic's <code>PermGroup</code>.</p>
 
+<h2>Even and odd permutations</h2>
+<p>Every permutation is a product of transpositions, and the number of them is always even or always odd. A \(k\)-cycle is \(k - 1\) transpositions, \((1\,2\,3\,4) = (1\,4)(1\,3)(1\,2)\), so the <em>sign</em> of a permutation of \(n\) points with \(c\) cycles (fixed points counted) is \((-1)^{n-c}\). The same parity is the parity of the number of <em>inversions</em>, pairs \(i &lt; j\) put out of order. The sign is a homomorphism onto \(\{\pm1\}\) and its kernel is the alternating group.</p>
+<pre><code>import { sign, isEven, inversions } from "@ratmath/structures";
+
+sign("(1 2 3 4)", 4);       // −1: odd
+isEven("(1 2)(3 4)", 4);    // true
+inversions([2, 0, 1]);      // 2, so (1 3 2) is even</code></pre>
+
 <h2>New groups from old</h2>
 <p>The <em>direct product</em> \(G \times H\) is the set of pairs \((g, h)\) multiplied entry by entry. The <em>semidirect product</em> \(N \rtimes H\) twists this: each \(h\) acts on \(N\) by an automorphism \(\varphi_h\), and</p>
 \[ (n_1, h_1)(n_2, h_2) = (n_1\,\varphi_{h_1}(n_2),\; h_1h_2). \]
@@ -117,6 +125,11 @@ PRINT(D.elements.map((x) =&gt; `${D.format(x)}: ${D.elementOrder(x)}`).join(", "
 const G = GL(2, 3);
 PRINT(G.describe());
 PRINT("element orders:", [...G.orderStatistics()].map(([o, c]) =&gt; `${c} of order ${o}`).join(", "));
+
+// even and odd: the sign of each element of S4 against membership in A4
+const S4 = symmetric(4), A4 = alternating(4);
+PRINT("sign agrees with A4 for every element:", S4.elements.every((p) =&gt; isEven(p) === A4.has(p)));
+PRINT("(1 2 3 4) has sign", sign("(1 2 3 4)", 4));
 
 // the smallest nonabelian group of odd order
 const F = metacyclic(7, 3, 2);

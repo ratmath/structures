@@ -23,7 +23,7 @@
 // rationals and certified n-th roots, and compared with the root.
 
 import { Rational } from "@ratmath/core";
-import { galoisAction, factor as factorZ } from "@ratmath/algebraic";
+import { galoisAction, factor as factorZ, cosMinimal } from "@ratmath/algebraic";
 import { ring } from "./mpoly.js";
 
 // ---- rationals as BigInt pairs
@@ -1055,7 +1055,18 @@ export function constructible(input) {
     const degree = g.length - 1;
     const text = fmtPoly(g);
     if (!isPowerOfTwo(degree)) { out.push({ text, degree, group: null, order: null, constructible: false, reason: `its roots have degree ${degree} over Q, which is not a power of 2`, roots: null }); continue; }
-    if (degree > 7) { out.push({ text, degree, group: null, order: null, constructible: null, reason: `degree ${degree} is a power of 2, but Galois groups are computed only up to degree 7, so this is left undecided`, roots: null }); continue; }
+    if (degree > 7) {
+      // Gauss–Wantzel: a proven minimal polynomial of cos(2π/n) (or 2cos(2π/n)) has an abelian
+      // splitting field Q(cos 2π/n) of degree φ(n)/2, here a power of 2, so its roots are constructible
+      const match = cosineMinimalMatch(toIntegers(g));
+      if (match) {
+        const what = `${match.scale === 2 ? "2" : ""}cos(2π/${match.n})`;
+        out.push({ text, degree, group: `abelian of order ${degree}`, order: degree, constructible: true, reason: `it is the minimal polynomial of ${what}; Q(cos(2π/${match.n})) is abelian of degree φ(${match.n})/2 = ${degree}, a power of 2 (Gauss–Wantzel)`, roots: null, cosine: match });
+        continue;
+      }
+      out.push({ text, degree, group: null, order: null, constructible: null, reason: `degree ${degree} is a power of 2, but Galois groups are computed only up to degree 7, so this is left undecided`, roots: null });
+      continue;
+    }
     const solved = solveByRadicals(g).factors[0];
     const ok = isPowerOfTwo(solved.order);
     out.push({
@@ -1074,6 +1085,30 @@ export function constructible(input) {
     factors: out,
   };
 }
+
+/**
+ * When the integer polynomial g (constant first, primitive, positive leading
+ * coefficient) equals the minimal polynomial of cos(2π/n), or of 2cos(2π/n),
+ * returns { n, scale: 1 | 2 }. Only n with φ(n) = 2·deg g can match, and
+ * φ(n) ≥ √(n/2) bounds them by 8·deg². The comparison is exact equality of
+ * coefficient lists against algebraic.cosMinimal, so a match is a proof.
+ */
+function cosineMinimalMatch(g) {
+  const d = g.length - 1;
+  const same = (a, b) => a.length === b.length && a.every((c, i) => c === b[i]);
+  for (let n = 3; n <= 8 * d * d + 8; n += 1) {
+    if (totient(n) !== 2 * d) continue;
+    const m = toIntegers(cosMinimal(n).map((c) => BigInt(String(c))));
+    if (same(m, g)) return { n, scale: 1 };
+    // 2cos(2π/n) is a root of m(x/2): coefficient k divided by 2^k
+    const half = toIntegers(m.map((c, k) => [c, 1n << BigInt(k)]));
+    if (same(half, g)) return { n, scale: 2 };
+  }
+  return null;
+}
+
+/** The regular n-gon by ruler and compass; the same as regularPolygon(n). */
+export const constructiblePolygon = (n) => regularPolygon(n);
 
 /** The three classical problems, each reduced to a polynomial and decided. */
 export const classicalProblems = Object.freeze({
