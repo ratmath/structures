@@ -864,3 +864,227 @@ export class QuadraticRing {
 export function quadraticRing(d: IntLike): QuadraticRing;
 export function gaussianIntegers(): QuadraticRing;
 export function eisensteinIntegers(): QuadraticRing;
+
+// ---- permutation groups too large to list ----------------------------------------------------
+
+/** A permutation as images counted from 0, or cycle notation counted from 1 such as "(1 2 3)(4 5)". */
+export type PermLike = number[] | string;
+
+/** A permutation group held by a base and strong generating set (Schreier–Sims). */
+export class PermChain {
+  constructor(generators: PermLike[] | PermGroup, options?: { degree?: number; base?: number[]; names?: string[]; name?: string | null; words?: boolean });
+  name: string | null;
+  readonly degree: number;
+  readonly generators: number[][];
+  readonly generatorNames: string[];
+  /** Points (from 1) that only the identity fixes all of. */
+  readonly base: number[];
+  /** The lengths of the basic orbits; their product is the order. */
+  readonly orbitLengths: number[];
+  readonly basicOrbits: number[][];
+  readonly strongGenerators: number[][];
+  readonly order: bigint;
+  readonly isTrivial: boolean;
+  contains(g: PermLike): boolean;
+  sift(g: PermLike): { member: boolean; level: number; images: number[]; residue: string; point: number | null };
+  /** A member as a product of the given generators (signed numbers, −k for an inverse; rightmost acts first). */
+  word(g: PermLike, options?: { limit?: number }): { length: bigint; word: number[] | null; text: string | null; check: boolean | null };
+  /** The product of generator names or signed numbers. */
+  evaluate(word: Array<number | string>): number[];
+  random(options?: { seed?: number; random?: () => number }): number[];
+  elements(): Generator<number[]>;
+  orbit(point: number): number[];
+  orbits(): number[][];
+  readonly isTransitive: boolean;
+  subgroup(generators: PermLike[], options?: { names?: string[]; name?: string | null }): PermChain;
+  /** The subgroup fixing each of the points. */
+  stabilizer(points: number | number[]): PermChain;
+  isSubgroup(H: PermChain): boolean;
+  equals(H: PermChain): boolean;
+  index(H: PermChain): bigint;
+  isNormal(H: PermChain): boolean;
+  normalClosure(generators: PermLike[]): PermChain;
+  derivedSubgroup(): PermChain;
+  derivedSeries(): PermChain[];
+  readonly isAbelian: boolean;
+  readonly isSolvable: boolean;
+  readonly isPerfect: boolean;
+  readonly isSymmetric: boolean;
+  readonly isAlternating: boolean;
+  /** The smallest block system with the two points in one block (transitive groups). */
+  minimalBlocks(a: number, b: number): number[][];
+  blockSystems(): number[][][];
+  readonly isPrimitive: boolean;
+  toGroup(options?: { maxOrder?: number; name?: string | null }): Group;
+  toString(): string;
+  describe(): string;
+}
+export function schreierSims(generators: PermLike[] | PermGroup, options?: number | { degree?: number; base?: number[]; names?: string[]; name?: string | null; words?: boolean }): PermChain;
+export const largeGroups: {
+  symmetric(n: number): PermChain;
+  alternating(n: number): PermChain;
+  /** M11, M12, M22, M23 or M24. */
+  mathieu(n: 11 | 12 | 22 | 23 | 24): PermChain;
+  /** The six face turns U, D, L, R, F, B on the 48 moving stickers. */
+  rubik(): PermChain;
+  /** The 2×2×2 cube with one corner held: turns U, R, F. */
+  pocketCube(): PermChain;
+};
+
+// ---- towers of fields -----------------------------------------------------------------------
+
+export type TowerLike = TowerElement | Rational | number | bigint | string | MPoly;
+
+export class TowerElement {
+  readonly field: Extension;
+  add(o: TowerLike): TowerElement;
+  sub(o: TowerLike): TowerElement;
+  mul(o: TowerLike): TowerElement;
+  div(o: TowerLike): TowerElement;
+  neg(): TowerElement;
+  inverse(): TowerElement;
+  pow(k: number): TowerElement;
+  equals(o: TowerLike): boolean;
+  isZero(): boolean;
+  readonly isRational: boolean;
+  toRational(): Rational | null;
+  /** Coordinates in the tower basis. */
+  coordinates(): Rational[];
+  toPoly(): MPoly;
+  /** The minimal polynomial over Q, constant first. */
+  minimalPolynomial(): Rational[];
+  minimalPolynomialText(variable?: string): string;
+  /** The minimal polynomial over the field of the first k generators, constant first. */
+  minimalPolynomialOver(k: number): TowerElement[];
+  /** The degree of Q(this) over Q. */
+  readonly degree: number;
+  norm(): Rational;
+  trace(): Rational;
+  /** The exact value as an algebraic number of @ratmath/algebraic. */
+  readonly value: unknown;
+  approx(): number | { re: number; im: number };
+  toString(): string;
+  toText(): string;
+  toTeX(): string;
+}
+
+export interface FieldAutomorphism {
+  index: number;
+  images: Record<string, TowerElement>;
+  apply(x: TowerLike): TowerElement;
+  toString(): string;
+}
+
+/** A tower of extensions of Q, each step given by an irreducible polynomial. */
+export class Extension {
+  constructor(steps: Array<[string, string | MPoly]>);
+  readonly names: string[];
+  readonly ring: PolyRing;
+  readonly degrees: number[];
+  readonly degree: number;
+  readonly polynomials: MPoly[];
+  readonly zero: TowerElement;
+  readonly one: TowerElement;
+  readonly generators: TowerElement[];
+  /** Each generator is also a property under its own name. */
+  [name: string]: unknown;
+  of(x: TowerLike): TowerElement;
+  readonly basis: TowerElement[];
+  degreeOver(k: number): number;
+  towerLaw(): string;
+  primitiveElement(): { element: TowerElement; polynomial: Rational[]; text: string; expressions: Record<string, string> };
+  subfield(x: TowerLike): { degree: number; polynomial: Rational[]; text: string; isWhole: boolean };
+  /** Roots in the field of a polynomial (text in x, or coefficients constant first). */
+  roots(polynomial: string | TowerLike[]): Array<{ value: TowerElement; multiplicity: number }>;
+  factor(polynomial: string | TowerLike[], options?: { variable?: string }): Array<{ factor: TowerElement[]; multiplicity: number; degree: number; text: string }>;
+  automorphisms(): FieldAutomorphism[];
+  readonly isGalois: boolean;
+  automorphismGroup(options?: { name?: string | null }): Group;
+  galoisGroup(options?: { name?: string | null }): Group;
+  fixedField(automorphisms: FieldAutomorphism | number | Array<FieldAutomorphism | number>): { degree: number; basis: TowerElement[]; generator: TowerElement | null; polynomial: Rational[] | null; text: string | null };
+  toNumberField(): { field: unknown; generators: unknown[] };
+  toString(): string;
+  describe(): string;
+}
+/** extension({ a: "a^2 - 2", b: "b^3 - a" }): each polynomial may use the generators before it. */
+export function extension(steps: Record<string, string | MPoly> | Array<[string, string | MPoly]>): Extension;
+/** A polynomial with rational coefficients (constant first) as text. */
+export function formatUnivariate(coefficients: unknown[], variable?: string): string;
+
+// ---- standard finite fields -----------------------------------------------------------------
+
+/** The Conway polynomial of GF(pⁿ): coefficients in 0 … p − 1, constant first. Found by search. */
+export function conwayPolynomial(p: number | bigint, n: number, options?: { limit?: number }): bigint[];
+export function formatModular(coefficients: Array<bigint | number>, variable?: string): string;
+/** GF(pⁿ) on its Conway polynomial, with the standard generator and the standard embeddings of its subfields. */
+export function conwayField(p: number | bigint, n: number, options?: { limit?: number }): Record<string, any> & {
+  conway: bigint[];
+  text: string;
+  gen: unknown;
+  generator: unknown;
+  embed(m: number): { from: Record<string, any>; exponent: bigint; image: unknown; map(x: unknown): unknown };
+};
+
+// ---- radicals and constructions -------------------------------------------------------------
+
+/** One number written in radicals. */
+export class RadicalExpression {
+  /** The rational value when no radicals are needed. */
+  readonly rational: Rational | null;
+  /** The radicals used, innermost first; a root is the one nearest `value`. */
+  readonly definitions: Array<{ name: string; kind: "root" | "name"; index: number | null; of: string; value: { re: number; im: number }; text: string }>;
+  /** The expression in terms of the named radicals. */
+  readonly text: string;
+  /** Written out with nested radicals, or null when longer than maxLength (default 600). */
+  inline(options?: { maxLength?: number; tex?: boolean }): string | null;
+  toTeX(options?: { maxLength?: number }): string | null;
+  /** The indices of the roots used, such as [2, 3]. */
+  readonly indices: number[];
+  readonly usesOnlySquareRoots: boolean;
+  /** How many radicals are used. */
+  readonly size: number;
+  /** Decimal digits of the value, from the rationals and certified roots alone. */
+  evaluate(digits?: number): { re: string; im: string; real: boolean };
+  approx(): number | { re: number; im: number };
+  /** Evaluates afresh and compares with the number meant. */
+  check(digits?: number): { agrees: boolean | null; digits: number };
+  toString(): string;
+}
+
+export type UnivariateLike = string | MPoly | Array<number | bigint | string | Rational | [bigint | number, bigint | number]>;
+
+export interface RadicalFactor {
+  polynomial: bigint[];
+  text: string;
+  degree: number;
+  multiplicity: number;
+  /** The Galois group's name, such as "S4" or "F20". */
+  group: string;
+  order: number;
+  solvable: boolean;
+  /** The prime indices of the steps of the chain of subgroups, from the top; null when not solvable. */
+  chain: number[] | null;
+  /** Real roots ascending, then the others; null when not solvable. */
+  roots: Array<{ value: unknown; expression: RadicalExpression }> | null;
+}
+/** Solves a polynomial over Q by radicals when its Galois group allows it (irreducible factors up to degree 7). */
+export function solveByRadicals(polynomial: UnivariateLike, options?: { expressions?: boolean }): { polynomial: bigint[]; text: string; degree: number; solvable: boolean; reason: string; factors: RadicalFactor[] };
+/** e^(2πi/n) in radicals. */
+export function rootOfUnityByRadicals(n: number): RadicalExpression;
+/** The regular n-gon: constructible exactly when φ(n) is a power of 2; cos(2π/n) in radicals where found. */
+export function regularPolygon(n: number): { n: number; constructible: boolean; totient: number; reason: string; cos: RadicalExpression | null };
+/** Can the roots be constructed with ruler and compass? true, false, "some", or null when undecided. */
+export function constructible(polynomial: UnivariateLike): {
+  polynomial: bigint[];
+  text: string;
+  constructible: boolean | "some" | null;
+  reason: string;
+  factors: Array<{ text: string; degree: number; group: string | null; order: number | null; constructible: boolean | null; reason: string; roots: Array<{ value: unknown; expression: RadicalExpression }> | null }>;
+};
+export interface ClassicalProblem { problem: string; possible: boolean; polynomial: string | null; reason: string; roots?: Array<{ value: unknown; expression: RadicalExpression }> | null }
+export const classicalProblems: {
+  doublingTheCube(): ClassicalProblem;
+  /** Trisecting the angle with the given rational cosine (1/2, that is 60°, by default). */
+  trisecting(cosine?: number | bigint | string | Rational): ClassicalProblem;
+  squaringTheCircle(): ClassicalProblem;
+};

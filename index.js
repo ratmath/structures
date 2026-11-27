@@ -42,3 +42,13 @@ export { ideal, Ideal, chineseRemainder, QuotientRing, QuotientElement, solve } 
 export {
   crt, Zn, ZnRing, quadraticRing, QuadraticRing, QuadraticInteger, QuadraticIdeal, gaussianIntegers, eisensteinIntegers,
 } from "./src/rings.js";
+
+// permutation groups too large to list
+export { schreierSims, PermChain, largeGroups } from "./src/schreier.js";
+
+// towers of fields, standard finite fields, radicals and constructions
+export { extension, Extension, TowerElement, formatUnivariate } from "./src/tower.js";
+export { conwayPolynomial, conwayField, formatModular } from "./src/conway.js";
+export {
+  solveByRadicals, rootOfUnityByRadicals, regularPolygon, constructible, classicalProblems, RadicalExpression,
+} from "./src/radicals.js";
