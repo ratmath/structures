@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Homomorphisms and Isomorphism</title>
+<meta name="description" content="Group homomorphisms, kernels and images, the three isomorphism theorems, isomorphism testing, automorphism groups and the groups of order at most 20.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Groups</div>
+<h1>Homomorphisms and isomorphism</h1>
+<p class="lede">A homomorphism is a map between groups that respects products. It is how one group is seen inside, or projected onto, another, and an isomorphism, one that can be reversed, says two groups are the same group in different clothes.</p>
+<div data-group="SmallGroup(16,6)" data-title="Which group is it?" data-groups="SmallGroup(12,5)|SmallGroup(16,13)|SmallGroup(18,5)|SmallGroup(20,5)|PSL(2,3)|SL(2,2)|C3 × C5|D2"></div>
+
+<h2>Homomorphisms</h2>
+<p>A map \(f : G \to H\) is a <em>homomorphism</em> when \(f(ab) = f(a)f(b)\) for all \(a, b\). Its <em>kernel</em> \(\ker f = \{x : f(x) = e\}\) is a normal subgroup of \(G\) and its <em>image</em> is a subgroup of \(H\). The sign of a permutation is a homomorphism \(S_n \to C_2\) with kernel \(A_n\); the determinant is a homomorphism from \(GL(n,p)\) to the nonzero numbers mod \(p\) with kernel \(SL(n,p)\).</p>
+<p>A homomorphism is fixed by where it sends a set of generators, but not every choice of images works: the images must satisfy every relation the generators do. <code>homomorphism(G, H, images)</code> walks through \(G\) from the identity, setting \(f(xs) = f(x)f(s)\) for each generator \(s\), and refuses if this ever gives an element two different images. When no clash appears the map is a homomorphism, because every element is a product of generators.</p>
+<pre><code>import { homomorphism, tryHomomorphism, cyclic, symmetric, cycleType } from "@ratmath/structures";
+
+// C6 → C3 sending a to a: well defined, since a⁶ = e and a⁶ ↦ a⁶ = e in C3
+const f = homomorphism(cyclic(6), cyclic(3), [1]);
+f.kernel().order;                 // 2
+tryHomomorphism(cyclic(4), cyclic(3), [1]);   // null: a⁴ = e but a⁴ = a in C3
+
+// the sign of a permutation, from a function
+const sign = homomorphism(symmetric(4), cyclic(2), (p) =&gt; cycleType(p).reduce((s, c) =&gt; s + c - 1, 0) % 2);
+String(sign);                     // "S4 → C2, (1 2) ↦ a, (1 2 3 4) ↦ a"
+sign.kernel().order;              // 12: the kernel is A4</code></pre>
+
+<h2>The isomorphism theorems</h2>
+<p>The three isomorphism theorems say which quotients are which. The library builds the isomorphism each one promises and checks it.</p>
+<ul>
+  <li><strong>First:</strong> for \(f : G \to H\), \(G/\ker f \cong \operatorname{im} f\) by \(x \ker f \mapsto f(x)\). <code>firstIsomorphism(f)</code>.</li>
+  <li><strong>Second:</strong> for \(H \le G\) and \(N \trianglelefteq G\), \(HN\) is a subgroup and \(H/(H\cap N) \cong HN/N\). <code>secondIsomorphism(G, H, N)</code>.</li>
+  <li><strong>Third:</strong> for normal \(N \subseteq K\), \((G/N)/(K/N) \cong G/K\). <code>thirdIsomorphism(G, N, K)</code>.</li>
+</ul>
+<pre><code>import { firstIsomorphism, secondIsomorphism, symmetric, alternating, homomorphism, cyclic, cycleType } from "@ratmath/structures";
+
+const S = symmetric(4);
+const sign = homomorphism(S, cyclic(2), (p) =&gt; cycleType(p).reduce((s, c) =&gt; s + c - 1, 0) % 2);
+const { quotient, image, iso } = firstIsomorphism(sign);
+[quotient.order, image.order, iso.isIsomorphism];   // [2, 2, true]
+
+const V = S.subgroup(["(1 2)(3 4)", "(1 3)(2 4)"]);
+const H = S.subgroup(["(1 2 3)", "(1 2)"]);         // a copy of S3
+const second = secondIsomorphism(S, H, V);
+[second.HN.order, second.HcapN.order];              // [24, 1]: S3 ≅ S4/V4</code></pre>
+
+<h2>Is it the same group?</h2>
+<p><code>isomorphism(G, H)</code> returns an isomorphism or <code>null</code>. It first compares invariants (orders, element orders and class sizes, the centre, the commutator subgroup), then searches: it picks a few generators of \(G\), tries for each generator the elements of \(H\) with the same order and class size, and abandons a partial choice as soon as it fails to be a one-to-one homomorphism on the subgroup generated so far. Every isomorphism it returns has been checked from scratch.</p>
+<pre><code>import { isomorphism, isIsomorphic, PSL, alternating, GL, dihedral, quaternion, symmetric, SL } from "@ratmath/structures";
+
+isIsomorphic(PSL(2, 5), alternating(5));     // true
+isIsomorphic(PSL(2, 7), GL(3, 2));           // true: the simple group of order 168, twice
+isIsomorphic(dihedral(4), quaternion());     // false, though both have order 8 and 5 classes
+isIsomorphic(SL(2, 3), symmetric(4));        // false
+String(isomorphism(symmetric(3), dihedral(3)));
+// "S3 → D3, (1 2) ↦ s, (1 2 3) ↦ r"</code></pre>
+
+<h2>Automorphisms</h2>
+<p>An isomorphism from a group to itself is an <em>automorphism</em>; together they form the group \(\operatorname{Aut}(G)\). Conjugation by any \(g\) is one, an <em>inner</em> automorphism, and these form a normal subgroup \(\operatorname{Inn}(G) \cong G/Z(G)\).</p>
+<pre><code>import { automorphisms, automorphismGroup, cyclic, quaternion, directProduct, GL, symmetric, isIsomorphic } from "@ratmath/structures";
+
+automorphisms(cyclic(12)).length;              // 4 = φ(12): a ↦ a, a⁵, a⁷, a¹¹
+automorphisms(quaternion()).length;            // 24
+const A = automorphismGroup(directProduct(cyclic(2), cyclic(2), cyclic(2)));
+isIsomorphic(A, GL(3, 2));                     // true: Aut(C2³) is GL(3, 2), order 168
+automorphismGroup(symmetric(4)).inner.order;   // 24: every automorphism of S4 is inner</code></pre>
+
+<h2>The groups of order at most 20</h2>
+<p>Up to isomorphism there are only a few groups of each small order: 1, 1, 1, 2, 1, 2, 1, 5, 2, 2, 1, 5, 1, 2, 1, 14, 1, 5, 1, 5 for orders 1 to 20. <code>smallGroups(n)</code> gives one of each, built from the constructions on the <a href="groups.html">first page</a>, and <code>identify(G)</code> says which one a group is. The tests check that the groups listed for each order are pairwise non-isomorphic, and that every subgroup of order at most 20 of \(S_5\), \(GL(2,3)\), \(PSL(2,7)\) and two groups of order 32 is isomorphic to one of them. In the explorer, <code>SmallGroup(n, i)</code> is the i-th group of order n in this list (the order is this library's, not GAP's).</p>
+<pre><code>import { smallGroups, identify, directProduct, cyclic, GL, metacyclic } from "@ratmath/structures";
+
+smallGroups(8).map(String);        // ["C8", "C4 × C2", "C2 × C2 × C2", "D4", "Q8"]
+smallGroups(16).length;            // 14
+identify(GL(2, 3).sylowSubgroup(2)).name;    // "SD16"
+identify(metacyclic(5, 4, 2)).name;          // "C5 ⋊ C4", the Frobenius group of order 20</code></pre>
+<template data-runbox>
+// the groups of order at most 20, with a few invariants that tell them apart
+for (let n = 1; n &lt;= 20; n += 1) {
+  const gs = smallGroups(n);
+  if (gs.length === 1) continue;
+  PRINT(`order ${n}: ` + gs.map((G) =&gt; `${G} [${G.isAbelian ? "abelian" : "nonabelian"}, centre ${G.centre().order}, ${G.conjugacyClasses().length} classes]`).join("; "));
+}
+// D4 and Q8 have the same order and class sizes; their element orders differ
+[dihedral(4), quaternion()].map((G) =&gt; `${G}: ${[...G.orderStatistics()].map(([o, c]) =&gt; `${c}×order ${o}`).join(", ")}`)
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

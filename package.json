@@ -1,7 +1,7 @@
 {
   "name": "@ratmath/structures",
-  "version": "0.1.0",
-  "description": "Abstract algebra for RatMath: exact polynomials in several variables and rational functions, over the rationals, finite fields and number fields",
+  "version": "0.2.0",
+  "description": "Abstract algebra for RatMath: finite groups (subgroups, quotients, Sylow, homomorphisms, actions) and exact polynomials in several variables and rational functions over the rationals, finite fields and number fields",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -31,7 +31,11 @@
     "rational-function",
     "resultant",
     "gcd",
-    "abstract-algebra"
+    "abstract-algebra",
+    "group-theory",
+    "finite-groups",
+    "sylow",
+    "burnside"
   ],
   "license": "MIT",
   "repository": {

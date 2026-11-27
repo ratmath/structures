@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Structures Reference</title>
 <meta property="og:title" content="Structures Reference">
-<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">
+<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratmath.com/structures/reference.html">
 <meta name="description" content="Every function of @ratmath/structures.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=39861edd55">
-<script type="module" src="assets/site.js?v=39861edd55"></script>
+<link rel="stylesheet" href="assets/style.css?v=f408e7fbe3">
+<script type="module" src="assets/site.js?v=f408e7fbe3"></script>
 </head>
 <body>
 <div class="shell">
@@ -22,10 +22,61 @@
 <article>
 <div class="eyebrow">Reference</div>
 <h1>Everything in the library</h1>
-<p class="lede">Every export of <code>@ratmath/structures</code>. Coefficients handed back to you are Core Rationals over Q, and the field's own elements otherwise. Wherever a polynomial is expected, text or a number is accepted too.</p>
-<input class="filter" id="filter" type="search" placeholder="Filter, e.g. gcd, order, factor" aria-label="Filter the reference">
+<p class="lede">Every export of <code>@ratmath/structures</code>: groups first, then polynomials. Group elements are given by value or by their printed label. Coefficients handed back to you are Core Rationals over Q, and the field's own elements otherwise. Wherever a polynomial is expected, text or a number is accepted too.</p>
+<input class="filter" id="filter" type="search" placeholder="Filter, e.g. sylow, quotient, gcd, factor" aria-label="Filter the reference">
 <div class="tablewrap"><table class="ref" id="ref">
 <tr><th>Function</th><th>What it does</th></tr>
+<tr class="grp"><th colspan="2"><a href="groups.html">Named groups and products</a></th></tr>
+<tr><td>cyclic(n), dihedral(n), dicyclic(n), quaternion(), kleinFour()</td><td>Cₙ (elements are exponents k, printed aᵏ); Dₙ of order 2n, the symmetries of an n-gon (pairs [k, f] = rᵏsᶠ); the dicyclic group of order 4n; Q₈ printed ±1, ±i, ±j, ±k; C₂ × C₂.</td></tr>
+<tr><td>symmetric(n), alternating(n), permutationGroup(gens, n), fromPermGroup(P)</td><td>Permutation groups. Generators are arrays (p[i] the image of i, from 0) or cycle notation from 1 such as &quot;(1 2 3)(4 5)&quot;. mul(a, b) is a∘b: first b, then a. G.toPermGroup() gives algebraic&#x27;s PermGroup.</td></tr>
+<tr><td>GL(n, p), SL(n, p), PSL(n, p), heisenberg(p), matrixGroup(gens, p)</td><td>Matrix groups over F_p for a prime p: matrices of whole numbers 0 … p−1. PSL is SL modulo its centre; its elements are cosets.</td></tr>
+<tr><td>directProduct(G, H, …), semidirectProduct(N, H, act), metacyclic(m, k, r)</td><td>G × H on tuples; N ⋊ H with act(h) the automorphism of N that h gives (checked); Cₘ ⋊ Cₖ with the generator acting by x ↦ xʳ.</td></tr>
+<tr><td>Group.generate({ generators, mul, identity, key, format, name }), Group.fromElements(list, mul), Group.fromTable(table, { labels })</td><td>Any group: from generators and a multiplication (key tells elements apart, default JSON), from a list of all elements, or from a multiplication table (axioms checked).</td></tr>
+<tr><td>G.natural</td><td>The named groups&#x27; own action: polygon vertices, the points 1 … n, or the vectors of F_pⁿ.</td></tr>
+<tr><td>PermGroup, cycleString, fromCycles, cycleType</td><td>Re-exported from @ratmath/algebraic, where Galois groups are computed.</td></tr>
+<tr class="grp"><th colspan="2"><a href="groups.html">Elements</a></th></tr>
+<tr><td>G.elements, G.order, G.identity, G.generators, G.name</td><td>All elements (identity first), their number, the identity, a generating list, the name.</td></tr>
+<tr><td>G.mul(a, b, …), G.inv(x), G.pow(x, k), G.conjugate(x, g), G.commutator(a, b)</td><td>Products left to right; inverse; powers (negative too); gxg⁻¹; [a, b] = a⁻¹b⁻¹ab. Elements may be given by value or by printed label (&quot;r²s&quot;, &quot;r^2 s&quot;, &quot;(1 2)&quot;, &quot;-i&quot;).</td></tr>
+<tr><td>G.element(x), G.has(x), G.indexOf(x), G.format(x), G.key(x)</td><td>The element for a value or label; membership; its element number; how it prints; its key.</td></tr>
+<tr><td>G.elementOrder(x), G.orderStatistics(), G.exponent</td><td>The order of x; a Map order → how many elements; the lcm of the orders.</td></tr>
+<tr><td>G.cayleyTable({ order })</td><td>{ labels, elements, table } with table[i][j] the position of the product; String(…) prints the grid.</td></tr>
+<tr><td>G.isAbelian, G.isCyclic, G.isPGroup, G.isTrivial</td><td>Tests.</td></tr>
+<tr><td>G.describe(), String(G)</td><td>A one-line summary; the name, or ⟨generators⟩.</td></tr>
+<tr class="grp"><th colspan="2"><a href="classes.html">Classes, centre, commutators</a></th></tr>
+<tr><td>G.conjugacyClasses()</td><td>[{ representative, elements, indices, size, order }], identity first; size·|C(x)| = |G|.</td></tr>
+<tr><td>G.classEquation()</td><td>{ order, centre, terms } printing as &quot;24 = 1 + 3 + 6 + 6 + 8&quot;.</td></tr>
+<tr><td>G.centre(), G.centraliser(x or list or H), G.normaliser(H)</td><td>Z(G); the elements commuting with x (or with all of a list or subgroup); the g with gHg⁻¹ = H. US spellings center, centralizer, normalizer work too.</td></tr>
+<tr><td>G.derivedSubgroup(), G.commutatorOf(H, K), G.normalClosure(list)</td><td>G′ = [G, G]; [H, K]; the smallest normal subgroup containing some elements.</td></tr>
+<tr><td>G.derivedSeries(), G.lowerCentralSeries(), G.upperCentralSeries()</td><td>Lists of subgroups, until they stop.</td></tr>
+<tr><td>G.isSolvable, G.isNilpotent, G.nilpotencyClass, G.isSimple, G.isPerfect</td><td>Tests; the class is null for a group that is not nilpotent.</td></tr>
+<tr class="grp"><th colspan="2"><a href="subgroups.html">Subgroups and quotients</a></th></tr>
+<tr><td>G.subgroup(gens), G.trivialSubgroup()</td><td>The subgroup generated by some elements; {e}. A subgroup is a Group with G as its parent.</td></tr>
+<tr><td>G.subgroups({ maxOrder }), G.subgroupClasses()</td><td>Every subgroup, smallest first (groups up to order 1000 by default); the subgroups up to conjugacy: [{ group, order, index, conjugates, normal, members }].</td></tr>
+<tr><td>G.normalSubgroups(), G.isNormal(H), G.conjugateSubgroup(H, g)</td><td>All normal subgroups (built from classes, no need to list every subgroup); normality; gHg⁻¹.</td></tr>
+<tr><td>G.isSubgroup(H), H.equals(K), G.contains(H), G.index(H)</td><td>Subgroup test; same elements; containment; [G : H].</td></tr>
+<tr><td>G.intersection(H, K), G.join(H, K, …), G.product(H, K)</td><td>H ∩ K; the subgroup generated by both; the set HK as a list.</td></tr>
+<tr><td>G.cosets(H, { side })</td><td>Left (or right) cosets: [{ representative, elements, indices }].</td></tr>
+<tr><td>G.quotient(N)</td><td>G/N for normal N; elements are Cosets printed gN. Q.cosetOf(x), Q.over, Q.normal.</td></tr>
+<tr><td>G.compositionSeries()</td><td>{ series, factors } with factors the orders of the simple quotients.</td></tr>
+<tr class="grp"><th colspan="2"><a href="sylow.html">Sylow subgroups</a></th></tr>
+<tr><td>G.sylowSubgroup(p), G.sylowSubgroups(p), G.sylowCount(p)</td><td>One Sylow p-subgroup (order the largest power of p dividing |G|); all of them, as conjugates; their number n_p = [G : N(P)].</td></tr>
+<tr class="grp"><th colspan="2"><a href="homomorphisms.html">Homomorphisms and isomorphism</a></th></tr>
+<tr><td>homomorphism(G, H, f), tryHomomorphism(G, H, f)</td><td>A homomorphism from a function on elements, a list of images of G.generators, or a Map from generating elements to images. Throws (or returns null) when the images do not respect G&#x27;s relations.</td></tr>
+<tr><td>f.apply(x), f.kernel(), f.image(), f.preimage(K), f.then(g), f.inverse()</td><td>Images; ker f (normal in the source); im f; f⁻¹(K); first f then g; the inverse of an isomorphism.</td></tr>
+<tr><td>f.isInjective, f.isSurjective, f.isIsomorphism, f.table</td><td>Tests; the images of all element numbers.</td></tr>
+<tr><td>identityMap(G), trivialMap(G, H), inclusion(H, G), projection(Q)</td><td>Standard maps; projection(G.quotient(N)) is x ↦ xN.</td></tr>
+<tr><td>firstIsomorphism(f), secondIsomorphism(G, H, N), thirdIsomorphism(G, N, K)</td><td>The three isomorphism theorems on an example: the quotients involved and a checked isomorphism between them.</td></tr>
+<tr><td>isomorphism(G, H), isIsomorphic(G, H)</td><td>An isomorphism or null (invariants first, then a pruned search over images of generators); its existence.</td></tr>
+<tr><td>automorphisms(G), automorphismGroup(G), innerAutomorphism(G, g)</td><td>Every automorphism; Aut(G) as a group with .inner = Inn(G); x ↦ gxg⁻¹.</td></tr>
+<tr><td>smallGroups(n), numberOfGroups(n), identify(G), SMALL_ORDER_LIMIT</td><td>One group of each isomorphism type for n ≤ 20, named; how many; { name, group, iso } for a group of order ≤ 20 (null above).</td></tr>
+<tr class="grp"><th colspan="2"><a href="actions.html">Actions</a></th></tr>
+<tr><td>action(G, points, act, { key, format, check })</td><td>G acting on a list of points by act(g, x). Checked to be an action.</td></tr>
+<tr><td>regularAction(G), conjugationAction(G), cosetAction(G, H)</td><td>G on itself by left multiplication; by conjugation; on the left cosets of H.</td></tr>
+<tr><td>A.orbit(x), A.orbits(), A.stabiliser(x), A.fixedPoints(g), A.apply(g, x), A.permutation(g)</td><td>Orbits, stabilisers (subgroups of G), fixed points, images, and g as a permutation of point numbers.</td></tr>
+<tr><td>A.kernel(), A.isTransitive, A.isFaithful, A.isFree</td><td>The elements fixing every point; tests.</td></tr>
+<tr><td>A.countOrbits(), burnside(A)</td><td>The orbit-counting lemma: { count, total, order, byClass }, printing the sum class by class; checked against the orbits.</td></tr>
+<tr><td>A.onColourings(k or colours), A.onSubsets(k)</td><td>The induced actions on colourings of the points and on k-element subsets.</td></tr>
+<tr><td>A.toPermGroup()</td><td>The image of G as algebraic&#x27;s PermGroup on point numbers, for @ratmath/discrete&#x27;s cycleIndex, countColourings and patternInventory.</td></tr>
 <tr class="grp"><th colspan="2"><a href="polynomials.html">Rings</a></th></tr>
 <tr><td>ring(vars, { field, order })</td><td>A polynomial ring. vars is text (&quot;x, y, z&quot;) or a list of names; field is any RatMath field object (default: the rationals); order is &quot;lex&quot;, &quot;grlex&quot;, &quot;grevlex&quot; (default) or a comparison of exponent lists.</td></tr>
 <tr><td>R.vars, R.n, R.gens, R.zero, R.one</td><td>The variable names, their number, the variables as polynomials, and the constants 0 and 1.</td></tr>
@@ -85,6 +136,9 @@
 <section class="runbox" aria-label="Runnable code">
   <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
   <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// A tour of the main entry points.
+const G = GL(2, 3);
+PRINT(G.describe(), " n2 =", G.sylowCount(2), " Sylow 2-subgroup ≅", identify(G.sylowSubgroup(2)).name);
+PRINT("necklaces of 5 beads in 3 colours:", cyclic(5).natural.onColourings(3).countOrbits().count);
 const R = ring("x, y");
 const f = R.poly("x^3 y - x y^3");
 PRINT("factor:", factor(f).factors.map((t) =&gt; String(t.factor)));

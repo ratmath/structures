@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sylow Subgroups</title>
+<meta name="description" content="Sylow p-subgroups of finite groups, their number, and what Sylow&#x27;s theorems say about groups of a given order, exactly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Groups</div>
+<h1>Sylow subgroups</h1>
+<p class="lede">Lagrange's theorem says what sizes a subgroup cannot have. Sylow's theorems go the other way: for the largest power of each prime dividing the order, a subgroup of that size always exists, and the number of them is tightly constrained.</p>
+<div data-group="A5" data-title="Sylow counts" data-groups="S4|GL(2,3)|PSL(2,7)|D6|C15|SmallGroup(20,5)|A4 × C3|S5"></div>
+
+<h2>The theorems</h2>
+<p>Write \(|G| = p^a m\) with \(p\) a prime not dividing \(m\). A subgroup of order \(p^a\) is a <em>Sylow p-subgroup</em>. Sylow's theorems say:</p>
+<ol>
+  <li>Sylow p-subgroups exist.</li>
+  <li>Any two of them are conjugate, and every subgroup of \(p\)-power order lies inside one.</li>
+  <li>Their number \(n_p\) divides \(m\) and satisfies \(n_p \equiv 1 \pmod p\).</li>
+</ol>
+<p>Since they are all conjugate, \(n_p = [G : N(P)]\) for any one of them \(P\), where \(N(P) = \{g : gPg^{-1} = P\}\) is its normaliser. In particular a Sylow subgroup is normal exactly when \(n_p = 1\).</p>
+
+<h2>How one is found</h2>
+<p><code>sylowSubgroup(p)</code> grows a \(p\)-subgroup one step at a time. Start with \(P = 1\). While \(|P| &lt; p^a\), the quotient \(N(P)/P\) has order divisible by \(p\) (this is the heart of the proof of the first theorem), so by Cauchy's theorem it has an element of order \(p\). Any \(x \in N(P)\) whose image in \(N(P)/P\) has \(p\)-power order makes \(\langle P, x \rangle = P\langle x\rangle\) a bigger \(p\)-group. When \(|P| = p^a\) it is a Sylow subgroup, and its conjugates are all the others. The tests compare \(n_p\) found this way with a count of all subgroups of order \(p^a\), for every prime and every test group up to order 168.</p>
+<pre><code>import { alternating, symmetric, GL, PSL, identify } from "@ratmath/structures";
+
+const A = alternating(5);                  // |A5| = 60 = 2²·3·5
+[2, 3, 5].map((p) =&gt; A.sylowCount(p));    // [5, 10, 6]
+identify(A.sylowSubgroup(2)).name;         // "C2 × C2"
+
+const S = symmetric(4);
+identify(S.sylowSubgroup(2)).name;         // "D4"
+S.sylowSubgroups(3).length;                // 4
+
+const G = GL(2, 3);
+identify(G.sylowSubgroup(2)).name;         // "SD16", the semidihedral group
+[2, 3, 7].map((p) =&gt; PSL(2, 7).sylowCount(p));   // [21, 28, 8]</code></pre>
+
+<h2>Using the theorems</h2>
+<p>The counting condition alone often pins a group down. If \(|G| = 15\) then \(n_3\) divides 5 and is 1 mod 3, so \(n_3 = 1\); likewise \(n_5\) divides 3 and is 1 mod 5, so \(n_5 = 1\). Both Sylow subgroups are normal, they meet only in \(e\), and \(G \cong C_3 \times C_5 \cong C_{15}\): <strong>every group of order 15 is cyclic</strong>. The same argument works for \(pq\) with primes \(p &lt; q\) and \(p \nmid q - 1\).</p>
+<p>For order 12, \(n_3\) is 1 or 4. In \(A_4\) it is 4, so there are \(4 \times 2 = 8\) elements of order 3, leaving room for just one subgroup of order 4: \(n_2 = 1\). A simple group of order 60 must have \(n_5 = 6\), which forces 24 elements of order 5; \(A_5\) is one, and it is the only one.</p>
+<template data-runbox>
+// Sylow counts, with the conditions n_p | m and n_p ≡ 1 (mod p) checked
+for (const G of [symmetric(4), alternating(5), GL(2, 3), PSL(2, 7), dihedral(12), metacyclic(7, 3, 2)]) {
+  const n = G.order;
+  const row = [];
+  for (const p of [2, 3, 5, 7]) {
+    if (n % p) continue;
+    let pa = 1;
+    while (n % (pa * p) === 0) pa *= p;
+    const np = G.sylowCount(p);
+    row.push(`n${p} = ${np} (divides ${n / pa}: ${(n / pa) % np === 0}, ≡ 1 mod ${p}: ${np % p === 1})`);
+  }
+  PRINT(`${G} (order ${n}):`, row.join("; "));
+}
+// a Sylow 2-subgroup of S4 and its conjugates
+symmetric(4).sylowSubgroups(2).map(String)
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

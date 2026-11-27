@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Structures Explorer</title>
 <meta property="og:title" content="Structures Explorer">
-<meta property="og:description" content="Exact polynomials in several variables, rational functions and elimination in JavaScript.">
+<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratmath.com/structures/explore.html">
 <meta name="description" content="A free-form exact calculator for polynomials in several variables and rational functions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=39861edd55">
-<script type="module" src="assets/site.js?v=39861edd55"></script>
+<link rel="stylesheet" href="assets/style.css?v=f408e7fbe3">
+<script type="module" src="assets/site.js?v=f408e7fbe3"></script>
 </head>
 <body>
 <div class="shell">
@@ -35,9 +35,18 @@
     </details>
   </div>
 </div>
+<h2>Groups</h2>
+<p>Type a group's name to see its order, classes, subgroups, Sylow counts and more, with the Cayley table for groups of order up to 24. Names: <code>C6</code>, <code>D4</code> (the square, order 8), <code>Dic3</code>, <code>Q8</code>, <code>Q16</code>, <code>V4</code>, <code>S4</code>, <code>A5</code>, <code>GL(2,3)</code>, <code>SL(2,5)</code>, <code>PSL(2,7)</code>, <code>Heis(3)</code>, <code>SmallGroup(16,4)</code> (the 4th group of order 16 in <a href="homomorphisms.html">this library's list</a>), and products such as <code>S3 × C2</code> (or <code>S3 x C2</code>).</p>
+<div data-group="D6" data-table data-groups="C12|C6 × C2|A4|Dic3|D4|Q8|SmallGroup(16,3)|SmallGroup(16,6)|SmallGroup(16,13)|SmallGroup(18,5)|SmallGroup(20,5)|SL(2,3)|S4|GL(2,3)|A5|PSL(2,7)|Heis(5)"></div>
+
 <section class="runbox" aria-label="Runnable code">
   <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
-  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// The explorer's language calls these functions; here they are in JavaScript.
+  <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// Groups: the same facts from code
+const G = dihedral(6);
+PRINT(G.describe(), "  ≅", identify(G).name);
+PRINT("normal subgroups:", G.normalSubgroups().map((N) =&gt; N.order));
+
+// The explorer's language calls these functions; here they are in JavaScript.
 const R = ring("x, y");
 const f = R.poly("(x + y)^3 - 8");
 PRINT("f =", f);
@@ -53,7 +62,7 @@ fractions(R).of(f, R.poly("x + y - 2"))</textarea>
 </main>
 </div>
 <script type="module">
-import { h, run, render, later } from "./assets/site.js?v=39861edd55";
+import { h, run, render, later } from "./assets/site.js?v=f408e7fbe3";
 const env = {};
 const input = document.getElementById("repl-in");
 const log = document.getElementById("repl-log");

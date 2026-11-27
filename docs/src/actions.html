@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Actions and Counting</title>
+<meta name="description" content="Group actions on finite sets, orbits, stabilisers, the orbit-stabiliser theorem, and counting necklaces and coloured cubes with the orbit-counting lemma.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Groups</div>
+<h1>Actions and counting</h1>
+<p class="lede">A group acts on a set when each of its elements moves the points around, compatibly with the product. Watching where points can go answers counting questions: how many different necklaces, how many ways to paint a cube.</p>
+
+<h2>Actions, orbits and stabilisers</h2>
+<p>An <em>action</em> of \(G\) on a set \(X\) assigns to each \(g\) and \(x\) a point \(g\cdot x\), with \(e \cdot x = x\) and \(g\cdot(h\cdot x) = (gh)\cdot x\). The <em>orbit</em> of \(x\) is everywhere it can be moved, \(G\cdot x\); the orbits split \(X\) into disjoint pieces. The <em>stabiliser</em> \(\operatorname{Stab}(x) = \{g : g\cdot x = x\}\) is a subgroup, and the points of the orbit match the cosets of the stabiliser, so</p>
+\[ |G \cdot x| \cdot |\operatorname{Stab}(x)| = |G| \qquad \text{(orbit–stabiliser).} \]
+<p>Every named group comes with its natural action as <code>G.natural</code>: \(D_n\) and \(C_n\) on the vertices \(0, \dots, n-1\) of the polygon, \(S_n\) on \(1, \dots, n\), matrix groups on the vectors of \(\mathbb F_p^n\). <code>action(G, points, act)</code> makes any other. Each group element becomes a permutation of the points, built from the generators and checked against <code>act</code>, so a rule that is not an action is refused instead of giving wrong counts.</p>
+<pre><code>import { dihedral, GL, symmetric, action, conjugationAction, cosetAction, cyclic } from "@ratmath/structures";
+
+const D = dihedral(6);
+D.natural.orbit(0);                   // [0, 1, 2, 5, 3, 4]: all six vertices of the hexagon
+D.natural.stabiliser(0).order;        // 2: the identity and one reflection; 6 · 2 = 12
+D.natural.fixedPoints("s");           // [0, 3]
+
+GL(2, 3).natural.orbits().map((o) =&gt; o.length);   // [1, 8]: zero, and all other vectors
+conjugationAction(symmetric(4)).orbits().length;  // 5: the conjugacy classes
+
+action(cyclic(4), [0, 1, 2], (g, x) =&gt; (x + 1) % 3);  // throws: not an action</code></pre>
+<p>Two standard actions turn group theory into this language. \(G\) acting on itself by left multiplication is free and transitive, and it embeds \(G\) in the symmetric group on \(|G|\) points (Cayley's theorem). \(G\) acting on the cosets of a subgroup \(H\) by \(g \cdot xH = gxH\) has as kernel the largest normal subgroup inside \(H\). Conjugation acting on elements has the conjugacy classes as orbits, and the class equation is orbit–stabiliser for it.</p>
+
+<h2>The orbit-counting lemma</h2>
+<p>Counting orbits directly needs the orbits. The lemma usually credited to Burnside (and known to Cauchy and Frobenius) counts them from fixed points:</p>
+\[ \#\text{orbits} = \frac{1}{|G|} \sum_{g \in G} |\operatorname{Fix}(g)|, \qquad \operatorname{Fix}(g) = \{x : g\cdot x = x\}. \]
+<p>To see it, count the pairs \((g, x)\) with \(g \cdot x = x\) both ways: by \(g\) it is the sum on the right; by \(x\) it is \(\sum_x |\operatorname{Stab}(x)| = \sum_x |G|/|G\cdot x|\), and each orbit contributes exactly \(|G|\). Since \(|\operatorname{Fix}(g)|\) is the same for conjugate elements, the sum can be taken class by class. <code>countOrbits()</code> does that, and also counts the orbits directly as a check.</p>
+
+<h2>Necklaces and cubes</h2>
+<p>A <em>colouring</em> gives each point one of \(k\) colours; the group acts on colourings by moving the points, and two colourings are the same up to symmetry when they are in one orbit. <code>A.onColourings(k)</code> is that action. For beads on a ring of 6 turned by \(C_6\), the rotation by \(j\) steps fixes a colouring exactly when the colouring repeats with period \(\gcd(j, 6)\), which gives \(\tfrac16(2^6 + 2^1 + 2^2 + 2^3 + 2^2 + 2^1) = 14\) necklaces in two colours; allowing the necklace to be turned over (\(D_6\)) gives 13 bracelets.</p>
+<pre><code>import { cyclic, dihedral, permutationGroup, burnside } from "@ratmath/structures";
+
+const necklaces = cyclic(6).natural.onColourings(2);
+String(necklaces.countOrbits());     // "(1/6)·(64 + 8 + 4 + 4 + 2 + 2) = 14"
+dihedral(6).natural.onColourings(2).countOrbits().count;   // 13
+
+// the 24 rotations of a cube, acting on its 6 faces
+const cube = permutationGroup([[0, 2, 3, 4, 1, 5], [1, 5, 2, 0, 4, 3]], 6);
+cube.order;                                      // 24
+String(burnside(cube.natural.onColourings(3)));  // "(1/24)·(729 + 3·81 + 6·27 + 8·9 + 6·27) = 57"
+cube.natural.onSubsets(3).orbits().length;       // 2: three faces round a corner, or a band</code></pre>
+<p>Listing colourings stops being practical around a million of them. For larger counts, and for the full pattern inventory (how many orbits use each colour how often), use Pólya's cycle index in <a href="https://ratmath.com/discrete/">@ratmath/discrete</a>: <code>countColourings(A.toPermGroup(), k)</code> and <code>patternInventory(A.toPermGroup(), colours)</code> take the image of any action from here.</p>
+<template data-runbox>
+// necklaces with n beads in k colours, by the orbit-counting lemma, against the formula (1/n) Σ φ(d) k^(n/d)
+const phi = (n) =&gt; [...Array(n).keys()].filter((i) =&gt; { let a = i, b = n; while (b) [a, b] = [b, a % b]; return a === 1; }).length;
+for (const n of [4, 5, 6, 8]) {
+  const k = 3;
+  const lemma = cyclic(n).natural.onColourings(k).countOrbits().count;
+  let formula = 0;
+  for (let d = 1; d &lt;= n; d += 1) if (n % d === 0) formula += phi(d) * k ** (n / d);
+  PRINT(`${n} beads, ${k} colours: ${lemma} necklaces (formula ${formula / n})`);
+}
+
+// orbit–stabiliser for GL(2, 3) acting on the lines through 0 in F3² (4 of them)
+const G = GL(2, 3);
+const lines = [[1, 0], [0, 1], [1, 1], [1, 2]];
+const norm = ([x, y]) =&gt; (x ? [1, (y * x) % 3] : [0, 1]);   // scale so the first nonzero entry is 1
+const L = action(G, lines, (A, v) =&gt; norm(G.natural.apply(A, v)));
+PRINT("orbits:", L.orbits().length, " stabiliser of a line has order", L.stabiliser([1, 0]).order, " kernel (scalars) has order", L.kernel().order);
+PRINT("the image of GL(2,3) in S4 has order", fromPermGroup(L.toPermGroup()).order, ": PGL(2,3) ≅ S4");
+String(L.countOrbits())
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>
