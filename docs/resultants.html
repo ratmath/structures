@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Resultants and Discriminants</title>
 <meta property="og:title" content="Resultants and Discriminants">
-<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">
+<meta property="og:description" content="Finite groups, polynomials in several variables, ideals, Gröbner bases and rings of numbers, exact, in JavaScript.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ratmath.com/structures/resultants.html">
 <meta name="description" content="Sylvester matrices, resultants, discriminants and fraction-free determinants: eliminating a variable exactly.">
@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/style.css?v=d8e8f8a9cb">
-<script type="module" src="assets/site.js?v=d8e8f8a9cb"></script>
+<link rel="stylesheet" href="assets/style.css?v=a54cf3100f">
+<script type="module" src="assets/site.js?v=a54cf3100f"></script>
 </head>
 <body>
 <div class="shell">
@@ -97,7 +97,7 @@ factor(det(M, T)).factors.map((t) =&gt; String(t.factor))</textarea>
 </main>
 </div>
 <script type="module">
-import { A, h, later } from "./assets/site.js?v=d8e8f8a9cb";
+import { A, h, later } from "./assets/site.js?v=a54cf3100f";
 const R = A.ring("x, y");
 const fIn = document.getElementById("cv-f");
 const gIn = document.getElementById("cv-g");

@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=d8e8f8a9cb";
-import { makeLang } from "./lang.js?v=d8e8f8a9cb";
-import { mountRunboxes } from "./runbox.js?v=d8e8f8a9cb";
-import { makeGroups, splitList } from "./groups.js?v=d8e8f8a9cb";
+import * as A from "./structures.js?v=a54cf3100f";
+import { makeLang } from "./lang.js?v=a54cf3100f";
+import { mountRunboxes } from "./runbox.js?v=a54cf3100f";
+import { makeGroups, splitList } from "./groups.js?v=a54cf3100f";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);
@@ -23,6 +23,9 @@ export const PAGES = [
   { href: "homomorphisms.html", title: "Homomorphisms and isomorphism", blurb: "Kernels, the isomorphism theorems, automorphisms, the groups of order up to 20" },
   { href: "actions.html", title: "Actions and counting", blurb: "Orbits, stabilisers, and counting necklaces and cubes up to symmetry" },
   { href: "presentations.html", title: "Presentations and coset enumeration", blurb: "Groups from generators and relations; Todd–Coxeter" },
+  { href: "characters.html", title: "Character tables", blurb: "Irreducible characters with exact cyclotomic values, orthogonality, the Burnside–Dixon method" },
+  { href: "class-functions.html", title: "Working with characters", blurb: "Products, restriction and induction, permutation characters, the Frobenius–Schur indicator" },
+  { href: "large-groups.html", title: "Large permutation groups", blurb: "Schreier–Sims: the Rubik's cube group, membership and words without listing elements" },
   { group: "Modules" },
   { href: "abelian.html", title: "Abelian groups", blurb: "The structure theorem through the Smith normal form" },
   { href: "modules.html", title: "Modules over Q[x]", blurb: "A matrix as a module; invariant factors and the rational canonical form" },
@@ -34,6 +37,20 @@ export const PAGES = [
   { group: "Elimination" },
   { href: "resultants.html", title: "Resultants and discriminants", blurb: "Eliminating a variable; where curves meet" },
   { href: "rational-functions.html", title: "Rational functions", blurb: "The field Q(x, y) and matrices with parameters" },
+  { group: "Ideals and Gröbner bases" },
+  { href: "groebner.html", title: "Gröbner bases", blurb: "Buchberger's algorithm, S-polynomials, certificates of membership" },
+  { href: "ideals.html", title: "Ideals", blurb: "Sums, intersections, quotients, elimination, radicals and the Nullstellensatz" },
+  { href: "systems.html", title: "Solving polynomial systems", blurb: "Every solution, exactly, with multiplicity and algebraic coordinates" },
+  { href: "quotients.html", title: "Quotient rings", blurb: "Units, zero divisors, nilpotents, fields as quotients, Chinese remainders" },
+  { group: "Rings of numbers" },
+  { href: "modular.html", title: "The integers mod n", blurb: "Units, zero divisors, idempotents, ideals and the unit group of Z/n" },
+  { href: "quadratic.html", title: "Quadratic integer rings", blurb: "Gaussian integers, Pell units, lost unique factorisation, class groups" },
+  { group: "Fields" },
+  { href: "towers.html", title: "Field extensions and towers", blurb: "Degrees, the tower law, minimal polynomials, primitive elements, factoring over a field" },
+  { href: "galois.html", title: "Automorphisms and the Galois correspondence", blurb: "Galois groups, fixed fields, subgroups against intermediate fields" },
+  { href: "radicals.html", title: "Solving by radicals", blurb: "Which polynomials have a formula, and the formula, checked" },
+  { href: "constructions.html", title: "Ruler and compass", blurb: "Constructible numbers, regular polygons, the three classical problems" },
+  { href: "conway.html", title: "Conway polynomials", blurb: "Standard finite fields that fit inside one another" },
   { group: "Symmetry" },
   { href: "symmetric.html", title: "Symmetric polynomials", blurb: "Elementary symmetric polynomials and Newton's identities" },
 ];
@@ -92,7 +109,7 @@ function chrome() {
     (group ?? sel).append(h("option", { value: p.href, selected: p.href === here }, p.title));
   }
   aside.append(
-    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Groups and polynomials, exactly")),
+    h("header", { class: "brand" }, h("a", { href: "index.html" }, h("div", { class: "mark" }, "RatMath ", h("span", {}, "structures"))), h("small", {}, "Groups, rings and polynomials, exactly")),
     sel, nav, theme(),
   );
 }

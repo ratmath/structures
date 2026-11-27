@@ -3,10 +3,17 @@
 Abstract algebra for [RatMath](https://ratmath.com/), part of the
 [RatMath Shelf](https://ratmath.com/shelf/). So far it has **finite groups**
 (named groups, classes, subgroups, quotients, Sylow subgroups,
-homomorphisms, isomorphism tests, actions and orbit counting) and
-**polynomials in several variables** with exact coefficients, with what is
-built directly on them: division, greatest common divisors, factoring,
-resultants, rational functions and symmetric polynomials.
+homomorphisms, isomorphism tests, actions and orbit counting, character
+tables),
+**polynomials in several variables** with exact coefficients (division,
+greatest common divisors, factoring, resultants, rational functions,
+symmetric polynomials), **ideals and Gröbner bases** (membership with
+certificates, elimination, radicals, quotient rings, polynomial systems
+solved exactly) **rings of numbers** (the integers mod n, quadratic
+integer rings with their ideals and class groups), **fields** (towers of
+extensions, automorphisms and the Galois correspondence, solving by radicals,
+ruler-and-compass constructions, Conway polynomials) and **large permutation
+groups** by Schreier–Sims.
 
 Docs, with the mathematics explained and every example runnable:
 <https://ratmath.com/structures/>
@@ -38,6 +45,21 @@ String(discriminant(S.poly("a x^2 + b x + c"), "x"));              // "b² − 4
 const F = fractions(R);                          // the field Q(x, y, z)
 String(F.parse("1/(x + y) + 1/(x - y)"));        // "2x/(x² − y²)"
 String(toElementary(powerSum(R, 3)).polynomial); // "e1³ − 3e1·e2 + 3e3"
+```
+
+```js
+import { ring, ideal, solve, quadraticRing, Zn } from "@ratmath/structures";
+
+const R = ring("x, y");
+const I = ideal(R, ["x^2 + y^2 - 5", "x y - 2"]);
+I.contains("x^4 - 5 x^2 + 4");                   // true, and I.express(…) says how
+I.solve().real.map(String);                      // ["(x = -2, y = -1)", "(x = -1, y = -2)", "(x = 1, y = 2)", "(x = 2, y = 1)"]
+solve(R, ["x^2 + y^2 - 1", "y - x^2"]).real[1].approx;   // { x: 0.786…, y: 0.618… }, exact values alongside
+
+const K = quadraticRing(-5);                     // Z[√−5]
+K.factorizations(6).map((f) => f.factors.map(String));   // [["2", "3"], ["1 + √−5", "1 − √−5"]]
+K.classNumber();                                 // 2
+Zn(12).idempotents();                            // [0n, 1n, 4n, 9n]
 ```
 
 ## What is in it
@@ -87,6 +109,66 @@ Polynomials:
 - **Symmetric polynomials**: `elementary`, `powerSum`, `completeHomogeneous`,
   `isSymmetric`, `toElementary`.
 
+Ideals and Gröbner bases:
+
+- **`groebner(polys)`**: Buchberger's algorithm (normal selection, Gebauer and
+  Möller's criteria, fraction-free over Q) over any exact field, giving the
+  reduced basis, normal forms, membership, `express(f)` (a member written in
+  the original generators and multiplied out to check), `verify()`, the
+  dimension and the standard monomials.
+- **`ideal(R, gens)`**: `add`, `mul`, `pow`, `intersect`, `quotient`,
+  `saturate`, `eliminate`, `radicalContains` (with a certificate
+  fᵏ = Σ cᵢfᵢ), `radical`, `dimension`, `degree`, `isPrime`, `isMaximal`,
+  and `chineseRemainder(I, J)`.
+- **`solve(R, polys)`**: every solution of a system with finitely many, over
+  Q: the count with and without multiplicity, real solutions as exact
+  algebraic numbers with float approximations, complex ones on request, the
+  conjugate components with their number fields, and a rational univariate
+  representation.
+- **Quotient rings** `I.quotientRing()`: arithmetic on normal forms, units and
+  inverses, zero divisors, nilpotents, minimal polynomials, multiplication
+  matrices, field and domain tests, `asField()`.
+
+Rings of numbers:
+
+- **`Zn(n)`**: units, zero divisors, nilpotents, idempotents, ideals, the unit
+  group and primitive roots, the decomposition into prime-power parts, and
+  `crt(residues, moduli)`.
+- **`quadraticRing(d)`**, `gaussianIntegers()`, `eisensteinIntegers()`:
+  elements with norm and conjugate, units (the fundamental unit by continued
+  fractions), Euclidean division and gcd where the norm allows, irreducible
+  against prime, every factorisation of an element, ideals with unique
+  factorisation into primes, how primes split, the class group.
+
+Characters:
+
+- **`characterTable(G)`**: the irreducible characters with exact cyclotomic
+  values (Burnside–Dixon–Schneider), verified by the orthogonality relations;
+  normal subgroups, simplicity, the centre and G/G′ read off the table.
+- **Class functions**: inner products and decomposition, tensor products,
+  symmetric and alternating squares, Adams operations, the Frobenius–Schur
+  indicator, kernels, restriction and induction, permutation characters.
+- **`Cyclotomic`**: exact numbers in Q(ζₙ) that print as −1, i, (1 + √5)/2 or
+  ζ₇³.
+
+Fields and large groups:
+
+- **`extension({ a: "a^2 - 2", b: "b^3 - a" })`**: towers over Q with exact
+  elements, the tower law, minimal polynomials over any level, primitive
+  elements, roots and factors over the field, automorphisms, `galoisGroup()`
+  and `fixedField(...)`.
+- **`solveByRadicals(poly)`**: the Galois group of each irreducible factor (up
+  to degree 7), whether it is solvable, and the roots as nested radicals
+  (`RadicalExpression`, with `inline()`, `toTeX()` and an independent
+  `check(digits)`); `rootOfUnityByRadicals(n)`.
+- **`constructible(poly)`**, **`regularPolygon(n)`** (cos(2π/n) in square
+  roots, Gauss's 17-gon formula included) and `classicalProblems`.
+- **`conwayPolynomial(p, n)`** and `conwayField(p, n)` with compatible
+  embeddings of subfields.
+- **`schreierSims(generators)`** and `largeGroups` (Sₙ, Aₙ, Mathieu groups,
+  Rubik's cube): order, membership, words in the generators, orbits,
+  stabilisers, normal closures, derived series, blocks and primitivity.
+
 Coefficients handed back are Core `Rational`s over Q and the field's own
 elements otherwise. Nothing is rounded.
 
@@ -96,16 +178,26 @@ elements otherwise. Nothing is rounded.
   quickly with degree and number of variables; it throws rather than run away.
   It works over Q only.
 - `squareFree` needs characteristic 0.
-- Division by several polynomials gives a remainder that can depend on their
-  order. Gröbner bases, which fix that, are planned (see the
-  [roadmap](https://github.com/ratmath/ratmath/blob/main/docs/design/library-roadmap.md)),
-  as are rings and ideals and character tables.
+- Gröbner bases can be very expensive in bad cases. Typical systems with a
+  few hundred solutions are fine (cyclic-6, 156 solutions, takes a few
+  seconds); `maxPairs` and `timeLimit` stop a run that is going nowhere.
+- `solve`, `isMaximal` and `isPrime` work over Q. `radical()` and `isPrime()`
+  cover ideals with finitely many solutions, one generator, or monomial or
+  linear generators; there is no primary decomposition.
+- Class groups are found by listing ideals up to the Minkowski bound, which
+  suits discriminants up to a few thousand. Searches for elements of a given
+  norm in a real quadratic ring grow with the fundamental unit.
 - Coset enumeration (HLT) can need many more cosets than the final index,
   and gives up past `maxCosets` (500,000 by default); it cannot tell an
   infinite group from a large one.
 - Groups are held by their elements: building one stops at 20,000 elements,
-  and listing every subgroup at order 1000. Schreier–Sims for large
-  permutation groups is planned.
+  and listing every subgroup at order 1000. `schreierSims` has no such limit
+  but offers fewer operations. Words it returns are correct, not short.
+- Towers of fields are comfortable to about degree 8; degree 16 is slow.
+  `solveByRadicals` handles irreducible factors up to degree 7, and its
+  formulas grow quickly (a general quartic takes seven radicals).
+- Character tables need the group listed (up to 20,000 elements) and at most
+  400 classes; time grows with the number of classes and the exponent.
 
 ## Install
 

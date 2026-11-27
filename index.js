@@ -1,8 +1,10 @@
 // @ratmath/structures: abstract algebra for RatMath.
 //
 // Finite groups (named groups, subgroups, quotients, Sylow subgroups,
-// homomorphisms, actions), and polynomials in several variables with the
-// rational functions built from them, over any exact field.
+// homomorphisms, actions); polynomials in several variables with the
+// rational functions built from them, over any exact field; Gröbner bases,
+// ideals, quotient rings and polynomial systems; the integers mod n and
+// quadratic integer rings.
 
 export { ring, PolyRing, MPoly } from "./src/mpoly.js";
 export { QQ } from "./src/field.js";
@@ -37,3 +39,25 @@ export { AbelianGroup, abelianGroup, cyclicProduct, fromRelations, abelianGroups
 export { smithForm, ZZ, polynomialDomain } from "./src/smith.js";
 export { matrixModule, companionMatrix, integerModule } from "./src/modules.js";
 export { abelianInvariants } from "./src/abelianise.js";
+
+// Gröbner bases, ideals, quotient rings and polynomial systems
+export { groebner, GroebnerBasis, sPolynomial, eliminationOrder } from "./src/groebner.js";
+export { ideal, Ideal, chineseRemainder, QuotientRing, QuotientElement, solve } from "./src/ideal.js";
+
+// the integers mod n and quadratic integer rings
+export {
+  crt, Zn, ZnRing, quadraticRing, QuadraticRing, QuadraticInteger, QuadraticIdeal, gaussianIntegers, eisensteinIntegers,
+} from "./src/rings.js";
+
+// permutation groups too large to list
+export { schreierSims, PermChain, largeGroups } from "./src/schreier.js";
+
+// towers of fields, standard finite fields, radicals and constructions
+export { extension, Extension, TowerElement, formatUnivariate } from "./src/tower.js";
+export { conwayPolynomial, conwayField, formatModular } from "./src/conway.js";
+export {
+  solveByRadicals, rootOfUnityByRadicals, regularPolygon, constructible, classicalProblems, RadicalExpression,
+} from "./src/radicals.js";
+
+// character tables
+export { characterTable, CharacterTable, ClassFunction, Cyclotomic } from "./src/characters.js";

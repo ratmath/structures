@@ -8,7 +8,10 @@
 // Variables are single letters; a ring is made from whichever letters occur.
 // makeLang(A) takes the library (so the build can check every example).
 
+import { makeGroups } from "./groups.js?v=a54cf3100f";
+
 export function makeLang(A) {
+  const groups = makeGroups(A);
   const letters = (s) => [...new Set(s.match(/[A-Za-z]/g) ?? [])].sort();
 
   /** Split at commas (or another separator) that are not inside parentheses. */
@@ -52,6 +55,11 @@ export function makeLang(A) {
     if (!/^\d+$/.test(s)) throw new Error(`expected a whole number, got "${s}"`);
     return Number(s);
   };
+  const int = (s) => {
+    const t = s.replace(/[\s()]/g, "").replace("−", "-");
+    if (!/^-?\d+$/.test(t)) throw new Error(`expected a whole number, got "${s}"`);
+    return Number(t);
+  };
   const factored = (unit, factors) => {
     const u = String(unit);
     const parts = factors.map(({ factor, multiplicity }) => {
@@ -81,6 +89,20 @@ export function makeLang(A) {
     }
     return a.map((row) => row.slice(n));
   }
+
+  const real = (z) => (typeof z === "number" ? z : z.re);
+  const sub = (n) => String(n).replace(/\d/g, (d) => "₀₁₂₃₄₅₆₇₈₉"[d]);
+  /** tower(a^2 - 2, b^3 - a): each polynomial introduces its newest letter. */
+  function towerOf(raw) {
+    const defs = {};
+    for (const part of splitTop(raw)) {
+      const fresh = letters(part).filter((ch) => !Object.hasOwn(defs, ch));
+      if (fresh.length !== 1) throw new Error(`"${part}" should bring in exactly one new letter`);
+      defs[fresh[0]] = part;
+    }
+    return A.extension(defs);
+  }
+  const RAW = new Set(["characters", "tensor", "det", "inverse", "large", "tower", "galois", "radicals", "unity", "polygon", "constructible", "conway"]);
 
   // Each function gets its arguments already expanded to plain text (names
   // replaced), plus the raw inside of the parentheses for matrices. It returns
@@ -153,6 +175,225 @@ export function makeLang(A) {
     elementary: ([k, ...vs]) => A.elementary(A.ring(vs.map(variable)), whole(k)).toText(),
     powersum: ([k, ...vs]) => A.powerSum(A.ring(vs.map(variable)), whole(k)).toText(),
     complete: ([k, ...vs]) => A.completeHomogeneous(A.ring(vs.map(variable)), whole(k)).toText(),
+    groebner: (args, env) => {
+      const c = context(env, args);
+      const G = A.groebner(args.map(c.poly));
+      return { type: "record", title: G.isTrivial ? "the whole ring: no common zeros" : `${G.length} polynomial${G.length === 1 ? "" : "s"} (${c.R.order}, ${c.R.vars.join(" > ")})`, rows: [...G.basis.map((g, i) => [`g${i + 1}`, String(g)]), ["solution set", G.dimension < 0 ? "empty" : G.dimension === 0 ? `${G.quotientDimension} point${G.quotientDimension === 1 ? "" : "s"}, counted with multiplicity` : `dimension ${G.dimension}`]] };
+    },
+    member: ([f, ...gs], env) => {
+      const c = context(env, [f, ...gs]);
+      const I = A.ideal(c.R, gs.map(c.poly));
+      const F = c.poly(f);
+      const r = I.reduce(F);
+      if (!r.isZero()) return { type: "record", title: "not in the ideal", rows: [["remainder", String(r)], ["some power in it?", I.radicalContains(F) ? `yes: the power ${I.exponentOf(F)}` : "no"]] };
+      const ex = I.express(F);
+      return { type: "record", title: "in the ideal", rows: I.generators.map((g, i) => [`times ${g}`, String(ex.cofactors[i])]) };
+    },
+    eliminate: ([v, ...gs], env) => {
+      const vs = [...v.replace(/\s/g, "")].map(variable);
+      const c = context(env, gs, vs);
+      const J = A.ideal(c.R, gs.map(c.poly)).eliminate(vs);
+      return { type: "record", title: J.isZero ? "nothing: no relation is left" : `without ${vs.join(", ")}`, rows: J.basis.map((g, i) => [`h${i + 1}`, String(g)]) };
+    },
+    radical: (args, env) => {
+      const c = context(env, args);
+      const I = A.ideal(c.R, args.map(c.poly));
+      const J = I.radical();
+      return { type: "record", title: I.equals(J) ? "already radical" : "the radical is larger", rows: J.basis.map((g, i) => [`r${i + 1}`, String(g)]) };
+    },
+    solve: (args, env) => {
+      const c = context(env, args);
+      const s = A.solve(c.R, args.map(c.poly), { complex: true });
+      if (!s.finite) return text(`infinitely many solutions: the solution set has dimension ${s.dimension}`);
+      if (!s.count) return text("no solutions, even over the complex numbers");
+      const show = (p) => c.R.vars.map((v) => `${v} = ${p.values[v]}`).join(",  ");
+      const rows = [];
+      s.real.forEach((p, i) => rows.push([`real ${i + 1}`, `${show(p)}   ≈ (${c.R.vars.map((v) => p.approx[v].toFixed(6)).join(", ")})`]));
+      s.complex.slice(0, 12).forEach((p, i) => rows.push([`complex ${i + 1}`, show(p)]));
+      if (s.complex.length > 12) rows.push(["", `and ${s.complex.length - 12} more complex solutions`]);
+      rows.push(["with multiplicity", String(s.multiplicity)]);
+      return { type: "record", title: `${s.count} solution${s.count === 1 ? "" : "s"}, ${s.real.length} real`, rows };
+    },
+    zmod: ([n]) => {
+      const Z = A.Zn(whole(n));
+      if (Z.n > 5000n) throw new Error("zmod lists elements, so keep n up to 5000");
+      const list = (xs) => (xs.length ? (xs.length > 40 ? `${xs.slice(0, 40).join(", ")}, … (${xs.length})` : xs.join(", ")) : "none");
+      const d = Z.decompose();
+      return { type: "record", title: `${Z}: ${Z.isField ? "a field" : Z.isReduced ? "not a domain, no nilpotents" : "not a domain"}`, rows: [["units", `${list(Z.units())}`], ["unit group", `${Z.unitGroup().text}, order ${Z.unitCount}${Z.primitiveRoot() === null ? "" : `, generated by ${Z.primitiveRoot()}`}`], ["zero divisors", list(Z.zeroDivisors())], ["nilpotents", list(Z.nilpotents())], ["idempotents", list(Z.idempotents())], ["ideals", Z.ideals().map((I) => `(${I.generator})`).join(", ")], ["splits as", d.moduli.map((m) => `Z/${m}`).join(" × ")]] };
+    },
+    crt: (args) => {
+      if (!args.length || args.length % 2) throw new Error("crt takes pairs: crt(2, 3, 3, 5) solves x ≡ 2 mod 3 and x ≡ 3 mod 5");
+      const rs = args.filter((_, i) => i % 2 === 0).map(int);
+      const ms = args.filter((_, i) => i % 2 === 1).map(whole);
+      const r = A.crt(rs, ms);
+      return text(r ? `x ≡ ${r.value} mod ${r.modulus}` : "no solution: the congruences contradict each other");
+    },
+    quadratic: ([d]) => {
+      const K = A.quadraticRing(int(d));
+      const cg = K.classGroup();
+      const u = K.units;
+      const small = [2, 3, 5, 7, 11, 13].map((p) => `${p} ${K.splitting(p).kind}`).join(", ");
+      return { type: "record", title: `${K}`, rows: [["discriminant", String(K.discriminant)], ["units", u.finite ? u.list.join(", ") : `${u.text}, norm ${u.norm}`], ["class number", `${cg.classNumber}${cg.classNumber > 1 ? ` (${cg.text})` : ""}`], ["unique factorisation", K.isUFD ? "yes" : "no"], ["division with remainder by the norm", K.isNormEuclidean ? "yes" : "no"], ["ideal classes", cg.representatives.map(String).join(", ")], ["small primes", small]] };
+    },
+    qfactor: ([d, a, b = "0"]) => {
+      const K = A.quadraticRing(int(d));
+      const x = K.sqrt(int(a), int(b));
+      const show = (f) => `${String(f.unit) === "1" ? "" : `(${f.unit}) · `}${f.factors.map((q) => `(${q})`).join(" · ")}`;
+      const fs = K.factorizations(x);
+      const rows = fs.map((f, i) => [fs.length > 1 ? `way ${i + 1}` : "irreducibles", show(f)]);
+      rows.push(["as ideals", K.ideal(x).factor().map(({ prime, exponent }) => `${prime}${exponent > 1 ? `^${exponent}` : ""}`).join(" · ") || "(1)"]);
+      return { type: "record", title: `${x} in ${K}: ${fs.length === 1 ? "one factorisation" : `${fs.length} different factorisations`}`, rows };
+    },
+    large: (_, env, raw) => {
+      const name = raw.trim();
+      const L = A.largeGroups;
+      const m = /^([SAM])\s*(\d+)$/i.exec(name);
+      let G;
+      if (/^rubik/i.test(name)) G = L.rubik();
+      else if (/^pocket/i.test(name)) G = L.pocketCube();
+      else if (m) {
+        const n = Number(m[2]);
+        const kind = m[1].toUpperCase();
+        if (kind !== "M" && n > 60) throw new Error("degrees up to 60 here, please");
+        G = kind === "S" ? L.symmetric(n) : kind === "A" ? L.alternating(n) : L.mathieu(n);
+      } else throw new Error(`large(…) takes rubik, pocket, S n, A n or M11, M12, M22, M23, M24, not "${name}"`);
+      const orbits = G.orbits().filter((o) => o.length > 1).map((o) => o.length);
+      const rows = [
+        ["acts on", `${G.degree} points`],
+        ["order", String(G.order)],
+        ["as a product", G.orbitLengths.join(" · ")],
+        ["base", G.base.join(", ")],
+        ["strong generators", String(G.strongGenerators.length)],
+        ["orbits", orbits.join(" + ") || "none"],
+      ];
+      if (G.isTransitive) rows.push(["primitive", G.isPrimitive ? "yes" : `no: blocks of size ${G.minimalBlocks()[0].length}`]);
+      if (G.degree <= 24) {
+        const D = G.derivedSubgroup();
+        rows.push(["commutator subgroup", `order ${D.order}${D.order === G.order ? " (perfect)" : ""}`], ["solvable", G.isSolvable ? "yes" : "no"]);
+      }
+      return { type: "record", title: String(G), rows };
+    },
+    tower: (_, env, raw) => {
+      const K = towerOf(raw);
+      const prim = K.primitiveElement();
+      const rows = [
+        ["degree", K.towerLaw()],
+        ["basis over Q", K.basis.map(String).join(", ")],
+        ["primitive element", `${prim.element}, a root of ${prim.text}`],
+      ];
+      if (K.degree <= 8) {
+        const auts = K.automorphisms();
+        rows.push(["automorphisms", `${auts.length}${auts.length === K.degree ? ", so it is a Galois extension" : `, fewer than the degree ${K.degree}: not Galois`}`]);
+        for (const s of auts.slice(1, 9)) rows.push(["", String(s)]);
+      }
+      return { type: "record", title: K.describe(), rows };
+    },
+    galois: (_, env, raw) => {
+      const K = towerOf(raw);
+      if (K.degree > 8) throw new Error("degree up to 8 here, please");
+      if (!K.isGalois) return text(`${K} has ${K.automorphisms().length} automorphisms but degree ${K.degree}, so it is not a Galois extension of Q`);
+      const G = K.galoisGroup();
+      const rows = [["Galois group", `${A.identify(G).name}, of order ${G.order}`]];
+      const subs = [...G.subgroups()].sort((x, y) => x.order - y.order);
+      for (const H of subs) {
+        const F = K.fixedField([...H.elements]);
+        rows.push([`subgroup of order ${H.order}${G.isNormal(H) ? " (normal)" : ""}`, `fixes a field of degree ${F.degree}: ${F.degree === 1 ? "Q" : `Q(${F.generator}), ${F.text} = 0`}`]);
+      }
+      return { type: "record", title: `${K}: subgroups and the fields they fix`, rows };
+    },
+    radicals: (_, env, raw) => {
+      const r = A.solveByRadicals(raw.trim());
+      const rows = [];
+      for (const f of r.factors) {
+        rows.push([r.factors.length > 1 ? f.text : "Galois group", r.factors.length > 1 ? `Galois group ${f.group}, of order ${f.order}` : `${f.group}, of order ${f.order}`]);
+        if (!f.solvable) {
+          rows.push(["", "not solvable: no formula in radicals"]);
+          continue;
+        }
+        if (f.chain.length) rows.push(["steps", f.chain.join(", ")]);
+        const shown = new Set();
+        f.roots.forEach((root, i) => {
+          const e = root.expression;
+          const line = e.inline({ maxLength: 160 });
+          if (line !== null) rows.push([`x${sub(i + 1)}`, line]);
+          else {
+            rows.push([`x${sub(i + 1)}`, e.text]);
+            for (const d of e.definitions) if (!shown.has(d.text)) (shown.add(d.text), rows.push(["", d.text]));
+          }
+        });
+        const ok = f.roots.every((root) => root.expression.check(30).agrees);
+        rows.push(["check", ok ? "every formula agrees with its root to 30 digits" : "a formula failed its check"]);
+      }
+      return { type: "record", title: r.solvable ? `${r.text} is solvable by radicals` : `${r.text} is not solvable by radicals`, rows };
+    },
+    unity: (_, env, raw) => {
+      const n = whole(raw.trim());
+      if (n > 60) throw new Error("n up to 60 here, please");
+      const e = A.rootOfUnityByRadicals(n);
+      const z = e.approx();
+      const rows = [];
+      const line = e.inline({ maxLength: 200 });
+      if (line !== null) rows.push([`ζ${sub(n)}`, line]);
+      else e.definitions.forEach((d, i) => rows.push([i ? "" : "step by step", d.text]));
+      rows.push(["value", `${z.re.toFixed(12)} ${z.im < 0 ? "−" : "+"} ${Math.abs(z.im).toFixed(12)}·i`], ["radicals used", [...new Set(e.indices)].sort((a, b) => a - b).map((k) => (k === 2 ? "square roots" : k === 3 ? "cube roots" : `${k}th roots`)).join(", ") || "none"], ["check", e.check(30).agrees ? "agrees with e^(2πi/n) to 30 digits" : "failed"]);
+      return { type: "record", title: `e^(2πi/${n}) in radicals`, rows };
+    },
+    polygon: (_, env, raw) => {
+      const n = whole(raw.trim());
+      if (n > 300) throw new Error("n up to 300 here, please");
+      const p = A.regularPolygon(n);
+      const rows = [["φ(n)", String(p.totient)], ["why", p.reason]];
+      if (p.constructible) {
+        const line = p.cos.inline({ maxLength: 220 });
+        if (line !== null) rows.push([`cos(2π/${n})`, line]);
+        else {
+          rows.push([`cos(2π/${n})`, p.cos.text]);
+          const defs = p.cos.definitions;
+          for (const d of defs.slice(0, 12)) rows.push(["", d.text]);
+          if (defs.length > 12) rows.push(["", `… and ${defs.length - 12} more square roots`]);
+        }
+        rows.push(["value", real(p.cos.approx()).toFixed(15)]);
+      }
+      return { type: "record", title: `The regular ${n}-gon ${p.constructible ? "can" : "cannot"} be drawn with ruler and compass`, rows };
+    },
+    constructible: (_, env, raw) => {
+      const r = A.constructible(raw.trim());
+      const rows = r.factors.map((f) => [f.text, `${f.group ? `Galois group ${f.group}, of order ${f.order}` : `degree ${f.degree}`}: ${f.constructible ? "constructible" : "not constructible"}`]);
+      rows.push(["why", r.reason]);
+      const word = r.constructible === true ? "Every root can" : r.constructible === "some" ? "Some roots can" : r.constructible === false ? "No root can" : "Undecided whether the roots can";
+      return { type: "record", title: `${word} be constructed with ruler and compass`, rows };
+    },
+    conway: (_, env, raw) => {
+      const [p, n] = splitTop(raw).map(whole);
+      if (n < 1 || p ** n > 5000) throw new Error("fields up to 5000 elements here, please");
+      const F = A.conwayField(p, n);
+      const rows = [["Conway polynomial", F.text], ["field", `${F.size} elements, generator a of order ${BigInt(F.size) - 1n}`]];
+      for (let m = 1; m < n; m += 1) {
+        if (n % m) continue;
+        const e = F.embed(m);
+        rows.push([`GF(${p}${m > 1 ? `^${m}` : ""}) inside`, `its generator is a^${e.exponent} = ${F.format(e.image)}`]);
+      }
+      return { type: "record", title: `GF(${p}^${n}) = GF(${p})[a] / (${F.text.replaceAll("x", "a")})`, rows };
+    },
+    characters: (_, env, raw) => {
+      const G = groups.parse(raw.trim());
+      if (G.order > 2000) throw new Error("groups of order up to 2000 here, please");
+      const T = A.characterTable(G);
+      const [head, sizes, ...body] = T.rows();
+      return { type: "matrix", head, rows: [sizes, ...body] };
+    },
+    tensor: (_, env, raw) => {
+      const parts = splitTop(raw);
+      if (parts.length !== 3) throw new Error("tensor(group, i, j) multiplies the characters χi and χj, as in tensor(S4, 4, 4)");
+      const T = A.characterTable(groups.parse(parts[0]));
+      const [i, j] = parts.slice(1).map(whole);
+      const irr = T.irreducibles;
+      if (!irr[i - 1] || !irr[j - 1]) throw new Error(`the characters are χ1 to χ${irr.length}`);
+      const prod = irr[i - 1].mul(irr[j - 1]);
+      const rows = [["values", prod.values.join(", ")], ["degree", `${irr[i - 1].degree} · ${irr[j - 1].degree} = ${prod.degree}`], ["decomposition", prod.decomposition()]];
+      if (i === j) rows.push(["symmetric square", irr[i - 1].symmetricSquare().decomposition()], ["alternating square", irr[i - 1].alternatingSquare().decomposition()]);
+      return { type: "record", title: `${irr[i - 1].name} ⊗ ${irr[j - 1].name} = ${prod.decomposition()}`, rows };
+    },
     symmetric: ([f, ...vs], env) => {
       const c = context(env, [f], vs.map(variable));
       const p = c.poly(f);
@@ -187,7 +428,7 @@ export function makeLang(A) {
         }
         if (depth > 0) throw new Error(`${name}( is never closed`);
         const raw = src.slice(start, j - 1);
-        const args = name === "det" || name === "inverse" ? [] : splitTop(raw).map((a) => expand(a, env));
+        const args = RAW.has(name) ? [] : splitTop(raw).map((a) => expand(a, env));
         const value = FUNCS[name](args, env, raw);
         const alone = src.slice(0, i).trim() === "" && src.slice(j).trim() === "";
         if (typeof value !== "string") {

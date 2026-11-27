@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Working with Characters</title>
+<meta name="description" content="Products and decompositions of characters, symmetric and alternating squares, restriction and induction with Frobenius reciprocity, permutation characters and the Frobenius–Schur indicator.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Groups</div>
+<h1>Working with characters</h1>
+<p class="lede">Once the irreducible characters are known, questions about representations become arithmetic on rows of numbers. How does a tensor product break up? What does a permutation action contain? What happens when a representation is restricted to a subgroup, or built up from one? Each is an inner product away.</p>
+<div data-expr="tensor(S4, 4, 4)" data-title="Multiply two irreducible characters" data-examples="tensor(S4, 4, 5)|tensor(S4, 3, 3)|tensor(A5, 2, 3)|tensor(A5, 2, 2)|tensor(S5, 3, 3)|tensor(S5, 7, 7)|tensor(D5, 3, 4)|tensor(Q8, 5, 5)|tensor(PSL(2,7), 2, 3)|characters(S4)|characters(A5)"></div>
+
+<h2>Decomposing a character</h2>
+<p>If \(\psi\) is the character of any representation, the irreducible \(\chi_i\) occurs in it exactly \(\langle \psi, \chi_i \rangle\) times, by orthonormality. So \(\psi = \sum_i \langle\psi,\chi_i\rangle\,\chi_i\), and \(\langle \psi, \psi \rangle = \sum m_i^2\) tells at a glance how complicated \(\psi\) is: it is irreducible exactly when this is 1.</p>
+<pre><code>import { characterTable, symmetric } from "@ratmath/structures";
+
+const T = characterTable(symmetric(4));
+const [triv, sign, two, std, other] = T.irreducibles;     // degrees 1, 1, 2, 3, 3
+
+T.regular.multiplicities();          // [1, 1, 2, 3, 3]: each irreducible occurs as often as its degree
+const psi = T.classFunction([4, 0, 2, 1, 0]);             // values on the classes 1a, 2a, 2b, 3a, 4a
+psi.norm;                            // 2
+psi.decomposition();                 // "χ₁ + χ₄"</code></pre>
+
+<h2>Products and squares</h2>
+<p>The tensor product of two representations has character \(\chi\psi\), the product of values. The square \(\chi^2\) splits further into a symmetric and an alternating part with characters</p>
+\[ S^2\chi(g) = \tfrac12\bigl(\chi(g)^2 + \chi(g^2)\bigr), \qquad \Lambda^2\chi(g) = \tfrac12\bigl(\chi(g)^2 - \chi(g^2)\bigr). \]
+<p>These need the <em>power map</em>, which says in which class the squares of each class lie; <code>T.powerMap(k)</code> gives it for any power, and <code>chi.adams(k)</code> is the class function \(g \mapsto \chi(g^k)\).</p>
+<pre><code>std.mul(sign).equals(other);         // true: twisting by the sign swaps the two characters of degree 3
+std.mul(std).decomposition();        // "χ₁ + χ₃ + χ₄ + χ₅"
+std.symmetricSquare().decomposition();   // "χ₁ + χ₃ + χ₄"
+std.alternatingSquare().decomposition(); // "χ₅"</code></pre>
+
+<h2>Real, complex and quaternionic</h2>
+<p>The <em>Frobenius–Schur indicator</em> of an irreducible character is</p>
+\[ \iota(\chi) = \frac{1}{|G|} \sum_{g \in G} \chi(g^2) \in \{1, 0, -1\}. \]
+<p>It is 1 when the representation can be written with real matrices, 0 when the character is not real-valued, and \(-1\) when the character is real but the representation is not (it is then <em>quaternionic</em>). The quaternion group's character of degree 2 has indicator \(-1\); the dihedral group's has \(+1\), though the two tables agree entry for entry. Also \(\sum_\chi \iota(\chi)\chi(1)\) counts the solutions of \(x^2 = 1\).</p>
+<pre><code>characterTable(quaternion()).irreducibles[4].indicator();   // −1
+characterTable(dihedral(4)).irreducibles[4].indicator();    //  1
+characterTable(quaternion()).irreducibles[4].type;          // "quaternionic"</code></pre>
+
+<h2>Restriction and induction</h2>
+<p>A character of \(G\) restricts to a character of any subgroup \(H\). In the other direction, a character \(\varphi\) of \(H\) <em>induces</em> a character of \(G\) of degree \([G:H]\,\varphi(1)\):</p>
+\[ \operatorname{Ind}_H^G\varphi\,(g) = \frac{1}{|H|} \sum_{x \in G,\; xgx^{-1} \in H} \varphi(xgx^{-1}) . \]
+<p><em>Frobenius reciprocity</em> ties the two together: \(\langle \operatorname{Ind}\varphi, \chi\rangle_G = \langle \varphi, \operatorname{Res}\chi\rangle_H\).</p>
+<pre><code>const G = symmetric(4);
+const H = G.sylowSubgroup(2);                // a dihedral group of order 8
+const TH = characterTable(H);
+
+std.restrict(H).decomposition();             // in H's own characters
+TH.irreducibles[4].induce(T).decomposition();   // "χ₄ + χ₅": degree 2·3 = 6
+TH.irreducibles[4].induce(T).inner(std) === std.restrict(TH).inner(TH.irreducibles[4]);   // true</code></pre>
+
+<h2>Permutation characters</h2>
+<p>When \(G\) acts on a finite set, the permutation matrices give a representation whose character counts fixed points. By the <a href="actions.html">orbit-counting lemma</a>, \(\langle \pi, \chi_1 \rangle\) is the number of orbits. And \(\langle \pi, \pi \rangle\) is the number of orbits on <em>pairs</em>, so a transitive action is doubly transitive exactly when \(\pi = \chi_1 + \chi\) with \(\chi\) irreducible. The action on the cosets of \(H\) has character \(\operatorname{Ind}_H^G 1\).</p>
+<pre><code>import { action } from "@ratmath/structures";
+const X = action(G, [0, 1, 2, 3], (g, x) =&gt; g[x]);
+const pi = T.permutationCharacter(X);
+pi.values.map(String);               // ["4", "0", "2", "1", "0"]
+pi.decomposition();                  // "χ₁ + χ₄": doubly transitive
+T.permutationCharacter(H).decomposition();   // "χ₁ + χ₃": the action on the three cosets of H</code></pre>
+<template data-runbox>
+const G = symmetric(5);
+const T = characterTable(G);
+PRINT(String(T));
+const irr = T.irreducibles;
+
+// every product of two irreducible characters, decomposed
+for (let i = 2; i < irr.length; i++) PRINT(`${irr[i].name}² =`, irr[i].mul(irr[i]).decomposition(), "  S² =", irr[i].symmetricSquare().decomposition(), "  Λ² =", irr[i].alternatingSquare().decomposition());
+
+// permutation characters: points, and unordered pairs of points
+const points = action(G, [0, 1, 2, 3, 4], (g, x) => g[x]);
+const pairs = action(G, [[0,1],[0,2],[0,3],[0,4],[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]], (g, [a, b]) => [g[a], g[b]].sort());
+for (const [name, X] of [["points", points], ["pairs", pairs]]) {
+  const pi = T.permutationCharacter(X);
+  PRINT(`on ${name}:`, pi.values.join(", "), " =", pi.decomposition(), "  ⟨π,π⟩ =", pi.norm);
+}
+
+// Frobenius reciprocity for A5 inside S5
+const H = G.derivedSubgroup();
+const TH = characterTable(H);
+for (const phi of TH.irreducibles) PRINT(`Ind ${phi.name} (degree ${phi.degree}) =`, phi.induce(T).decomposition());
+for (const chi of irr) PRINT(`Res ${chi.name} =`, chi.restrict(TH).decomposition());
+
+// indicators: every character of a symmetric group is real
+irr.map((c) => c.indicator())
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

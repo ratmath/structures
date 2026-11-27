@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Character Tables</title>
+<meta name="description" content="Character tables of finite groups with exact cyclotomic entries: what a character is, the orthogonality relations, how the table is computed by the Burnside–Dixon method, and what can be read from it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Groups</div>
+<h1>Character tables</h1>
+<p class="lede">A representation turns the elements of a group into matrices. Its character keeps only the traces, and astonishingly that is enough: a small square table of numbers, one row per irreducible representation and one column per conjugacy class, determines how every representation of the group breaks up. Here the table is computed exactly for any group the library can list.</p>
+<div data-expr="characters(S4)" data-title="The character table of a group" data-examples="characters(S3)|characters(A4)|characters(D4)|characters(Q8)|characters(A5)|characters(C5)|characters(D5)|characters(SL(2,3))|characters(GL(2,3))|characters(S5)|characters(PSL(2,7))|characters(A6)|characters(C7)|characters(S3 × C3)"></div>
+
+<h2>Representations and characters</h2>
+<p>A <em>representation</em> of \(G\) of degree \(d\) is a homomorphism \(\rho : G \to GL_d(\mathbb{C})\). Its <em>character</em> is \(\chi(g) = \operatorname{tr}\rho(g)\). Since conjugate matrices have equal traces, \(\chi\) is constant on conjugacy classes, and \(\chi(1) = d\). A representation is <em>irreducible</em> if no proper subspace is preserved by every \(\rho(g)\); every representation is a direct sum of irreducible ones (Maschke), so every character is a sum of irreducible characters. The basic facts:</p>
+<ul>
+  <li>there are exactly as many irreducible characters as conjugacy classes;</li>
+  <li>their degrees divide \(|G|\) and satisfy \(\sum_\chi \chi(1)^2 = |G|\);</li>
+  <li>a representation is determined up to isomorphism by its character.</li>
+</ul>
+<p>Because \(g\) has finite order \(n\), the matrix \(\rho(g)\) is diagonalisable with \(n\)-th roots of unity as eigenvalues. So \(\chi(g)\) is a sum of \(\chi(1)\) roots of unity: an algebraic integer in the cyclotomic field \(\mathbb{Q}(\zeta_n)\). That is why the entries of a table are things like \(-1\), \(i\), \(\frac{1+\sqrt5}{2}\) or \(\zeta_7^3\), and why they can be held exactly.</p>
+<pre><code>import { characterTable, symmetric, alternating } from "@ratmath/structures";
+
+const T = characterTable(alternating(5));
+console.log(String(T));
+//       1a  2a  3a          5a          5b
+// size   1  15  20          12          12
+// χ₁     1   1   1           1           1
+// χ₂     3  −1   0  (1 + √5)/2  (1 − √5)/2
+// χ₃     3  −1   0  (1 − √5)/2  (1 + √5)/2
+// χ₄     4   0   1          −1          −1
+// χ₅     5   1  −1           0           0
+
+T.degrees;                        // [1, 3, 3, 4, 5]:  1 + 9 + 9 + 16 + 25 = 60
+T.classes[3];                     // { name: "5a", size: 12, order: 5, centralizerOrder: 5, representative, … }
+T.irreducibles[1].values[3];      // a Cyclotomic: (1 + √5)/2, exactly</code></pre>
+<p>Classes are named by the order of their elements and a letter. Characters are listed by degree with the trivial character first.</p>
+
+<h2>Orthogonality</h2>
+<p>Class functions have an inner product</p>
+\[ \langle \chi, \psi \rangle = \frac{1}{|G|} \sum_{g \in G} \chi(g)\,\overline{\psi(g)} , \]
+<p>and the irreducible characters are an orthonormal basis for it: \(\langle \chi_i, \chi_j \rangle = \delta_{ij}\). The columns are orthogonal too: for elements \(g, h\),</p>
+\[ \sum_{\chi} \chi(g)\,\overline{\chi(h)} = \begin{cases} |C_G(g)| &amp; \text{if } g, h \text{ are conjugate,} \\ 0 &amp; \text{otherwise.} \end{cases} \]
+<p><code>verify()</code> checks both relations and the degree sum on the exact values. Every table is verified this way before it is returned, so a wrong table cannot come out quietly.</p>
+
+<h2>How the table is found</h2>
+<p>Nobody constructs the matrices. The method is Burnside's, made practical by Dixon and Schneider. Let \(C_1, \dots, C_r\) be the classes and write \(\widehat{C_i}\) for the sum of the elements of \(C_i\) in the group algebra. These sums multiply among themselves,</p>
+\[ \widehat{C_i}\,\widehat{C_j} = \sum_k a_{ijk}\,\widehat{C_k}, \qquad a_{ijk} = \#\{(x, y) \in C_i \times C_j : xy = g_k\}, \]
+<p>and the whole numbers \(a_{ijk}\) can be counted from the multiplication. In an irreducible representation each class sum acts as a scalar \(\omega_\chi(C_i) = |C_i|\,\chi(g_i)/\chi(1)\) (Schur's lemma), so the vector \((\omega_\chi(C_k))_k\) is a common eigenvector of the matrices \(M_j = (a_{ijk})_{i,k}\). There are \(r\) such vectors and they are the only common eigenvectors: find them and the table follows.</p>
+<p>Dixon's idea was to do the linear algebra in a finite field. Let \(e\) be the exponent of \(G\) and choose a prime \(p \equiv 1 \pmod e\) with \(p &gt; 2\sqrt{|G|}\). Then \(\mathrm{GF}(p)\) contains the \(e\)-th roots of unity, the eigenvectors can be found there with no rounding, and the degree \(\chi(1) &lt; p/2\) is recovered from \(\langle\chi,\chi\rangle = 1\). To get back from \(\mathrm{GF}(p)\) to genuine cyclotomic numbers: \(\chi(g)\) is \(\sum_k m_k \zeta_n^k\) where \(m_k\) counts how often \(\zeta_n^k\) is an eigenvalue of \(\rho(g)\), and a discrete Fourier transform over the powers of \(g\) gives</p>
+\[ m_k = \frac{1}{n} \sum_{l=0}^{n-1} \chi(g^l)\,\zeta_n^{-kl} . \]
+<p>This is a whole number between 0 and \(\chi(1)\), so knowing it mod \(p\) is knowing it. <code>describe()</code> reports the field and the prime used.</p>
+<pre><code>const S = characterTable(symmetric(5));
+S.describe();     // "S5 of order 120: 7 classes, degrees 1, 1, 4, 4, 5, 5, 6; values in Q(ζ₆₀), found mod 61"
+S.verify();       // { rows: true, columns: true, degrees: true, ok: true }</code></pre>
+
+<h2>Reading the group from its table</h2>
+<p>The kernel of a character is \(\{g : \chi(g) = \chi(1)\}\), a normal subgroup, and every normal subgroup is an intersection of kernels of irreducible characters. So the table shows all normal subgroups and their orders, and in particular whether the group is simple. The number of characters of degree 1 is the index of the commutator subgroup, and the classes of size 1 make up the centre.</p>
+<pre><code>const T4 = characterTable(symmetric(4));
+T4.normalSubgroups().map((N) =&gt; N.order);   // [1, 4, 12, 24]
+T4.irreducibles[2].kernel().order;           // 4: the Klein four-group is the kernel of the degree 2 character
+T4.abelianizationOrder;                      // 2
+characterTable(alternating(5)).isSimple;     // true</code></pre>
+<p>The table does not determine the group: the dihedral group \(D_4\) and the quaternion group \(Q_8\) have the same one. They are told apart by the <a href="class-functions.html">Frobenius–Schur indicator</a>, which needs to know which class the squares fall in.</p>
+
+<h2>Cyclotomic numbers</h2>
+<p>Entries are <code>Cyclotomic</code> values: exact elements of \(\mathbb{Q}(\zeta_n)\) with arithmetic, complex and Galois conjugates, and a float approximation. They print as whole numbers when they are, as \(\frac{a + b\sqrt d}{c}\) when they lie in a quadratic field, and otherwise in powers of \(\zeta_m\) for the smallest \(m\) that works.</p>
+<pre><code>import { Cyclotomic } from "@ratmath/structures";
+const z = Cyclotomic.root(5);                // ζ₅
+String(z.add(z.conj()));                     // "(−1 + √5)/2", which is 2cos(72°)
+String(Cyclotomic.root(8).add(Cyclotomic.root(8, 3)));   // "i√2"
+z.add(z.conj()).conductor;                   // 5</code></pre>
+<p>Tables are computed for groups with up to 400 classes. The cost grows with the number of classes and with the exponent of the group: \(S_7\) takes a tenth of a second, \(M_{11}\) about a second.</p>
+<template data-runbox>
+// The table of S4, verified, and what it says about the group
+const T = characterTable(symmetric(4));
+PRINT(T.describe());
+PRINT(String(T));
+PRINT("orthogonality:", T.verify());
+PRINT("normal subgroups have orders", T.normalSubgroups().map((N) => N.order), " centre:", T.centreOrder, " |G/G′|:", T.abelianizationOrder);
+
+// A5: irrational entries, and simplicity read off the table
+const A = characterTable(alternating(5));
+PRINT(String(A));
+const g = A.irreducibles[1].values[3];
+PRINT("χ₂(5a) =", g, "≈", g.approx().re, "  its conjugate:", g.conjugates()[1], "  simple:", A.isSimple);
+
+// Column orthogonality by hand for the two classes of 5-cycles
+let s = Cyclotomic.int(0), t = Cyclotomic.int(0);
+for (const chi of A.irreducibles) { s = s.add(chi.values[3].mul(chi.values[3].conj())); t = t.add(chi.values[3].mul(chi.values[4].conj())); }
+PRINT("Σ|χ(5a)|² =", s, "= |C(g)|;   Σ χ(5a)χ(5b)* =", t);
+
+// Same table, different groups
+const entries = (G) => characterTable(G).irreducibles.map((c) => c.values.join(" ")).join(" | ");
+PRINT("D4 and Q8 have the same entries:", entries(dihedral(4)) === entries(quaternion()));
+characterTable(PSL(2, 7)).describe()
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>
