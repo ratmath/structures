@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=234d6a2f16";
-import { makeLang } from "./lang.js?v=234d6a2f16";
-import { mountRunboxes } from "./runbox.js?v=234d6a2f16";
-import { makeGroups } from "./groups.js?v=234d6a2f16";
+import * as A from "./structures.js?v=00cfbd2ed2";
+import { makeLang } from "./lang.js?v=00cfbd2ed2";
+import { mountRunboxes } from "./runbox.js?v=00cfbd2ed2";
+import { makeGroups } from "./groups.js?v=00cfbd2ed2";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);

@@ -474,6 +474,8 @@ export interface GroebnerOptions {
   certificates?: boolean;
   /** Give up after this many S-pairs (default 200000). */
   maxPairs?: number;
+  /** Give up after this many milliseconds (default: no limit). */
+  timeLimit?: number;
 }
 
 export interface GroebnerStats {

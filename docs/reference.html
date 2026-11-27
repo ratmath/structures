@@ -12,8 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=234d6a2f16">
-<script type="module" src="assets/site.js?v=234d6a2f16"></script>
+<link rel="stylesheet" href="assets/style.css?v=00cfbd2ed2">
+<script type="module" src="assets/site.js?v=00cfbd2ed2"></script>
 </head>
 <body>
 <div class="shell">
@@ -127,7 +127,7 @@
 <tr><td>q.diff(v), q.subs(values), q.at(point)</td><td>Derivative; substitution; exact value (throws at a pole).</td></tr>
 <tr><td>String(q), q.toText(), q.toTeX()</td><td>&quot;2x/(x² − y²)&quot;; text that F.parse reads back; LaTeX.</td></tr>
 <tr class="grp"><th colspan="2"><a href="groebner.html">Gröbner bases</a></th></tr>
-<tr><td>groebner(polys, { order, certificates, maxPairs })</td><td>The reduced Gröbner basis of the ideal the polynomials generate, by Buchberger&#x27;s algorithm. order replaces the ring&#x27;s monomial order; certificates: true tracks cofactors during the run (express works either way).</td></tr>
+<tr><td>groebner(polys, { order, certificates, maxPairs, timeLimit })</td><td>The reduced Gröbner basis of the ideal the polynomials generate, by Buchberger&#x27;s algorithm. order replaces the ring&#x27;s monomial order; certificates: true tracks cofactors during the run (express works either way); maxPairs and timeLimit (ms) stop a run that is too large.</td></tr>
 <tr><td>G.basis, G.length, G.leadingMonomials, G.leadingExponents, G.generators, G.stats</td><td>The basis (monic, each term reduced); its size; leading monomials; the original generators; { pairs, zero, skipped, added }.</td></tr>
 <tr><td>G.reduce(f), G.divide(f), G.contains(f)</td><td>The normal form of f; { quotients, remainder }; whether f is in the ideal.</td></tr>
 <tr><td>G.express(f), G.cofactors</td><td>{ cofactors, check } with f = Σ cofactors[i]·generators[i], multiplied out to confirm (throws when f is not in the ideal); each basis element in terms of the generators.</td></tr>

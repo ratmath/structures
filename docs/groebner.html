@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://ratmath.com/assets/katex/0.19.1/katex.min.css">
-<link rel="stylesheet" href="assets/style.css?v=234d6a2f16">
-<script type="module" src="assets/site.js?v=234d6a2f16"></script>
+<link rel="stylesheet" href="assets/style.css?v=00cfbd2ed2">
+<script type="module" src="assets/site.js?v=00cfbd2ed2"></script>
 </head>
 <body>
 <div class="shell">
@@ -107,7 +107,7 @@ C.quotientDimension;                     // 4: a circle and a hyperbola meet in 
 
 
 <h2>How far it goes</h2>
-<p>The worst case for Gröbner bases is very bad (degrees can grow doubly exponentially in the number of variables), but the systems that come up in practice are usually far from it. As a guide, on standard benchmarks this implementation takes about 20 ms for cyclic-5 (5 variables, 70 solutions), 50 ms for katsura-5 (6 variables, 32 solutions) and a few seconds for cyclic-6 (156 solutions). The option <code>maxPairs</code> stops a run that is going nowhere. Coefficients may come from any exact field: the rationals, a prime field, a finite field or a number field.</p>
+<p>The worst case for Gröbner bases is very bad (degrees can grow doubly exponentially in the number of variables), but the systems that come up in practice are usually far from it. As a guide, on standard benchmarks this implementation takes about 20 ms for cyclic-5 (5 variables, 70 solutions), 50 ms for katsura-5 (6 variables, 32 solutions) and a few seconds for cyclic-6 (156 solutions). The options <code>maxPairs</code> and <code>timeLimit</code> (milliseconds) stop a run that is going nowhere. Coefficients may come from any exact field: the rationals, a prime field, a finite field or a number field.</p>
 <section class="runbox" aria-label="Runnable code">
   <div class="runbox-head"><strong>Try it</strong><span>Edit the code and run it with <code>@ratmath/structures</code> and Core's <code>Rational</code> in scope. The last line's value is shown; <code>PRINT(…)</code> adds lines, <code>TEX(…)</code> typesets math.</span></div>
   <textarea spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code">// Three symmetric equations: power sums 6, 14, 36

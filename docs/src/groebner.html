@@ -102,7 +102,7 @@ C.quotientDimension;                     // 4: a circle and a hyperbola meet in 
 
 
 <h2>How far it goes</h2>
-<p>The worst case for Gröbner bases is very bad (degrees can grow doubly exponentially in the number of variables), but the systems that come up in practice are usually far from it. As a guide, on standard benchmarks this implementation takes about 20 ms for cyclic-5 (5 variables, 70 solutions), 50 ms for katsura-5 (6 variables, 32 solutions) and a few seconds for cyclic-6 (156 solutions). The option <code>maxPairs</code> stops a run that is going nowhere. Coefficients may come from any exact field: the rationals, a prime field, a finite field or a number field.</p>
+<p>The worst case for Gröbner bases is very bad (degrees can grow doubly exponentially in the number of variables), but the systems that come up in practice are usually far from it. As a guide, on standard benchmarks this implementation takes about 20 ms for cyclic-5 (5 variables, 70 solutions), 50 ms for katsura-5 (6 variables, 32 solutions) and a few seconds for cyclic-6 (156 solutions). The options <code>maxPairs</code> and <code>timeLimit</code> (milliseconds) stop a run that is going nowhere. Coefficients may come from any exact field: the rationals, a prime field, a finite field or a number field.</p>
 <template data-runbox>
 // Three symmetric equations: power sums 6, 14, 36
 const L = ring("x, y, z", { order: "lex" });

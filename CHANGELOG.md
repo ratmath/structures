@@ -4,7 +4,7 @@
 
 Rings, ideals and Gröbner bases (roadmap phases 3 and 4).
 
-- `groebner(polys, { order, certificates, maxPairs })`: Buchberger's
+- `groebner(polys, { order, certificates, maxPairs, timeLimit })`: Buchberger's
   algorithm with the normal selection strategy and Gebauer and Möller's
   criteria, fraction-free over Q and by field arithmetic elsewhere. The
   result has the reduced basis, `reduce`, `divide`, `contains`,

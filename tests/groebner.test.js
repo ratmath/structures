@@ -187,3 +187,25 @@ describe("solving polynomial systems", () => {
     expect(s.real.every((p) => [1, 2, 3].every((v) => Object.values(p.approx).some((a) => Math.abs(a - v) < 1e-9)))).toBe(true);
   });
 });
+
+describe("limits", () => {
+  test("timeLimit and maxPairs stop a large computation", () => {
+    const S = ring(Array.from({ length: 7 }, (_, i) => `x${i}`), { order: "lex" });
+    const g = S.gens;
+    const polys = [];
+    for (let k = 1; k < 7; k += 1) {
+      let s = S.zero;
+      for (let i = 0; i < 7; i += 1) {
+        let m = S.one;
+        for (let j = 0; j < k; j += 1) m = m.mul(g[(i + j) % 7]);
+        s = s.add(m);
+      }
+      polys.push(s);
+    }
+    polys.push(g.reduce((m, v) => m.mul(v), S.one).sub(S.one));
+    const t0 = Date.now();
+    expect(() => groebner(polys, { timeLimit: 300 })).toThrow("time limit");
+    expect(Date.now() - t0).toBeLessThan(5000);
+    expect(() => groebner(polys, { maxPairs: 10 })).toThrow("S-polynomials");
+  });
+});

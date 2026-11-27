@@ -141,7 +141,7 @@ elements otherwise. Nothing is rounded.
 - `squareFree` needs characteristic 0.
 - Gröbner bases can be very expensive in bad cases. Typical systems with a
   few hundred solutions are fine (cyclic-6, 156 solutions, takes a few
-  seconds); `maxPairs` stops a run that is going nowhere.
+  seconds); `maxPairs` and `timeLimit` stop a run that is going nowhere.
 - `solve`, `isMaximal` and `isPrime` work over Q. `radical()` and `isPrime()`
   cover ideals with finitely many solutions, one generator, or monomial or
   linear generators; there is no primary decomposition.
