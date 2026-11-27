@@ -1,0 +1,175 @@
+# @ratmath/structures
+
+> Abstract algebra for RatMath: finite groups, exact polynomials in several variables, Gröbner bases, ideals, quotient rings, polynomial systems solved exactly, the integers mod n and quadratic integer rings, presentations, abelian groups and modules over Q[x]. Part of the RatMath Shelf; numbers come from @ratmath/core (a peer dependency). ESM: `import * as structures from "@ratmath/structures"`.
+
+Built from 0.5.0, commit fbc325d. `file:line` is relative to the package root (also node_modules/@ratmath/structures/); on GitHub: https://github.com/ratmath/structures/blob/fbc325d/<file>#L<line>. Docs pages are under https://ratmath.com/structures/. Full types: index.d.ts.
+
+Types: `type Exponents = number[] | Record<string, number>`; `type MonomialOrder = "lex" | "grlex" | "grevlex" | ((a: number[], b: number[]) => number)`; `type PolyLike<C = Rational> = MPoly<C> | string | number | bigint | Rational | C`; `type FractionLike<C = Rational> = RationalFunction<C> | PolyLike<C>`; `type Perm = number[]`; `type Matrix = number[][]`; `type ElementLike<E> = E | string | { index: number }`; `type PowerPair = [number, 0 | 1]`; `type HomSpec<A, B> = ((x: A) => B) | Array<ElementLike<B>> | Map<ElementLike<A>, ElementLike<B>>`; `type Word = number[]`; `type WordLike = Word | string`; `type IntLike = number | bigint`; `type QuadLike = QuadraticInteger | IntLike`; `type PermLike = number[] | string`; `type TowerLike = TowerElement | Rational | number | bigint | string | MPoly`; `type UnivariateLike = string | MPoly | Array<number | bigint | string | Rational | [bigint | number, bigint | number]>`
+
+## Docs
+
+- https://ratmath.com/structures/llms-full.txt: every page below as Markdown, each with a runnable example
+- Pages: index (Overview), reference (Reference), explore (Explore), groups (Groups and how to build them), classes (Conjugacy classes and commutators), subgroups (Subgroups and quotients), sylow (Sylow subgroups), homomorphisms (Homomorphisms and isomorphism), actions (Actions and counting), presentations (Presentations and coset enumeration), characters (Character tables), class-functions (Working with characters), large-groups (Large permutation groups), abelian (Abelian groups), modules (Modules over Q[x]), polynomials (Polynomials in several variables), orders (Monomial orders and division), gcd (Greatest common divisors), factoring (Factoring), resultants (Resultants and discriminants), rational-functions (Rational functions), groebner (Gröbner bases), ideals (Ideals), systems (Solving polynomial systems), quotients (Quotient rings), modular (The integers mod n), quadratic (Quadratic integer rings), towers (Field extensions and towers), galois (Automorphisms and the Galois correspondence), radicals (Solving by radicals), constructions (Ruler and compass), conway (Conway polynomials), symmetric (Symmetric polynomials)
+
+## API
+
+name(params) → result — meaning · file:line · docs page
+
+- `ring(vars: string | string[], options?: RingOptions) → PolyRing<C>` — A polynomial ring: `ring("x, y")`, `ring(["x", "y"], { field: primeField(7), order: "lex" })`. · src/mpoly.js:158 · polynomials
+- `PolyRing class: vars, n, field, order, cmp` · src/mpoly.js:17
+- `MPoly class: ring, length, terms, isZero, isConstant, isMonomial, isHomogeneous, constantTerm, toConstant, degree, degrees, variables, toUnivariate, leadingTerm, leadingCoefficient, leadingMonomial, leadingExponents, coefficient, coefficients, add, sub, mul, neg, scale, pow, equals, monic, divmod, rem, isDivisibleBy, div, diff, gradient, subs, at, compose, homogenize, into, toString, toText, toTeX, toJSON` · src/mpoly.js:173
+- `QQ: Field<[bigint, bigint]> & { name: "Q" }` — The rationals. · src/field.js:24
+- `ORDERS: Readonly<Record<"lex" | "grlex" | "grevlex", (a: number[], b: number[]) => number>>` · src/monomial.js:39
+- `gcd(first: PolyLike<C> | PolyLike<C>[], ...rest: PolyLike<C>[]) → MPoly<C>` — The greatest common divisor of two or more polynomials, normalised so its leading coefficient is 1. gcd(0, 0) is 0. · src/gcd.js:115 · gcd
+- `lcm(first: PolyLike<C> | PolyLike<C>[], ...rest: PolyLike<C>[]) → MPoly<C>` — The least common multiple, with leading coefficient 1. · src/gcd.js:126 · gcd
+- `content(f: MPoly<C>, v: string | number) → MPoly<C>` — The content of f with respect to a variable (the gcd of the coefficients of its powers, a polynomial in the other variables) and the primitive part f / content. · src/gcd.js:145 · gcd
+- `primitivePart(f: MPoly<C>, v: string | number) → MPoly<C>` · src/gcd.js:150 · gcd
+- `squareFree(f: MPoly<C>) → Factorisation<C, C>` — The square-free decomposition f = c·f₁·f₂²·f₃³…, with the fₖ square-free and pairwise coprime: [{ factor, multiplicity }] and the constant c. · src/gcd.js:159 · gcd
+- `squareFreePart(f: MPoly<C>) → MPoly<C>` — The product of the distinct irreducible factors (characteristic 0). · src/gcd.js:207 · gcd
+- `det(matrix: PolyLike<C>[][], ring?: PolyRing<C>) → MPoly<C>` — The determinant of a square matrix whose entries are polynomials (or anything the ring reads). · src/resultant.js:10 · resultants
+- `sylvester(f: MPoly<C>, g: PolyLike<C>, v: string | number) → MPoly<C>[][]` — The Sylvester matrix of f and g with respect to a variable: its determinant is the resultant. · src/resultant.js:45 · resultants
+- `resultant(f: MPoly<C>, g: PolyLike<C>, v: string | number) → MPoly<C>` — The resultant of f and g with respect to a variable: a polynomial in the other variables that vanishes exactly where f and g have a common root in that… · src/resultant.js:66 · resultants
+- `discriminant(f: MPoly<C>, v: string | number) → MPoly<C>` — The discriminant with respect to a variable: (−1)^(n(n−1)/2) · Res(f, ∂f/∂v) / lc(f). · src/resultant.js:83 · resultants
+- `jacobian(list: MPoly<C>[]) → MPoly<C>[][]` — The Jacobian matrix of a list of polynomials: rows are the gradients. · src/resultant.js:94 · resultants
+- `hessian(f: MPoly<C>) → MPoly<C>[][]` — The Hessian matrix of second partial derivatives. · src/resultant.js:99 · resultants
+- `factor(f: MPoly<Rational>) → Factorisation<Rational, Rational>` — Factor a polynomial with rational coefficients into irreducibles over Q: f = unit · Π factorᵢ ^ multiplicityᵢ Each factor has coprime integer coefficients… · src/factor.js:149 · subgroups
+- `isIrreducible(f: MPoly<Rational>) → boolean` — Whether a non-constant polynomial over Q is irreducible. · src/factor.js:164 · factoring
+- `integerPrimitive(f: MPoly<Rational>) → { content: Rational; primitive: MPoly<Rational> }` — Write f = c·p with p having coprime integer coefficients and a positive leading coefficient. · src/factor.js:33
+- `fractions(R: PolyRing<C>) → FractionField<C>` — The field of fractions of a polynomial ring: rational functions in its variables. · src/ratfun.js:151 · rational-functions
+- `RationalFunction class: field, ring, num, den, isZero, isPolynomial, toPolynomial, add, sub, mul, div, neg, inv, pow, equals, diff, subs, at, toString, toText, toTeX` · src/ratfun.js:27
+- `elementary(R: PolyRing<C>, k: number) → MPoly<C>` — The k-th elementary symmetric polynomial of the ring's variables (e₀ = 1). · src/symmetric.js:12 · symmetric
+- `powerSum(R: PolyRing<C>, k: number) → MPoly<C>` — The k-th power sum x₁ᵏ + … + xₙᵏ. · src/symmetric.js:32 · symmetric
+- `completeHomogeneous(R: PolyRing<C>, k: number) → MPoly<C>` — The k-th complete homogeneous symmetric polynomial: the sum of all monomials of degree k. · src/symmetric.js:38 · symmetric
+- `isSymmetric(f: MPoly<any>) → boolean` — Whether f is unchanged by every permutation of the ring's variables. · src/symmetric.js:57 · symmetric
+- `toElementary(f: MPoly<C>, options?: { prefix?: string }) → { polynomial: MPoly<C>; ring: PolyRing<C> }` — Write a symmetric polynomial in terms of the elementary symmetric polynomials. · src/symmetric.js:85 · symmetric
+- `primeField` — from @ratmath/algebraic
+- `galoisField` — from @ratmath/algebraic
+- `NumberField` — from @ratmath/algebraic
+- `Group class: generate, fromElements, format` · src/group.js:36 · groups
+- `Coset class: id, repIndex, indices, text, toString` — An element of a quotient group: the coset gN, printed with its representative. · src/group.js:869
+- `cyclic(n: number) → Group<number>` — Cₙ: the integers mod n under addition, written multiplicatively as powers of a. · src/named.js:15 · groups
+- `dihedral(n: number) → Group<PowerPair>` — Dₙ: the symmetries of a regular n-gon, of order 2n, as rᵏsᶠ with r a turn by 1/n and s a reflection (srs = r⁻¹). · src/named.js:27 · groups
+- `dicyclic(n: number) → Group<PowerPair>` — The dicyclic group of order 4n: aᵏxᶠ with a²ⁿ = 1, x² = aⁿ, xax⁻¹ = a⁻¹. n = 2 is the quaternion group Q₈, and n a power of 2 gives the generalised… · src/named.js:41
+- `quaternion() → Group<PowerPair>` — The quaternion group Q₈ = {±1, ±i, ±j, ±k}. · src/named.js:51 · groups
+- `kleinFour() → Group<[number, number]>` — The Klein four-group C₂ × C₂. · src/named.js:59 · groups
+- `symmetric(n: number) → Group<Perm>` — Sₙ, all permutations of n points. · src/named.js:83 · groups
+- `alternating(n: number) → Group<Perm>` — Aₙ, the even permutations of n points. · src/named.js:90 · classes
+- `permutationGroup(generators: Array<Perm | string> | PermGroup, n?: number, options?: { name?: string | null; maxOrder?: number }) → Group<Perm>` — A permutation group from generators: arrays p with p[i] the image of i (counting from 0), or cycle notation counted from 1 such as "(1 2 3)(4 5)". · src/named.js:69 · actions
+- `fromPermGroup(P: PermGroup, options?: { name?: string | null; maxOrder?: number }) → Group<Perm>` — algebraic's PermGroup as a Group (the same as permutationGroup(P)). · src/named.js:97
+- `matrixGroup(generators: Matrix[], p: number, options?: { name?: string | null; maxOrder?: number }) → Group<Matrix>` — The group generated by some invertible n×n matrices over F_p (entries whole numbers 0 … p−1). · src/named.js:136
+- `GL(n: number, p: number) → Group<Matrix>` — GL(n, p): all invertible n×n matrices over F_p. · src/named.js:149 · groups
+- `SL(n: number, p: number) → Group<Matrix>` — SL(n, p): the matrices of determinant 1. · src/named.js:157 · classes
+- `PSL(n: number, p: number) → Group<Coset>` — PSL(n, p) = SL(n, p) / its centre (the scalar matrices in it). · src/named.js:163 · subgroups
+- `heisenberg(p: number) → Group<Matrix>` — The Heisenberg group: upper unitriangular 3×3 matrices over F_p, of order p³. · src/named.js:171 · classes
+- `directProduct(...groups: Array<Group<any> | { name?: string }>) → Group<any[]>` — G₁ × G₂ × …: tuples multiplied entry by entry. · src/named.js:179 · groups
+- `semidirectProduct(N: Group<N>, H: Group<H>, act: (h: H) => (n: N) => N, options?: { name?: string | null }) → Group<[N, H]>` — N ⋊ H, where `act(h)` gives the automorphism of N that h induces, as a function on N's elements. · src/named.js:207 · groups
+- `metacyclic(m: number, k: number, r: number, options?: { name?: string | null }) → Group<[number, number]>` — Cₘ ⋊ Cₖ with the generator of Cₖ acting as x ↦ xʳ (needs rᵏ ≡ 1 mod m). · src/named.js:243 · groups
+- `Homomorphism class: source, target, name, apply, applyIndex, table, kernel, image, preimage, isInjective, isSurjective, isIsomorphism, then, inverse, toString` · src/hom.js:34
+- `homomorphism(G: Group<A>, H: Group<B>, f: HomSpec<A, B>, options?: { name?: string | null }) → Homomorphism<A, B>` — A homomorphism G → H, given by a function on elements, or by the images of G's generators (a list in the order of G.generators, or a Map from elements that… · src/hom.js:106 · homomorphisms
+- `tryHomomorphism(G: Group<A>, H: Group<B>, f: HomSpec<A, B>, options?: { name?: string | null }) → Homomorphism<A, B> | null` — As homomorphism, but returns null instead of throwing. · src/hom.js:113 · homomorphisms
+- `identityMap(G: Group<A>) → Homomorphism<A, A>` — The identity map and the trivial map. · src/hom.js:143
+- `trivialMap(G: Group<A>, H: Group<B>) → Homomorphism<A, B>` · src/hom.js:144
+- `inclusion(H: Group<A>, G: Group<A>) → Homomorphism<A, A>` — The inclusion of a subgroup. · src/hom.js:146
+- `projection(Q: Group<Coset>) → Homomorphism<any, Coset>` — G → G/N, x ↦ xN. · src/hom.js:148
+- `isomorphism(G: Group<A>, H: Group<B>) → Homomorphism<A, B> | null` — An isomorphism G → H, or null when the groups are not isomorphic. · src/hom.js:217 · homomorphisms
+- `isIsomorphic(G: Group<any>, H: Group<any>) → boolean` · src/hom.js:227 · groups
+- `automorphisms(G: Group<A>, options?: { max?: number }) → Homomorphism<A, A>[]` — Every automorphism of G, as Homomorphisms. · src/hom.js:230 · homomorphisms
+- `automorphismGroup(G: Group<A>, options?: { max?: number }) → Group<Homomorphism<A, A>> & { inner: Group<Homomorphism<A, A>>; of: Group<A> }` — Aut(G) as a group under composition. · src/hom.js:244 · homomorphisms
+- `innerAutomorphism(G: Group<A>, g: ElementLike<A>) → Homomorphism<A, A>` — The automorphism x ↦ gxg⁻¹. · src/hom.js:259
+- `firstIsomorphism(f: Homomorphism<A, B>) → { kernel: Group<A>; quotient: Group<Coset>; image: Group<B>; iso: Homomorphism<Coset, B> }` — First isomorphism theorem: for f: G → H, the map G/ker f → im f, x·ker f ↦ f(x), is well defined and an isomorphism. · src/hom.js:268 · homomorphisms
+- `secondIsomorphism(G: Group<E>, H: Group<E>, N: Group<E>) → { HN: Group<E>; HcapN: Group<E>; left: Group<Coset>; right: Group<Coset>; iso: Homomorphism<Coset, Coset> }` — Second isomorphism theorem: for a subgroup H and a normal subgroup N of G, HN is a subgroup, H ∩ N is normal in H, and H/(H ∩ N) ≅ HN/N by h(H ∩ N) ↦ hN. · src/hom.js:282 · homomorphisms
+- `thirdIsomorphism(G: Group<E>, N: Group<E>, K: Group<E>) → { GN: Group<Coset>; KN: Group<Coset>; left: Group<Coset>; right: Group<Coset>; iso: Homomorphism<Coset, Coset> }` — Third isomorphism theorem: for normal subgroups N ⊆ K of G, (G/N)/(K/N) ≅ G/K by (gN)(K/N) ↦ gK. · src/hom.js:299 · homomorphisms
+- `Action class: format` · src/action.js:17
+- `action(group: Group<E>, points: X[], act: (g: E, x: X) => X, options?: { key?: (x: X) => string; format?: ((x: X) => string) | null; name?: string | null; check?: boolean }) → Action<E, X>` — An action of G on a list of points by act(g, x). · src/action.js:236 · actions
+- `regularAction(G: Group<E>) → Action<E, E>` — G acting on itself by left multiplication (Cayley's theorem). · src/action.js:239
+- `conjugationAction(G: Group<E>) → Action<E, E>` — G acting on itself by conjugation; the orbits are the conjugacy classes. · src/action.js:242 · actions
+- `cosetAction(G: Group<E>, H: Group<E>) → Action<E, number> & { cosets: CosetInfo<E>[] }` — G acting on the left cosets of H by left multiplication; the points are coset representatives' cosets. · src/action.js:245 · actions
+- `burnside(A: Action<E, any>) → OrbitCount<E>` — The orbit-counting lemma for an action: see Action#countOrbits. · src/action.js:257 · actions
+- `smallGroups(n: number) → Group<any>[]` — One group of each isomorphism type of order n (n ≤ 20), each with its name. · src/small.js:77 · homomorphisms
+- `numberOfGroups(n: number) → number` — The number of groups of order n up to isomorphism, for n ≤ 20. · src/small.js:84
+- `identify(G: Group<E>) → { name: string; group: Group<any>; iso: Homomorphism<E, any> } | null` — Which group in the table G is isomorphic to: { name, group, iso }, or null when |G| > 20. · src/small.js:90 · sylow
+- `SMALL_ORDER_LIMIT: 20` — Largest order the table covers. · src/small.js:72
+- `PermGroup` — from @ratmath/algebraic
+- `cycleString` — from @ratmath/algebraic
+- `fromCycles` — from @ratmath/algebraic
+- `cycleType` — from @ratmath/algebraic
+- `Presentation class: generators, relators, word, formatWord, enumerate, index, order, toGroup, abelianInvariants, toString` · src/presentation.js:139
+- `presentation(text: string) → Presentation (+1 overload)` — A presentation from text "a, b | a^4, b^2, (ab)^2" (angle brackets optional), or from names and relators. · src/presentation.js:221 · presentations
+- `presentationOf(G: Group<any>, options?: { names?: string[] | null }) → Presentation` — A presentation of a finite Group: its generators, and one relator for each edge of its Cayley graph outside a spanning tree (Schreier's method). · src/presentation.js:368 · presentations
+- `parseWord(text: string, names: readonly string[]) → Word` — Reads a word over the given generator names: "a^2 b^-1", "a²b⁻¹", "(ab)^3", "[a, b]" (= a⁻¹b⁻¹ab), "A" for a⁻¹. · src/presentation.js:53
+- `formatWord(w: Word, names: readonly string[], options?: { plain?: boolean }) → string` — A word as text: a²b⁻¹ (or a^2*b^-1 with { plain: true }), "e" when empty. · src/presentation.js:37
+- `reduceWord(w: Word) → Word` — Free reduction: cancel x x⁻¹ pairs. · src/presentation.js:20
+- `invertWord(w: Word) → Word` · src/presentation.js:28
+- `AbelianGroup class: invariants, rank, generators, order, isFinite, isTrivial, isCyclic, torsion, exponent, elementaryDivisors, equals, times, toGroup, toString` · src/abelian.js:17
+- `abelianGroup(invariants?: Array<bigint | number>, rank?: number) → AbelianGroup` — The abelian group with these invariant factors and free rank (units are dropped, the list is checked). · src/abelian.js:81 · abelian
+- `cyclicProduct(orders: Array<bigint | number>, rank?: number) → AbelianGroup` — Z/n₁ × Z/n₂ × … × Z^rank for any orders nᵢ (0 means Z), put into invariant factor form. · src/abelian.js:84 · abelian
+- `fromRelations(relations: Array<Array<bigint | number>>, n?: number, extraRank?: number) → AbelianGroup` — The abelian group with generators x₁ … xₙ and the given relations (rows of integers: Σ r_j x_j = 0). · src/abelian.js:114 · abelian
+- `abelianGroups(n: number) → AbelianGroup[]` — Every abelian group of order n, one of each kind (as many as Π p(aᵢ) for n = Π pᵢ^aᵢ). · src/abelian.js:137 · abelian
+- `smithForm(A: Array<Array<bigint | number | string>>) → SmithForm<bigint> (+1 overload)` — Smith normal form of a matrix (an array of rows) over the domain D (default the integers). · src/smith.js:87 · abelian
+- `ZZ: EuclideanDomain<bigint>` — The integers as a Euclidean domain (elements are BigInts; numbers are accepted). · src/smith.js:16 · modules
+- `polynomialDomain(v?: string, options?: RingOptions) → EuclideanDomain<MPoly<any>> & { ring: PolyRing<any> }` — The polynomials in one variable over Q (or over a field object) as a Euclidean domain; elements are structures polynomials. · src/smith.js:50 · modules
+- `matrixModule(A: Array<Array<number | bigint | string | Rational>>, options?: { variable?: string }) → MatrixModule` — The Q[x]-module of a square matrix A over Q (entries numbers, BigInts, Core Rationals or text such as "1/2"). · src/modules.js:35 · modules
+- `companionMatrix(f: MPoly<Rational>) → Rational[][]` — The companion matrix of a monic polynomial: ones below the diagonal, minus the coefficients in the last column. · src/modules.js:19
+- `integerModule(relations: Array<Array<bigint | number>>, n?: number) → AbelianGroup` — A finitely generated Z-module (abelian group) from generators and relations: the quotient Zⁿ/L, L spanned by the rows. · src/modules.js:76
+- `abelianInvariants(G: Group<any> | Presentation) → AbelianGroup` — The abelianisation G/G′ of a Group or Presentation, as an AbelianGroup (Z/d₁ × … × Z^r). · src/abelianise.js:5 · abelian
+- `groebner(polys: MPoly<C>[], options?: GroebnerOptions) → GroebnerBasis<C>` — The reduced Gröbner basis of the ideal generated by some polynomials of one ring, in that ring's monomial order (or { order } to use another). {… · src/groebner.js:601 · groebner
+- `GroebnerBasis class: ring, generators, basis, stats, length, leadingExponents, leadingMonomials, isTrivial, isZero, reduce, divide, contains, cofactors, verify, isZeroDimensional, standardMonomials, toString` · src/groebner.js:388
+- `sPolynomial(f: MPoly<C>, g: MPoly<C>) → MPoly<C>` — The S-polynomial of two polynomials: the combination in which their leading terms cancel. · src/groebner.js:356 · groebner
+- `eliminationOrder(n: number, eliminate: number[]) → (a: number[], b: number[]) => number` — A comparison function that eliminates the given variables: any monomial containing one of them is larger than any monomial without. · src/groebner.js:371 · groebner
+- `ideal(ring: PolyRing<C>, generators: Array<PolyLike<C>>) → Ideal<C> (+1 overload)` — The ideal generated by some polynomials: ideal(R, ["x^2 - y", "x*y - 1"]), or ideal([f, g]) for polynomials of one ring. · src/ideal.js:352 · groebner
+- `Ideal class: ring, generators, groebner, basis, isZero, isWhole, isProper, contains, reduce, express, isSubsetOf, equals, add, mul, pow, intersect, quotient, saturate, radicalContains, exponentOf, eliminate, dimension, isZeroDimensional, degree, standardMonomials, minimalPolynomial, radical, isRadical, isMaximal, isPrime, quotientRing, solve, toString` · src/ideal.js:85
+- `chineseRemainder(I: Ideal<C>, J: Ideal<C>) → ChineseRemainder<C>` — The Chinese remainder theorem for two ideals. · src/ideal.js:365 · quotients
+- `QuotientRing class: ring, ideal, gens, zero, one, of, isFinite, basis, isZeroRing, isField, isIntegralDomain, isReduced, asField, toString` — The quotient ring R/I: its elements are normal forms modulo the ideal. · src/ideal.js:474
+- `QuotientElement class: parent, rep, add, sub, neg, mul, pow, equals, isZero, isUnit, inverse, div, isZeroDivisor, isNilpotent, minimalPolynomial, matrix, toString` · src/ideal.js:391
+- `solve(ring: PolyRing, polys: Array<PolyLike>, options?: SolveOptions) → Solutions (+2 overloads)` — Solve a system of polynomial equations (each polynomial = 0) exactly: solve([f, g]) or solve(ring, ["x^2 - 2", "x*y - 1"]). · src/ideal.js:688 · systems
+- `crt(residues: IntLike[], moduli: IntLike[]) → { value: bigint; modulus: bigint } | null` — The Chinese remainder theorem for integers: the x with x ≡ rᵢ (mod mᵢ) for every i. · src/rings.js:75 · modular
+- `Zn(n: IntLike) → ZnRing` · src/rings.js:271 · modular
+- `ZnRing class: n, characteristic, size, of, add, sub, mul, neg, pow, isUnit, inverse, div, isZeroDivisor, isField, isIntegralDomain, isReduced, elements, units, unitCount, zeroDivisors, nilpotents, idempotents, additiveOrder, orderOf, unitGroup, primitiveRoot, ideals, decompose, table, asField, toString` — The ring of integers modulo n. · src/rings.js:95
+- `quadraticRing(d: IntLike) → QuadraticRing` — The ring of integers of Q(√d): quadraticRing(-5) is Z[√−5], quadraticRing(5) is Z[(1 + √5)/2]. · src/rings.js:941 · quadratic
+- `QuadraticRing class: d, discriminant, zero, one, omega, isReal, of, sqrt, units, fundamentalUnit, isNormEuclidean, divmod, gcd, canonical, elementsOfNorm, isIrreducible, isPrimeElement, irreducibleDivisors, factorizations, ideal, splitting, primesAbove, minkowskiBound, classGroup, classNumber, isPID, isUFD, toString` — The ring of integers of Q(√d), for a square-free integer d other than 0 and 1. · src/rings.js:495
+- `QuadraticInteger class: ring, a, b, add, sub, neg, mul, pow, conj, norm, trace, isZero, equals, isUnit, inverse, divExact, isDivisibleBy, isAssociateOf, sign, toNumber, toString` — An element a + bω of a quadratic ring. · src/rings.js:278
+- `QuadraticIdeal class: ring, norm, generators, isWhole, contains, equals, isSubsetOf, add, mul, pow, conj, generator, isPrincipal, isPrime, isEquivalentTo, factor, toString` — A non-zero ideal of a quadratic ring, as the lattice Z·a + Z·(b + cω). · src/rings.js:401
+- `gaussianIntegers() → QuadraticRing` — The Gaussian integers Z[i]. · src/rings.js:943 · quadratic
+- `eisensteinIntegers() → QuadraticRing` — The Eisenstein integers Z[ω], ω = (1 + √−3)/2 (a sixth root of unity; ω − 1 is the usual cube root of unity). · src/rings.js:945
+- `schreierSims(generators: PermLike[] | PermGroup, options?: number | { degree?: number; base?: number[]; names?: string[]; name?: string | null; words?: boolean }) → PermChain` — The group generated by the permutations, held by a base and strong generating set. · src/schreier.js:464 · large-groups
+- `PermChain class: name, degree, generators, generatorNames, base, basicOrbits, strongGenerators, order, isTrivial, contains, sift, word, evaluate, random` — A permutation group held by a base and strong generating set. · src/schreier.js:86
+- `largeGroups: { symmetric(n: number): PermChain; alternating(n: number): PermChain; /** M11, M12, M22, M23 or M24. */ mathieu(n: 11 | 12 | 22 | 23 | 24): PermChain; /** The six face turns U, D, L, R, F, B on the 48 moving …` · src/schreier.js:501 · large-groups
+- `extension(steps: Record<string, string | MPoly> | Array<[string, string | MPoly]>) → Extension` — A tower of extensions of Q: extension({ a: "a^2 - 2", b: "b^3 - a" }), or a list of [name, polynomial] pairs. · src/tower.js:605 · towers
+- `Extension class: names, ring, degrees, degree, polynomials, zero, one, generators, name, of, basis, degreeOver, towerLaw, primitiveElement, subfield, roots, factor, automorphisms, isGalois, automorphismGroup, galoisGroup, fixedField, toNumberField, toString, describe` · src/tower.js:197
+- `TowerElement class: field, add, sub, mul, div, neg, inverse, pow, equals, isZero, isRational, toRational, coordinates, toPoly, minimalPolynomial, minimalPolynomialText, minimalPolynomialOver, degree, norm, trace, value, approx, toString, toText, toTeX` · src/tower.js:120
+- `formatUnivariate(coefficients: unknown[], variable?: string) → string` — A polynomial with rational coefficients (constant first) as text. · src/tower.js:105
+- `conwayPolynomial(p: number | bigint, n: number, options?: { limit?: number }) → bigint[]` — The Conway polynomial for GF(pⁿ): its coefficients, constant first, as BigInts in 0 … p − 1 (the form galoisField takes as a modulus). · src/conway.js:61 · conway
+- `conwayField(p: number | bigint, n: number, options?: { limit?: number }) → Record<string, any> & { conway: bigint[]; text: string; gen: unknown; generator: unknown; embed(m: number): { from: Record<string, any>; exponent: bigint …` — GF(pⁿ) built on its Conway polynomial: a field object as from galoisField, with `conway` (the polynomial), `text`, the standard generator `gen` (a generator… · src/conway.js:127 · conway
+- `formatModular(coefficients: Array<bigint | number>, variable?: string) → string` — A polynomial over F_p (constant first) as text. · src/conway.js:110
+- `solveByRadicals(polynomial: UnivariateLike, options?: { expressions?: boolean }) → { polynomial: bigint[]; text: string; degree: number; solvable: boolean; reason: string; factors: RadicalFactor[] }` — Solves a polynomial over Q by radicals when that is possible. · src/radicals.js:897 · radicals
+- `rootOfUnityByRadicals(n: number) → RadicalExpression` — A primitive n-th root of unity e^(2πi/n) in radicals, for any n ≥ 1. · src/radicals.js:943 · radicals
+- `regularPolygon(n: number) → { n: number; constructible: boolean; totient: number; reason: string; cos: RadicalExpression | null }` — The regular n-gon and ruler and compass: { n, constructible, totient, reason, cos } where `cos` is cos(2π/n) as a RadicalExpression in real square roots… · src/radicals.js:993 · constructions
+- `constructible(polynomial: UnivariateLike) → { polynomial: bigint[]; text: string; constructible: boolean | "some" | null; reason: string; factors: Array<{ text: string; degree: number; group: string | null; order: number | null …` · src/radicals.js:996 · constructions
+- `classicalProblems: { doublingTheCube(): ClassicalProblem; /** Trisecting the angle with the given rational cosine (1/2, that is 60°, by default). */ trisecting(cosine?: number | bigint | string | Rational): ClassicalProblem …` — The three classical problems, each reduced to a polynomial and decided. · src/radicals.js:1079 · constructions
+- `RadicalExpression class: rational, text, inline, toTeX, indices, usesOnlySquareRoots, size, evaluate, approx, check, toString` — One number written in radicals. · src/radicals.js:713
+- `characterTable(G: Group, options?: { classLimit?: number }) → CharacterTable` — The character table of a finite group (cached on the group). · src/characters.js:485 · characters
+- `CharacterTable class: ` · src/characters.js:492
+- `ClassFunction class: table, values, name, degree, value, add, sub, mul, tensor, scale, pow, conj, dual, equals, inner, norm, multiplicities, isCharacter, isVirtualCharacter, isIrreducible, isLinear, isFaithful, decompose, decomposition, adams, symmetricSquare, alternatingSquare, indicator, type, kernelClasses, kernel, centreClasses, restrict, induce, toString` — A class function on a group: one cyclotomic value per conjugacy class, in the order of the table's classes. · src/characters.js:395
+- `Cyclotomic class: int, root, fromPowers, of, n, c, den, lift, add, sub, mul, neg, over, galois, conj, equals, isZero, isRational, isInteger, isReal, toInteger, toFraction, approx, conjugates, conductor, toString, toTeX` — An element of a cyclotomic field Q(ζₙ), ζₙ = e^(2πi/n): the values of characters. · src/characters.js:57 · characters
+
+## Example
+
+```js
+import { ring, gcd, resultant, factor, fractions, symmetric } from "@ratmath/structures";
+const S = symmetric(4);
+console.log(S.describe());
+console.log("class equation:", S.classEquation(), "  Sylow counts:", [2, 3].map((p) => S.sylowCount(p)));
+
+const R = ring("x, y, z");
+const f = R.poly("x^3 + y^3 + z^3 - 3xyz");
+console.log("f =", f);
+for (const { factor: g, multiplicity } of factor(f).factors) console.log("  factor:", g, "to the power", multiplicity);
+console.log("gcd:", gcd(R.poly("x^3 - y^3"), R.poly("x^2 - y^2")));
+console.log("circle and parabola meet where", resultant(R.poly("x^2 + y^2 - 1"), R.poly("y - x^2"), "y"), "= 0");
+fractions(R).parse("1/(x + y) + 1/(x - y)")
+```
+
+## More
+
+- tests/: worked examples for every function
+- https://ratmath.com/core/ (numbers), https://ratmath.com/shelf/ (all the libraries)
