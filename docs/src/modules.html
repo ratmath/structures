@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modules over Q[x]</title>
+<meta name="description" content="A square matrix turns Q^n into a module over Q[x]; its invariant factors from the Smith normal form of xI - A, elementary divisors, and the rational canonical form.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Modules</div>
+<h1>Modules over Q[x]</h1>
+<p class="lede">A matrix is a way for the variable x to act on vectors. Seen like that, the classification of matrices up to similarity is the same theorem as the classification of abelian groups, with polynomials in place of whole numbers.</p>
+
+<h2>A matrix as a module</h2>
+<p>A <em>module</em> over a ring is like a vector space whose scalars come from the ring. Abelian groups are the modules over \(\mathbb Z\). A square matrix \(A\) over \(\mathbb Q\) makes \(\mathbb Q^n\) a module over the polynomial ring \(\mathbb Q[x]\): a polynomial \(f\) acts on a vector \(v\) as \(f(A)v\).</p>
+<p>\(\mathbb Q[x]\) has division with remainder, just like \(\mathbb Z\), so the same Smith normal form works over it, and the same structure theorem holds. The relations of this module are the columns of \(xI - A\) (they say that \(x\) acting on \(e_j\) is the \(j\)-th column of \(A\)), so</p>
+\[ \mathbb Q^n \cong \mathbb Q[x]/(f_1) \oplus \cdots \oplus \mathbb Q[x]/(f_k), \qquad f_1 \mid f_2 \mid \cdots \mid f_k, \]
+<p>where the \(f_i\) are the monic non-constant diagonal entries of the Smith form of \(xI - A\): the <em>invariant factors</em> of \(A\). Their product is the characteristic polynomial and the last one is the minimal polynomial.</p>
+<pre><code>import { matrixModule } from "@ratmath/structures";
+
+const M = matrixModule([[2, 1, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 3]]);
+String(M);                          // "Q[x]/(x − 2) ⊕ Q[x]/(x³ − 7x² + 16x − 12)"
+String(M.minimalPolynomial);        // "x³ − 7x² + 16x − 12"
+String(M.characteristicPolynomial); // "x⁴ − 9x³ + 30x² − 44x + 24"
+M.elementaryDivisors.map((e) =&gt; String(e.divisor));   // ["x − 2", "x − 3", "x² − 4x + 4"]
+M.isCyclic;                         // false: two summands</code></pre>
+
+<h2>The rational canonical form</h2>
+<p>On \(\mathbb Q[x]/(f)\) with \(f = x^d + c_{d-1}x^{d-1} + \dots + c_0\), the basis \(1, x, \dots, x^{d-1}\) is moved by \(x\) as \(1 \mapsto x \mapsto x^2 \mapsto \cdots \mapsto x^d = -c_0 - c_1x - \cdots\). That is the <em>companion matrix</em> of \(f\): ones below the diagonal and \(-c_0, \dots, -c_{d-1}\) down the last column. Putting the companion blocks of the invariant factors together gives the <strong>rational canonical form</strong> of \(A\): two matrices are similar over \(\mathbb Q\) exactly when they have the same one. It needs no eigenvalues, so it works when the characteristic polynomial does not factor. The elementary divisors (the prime-power parts of the invariant factors) give the finer primary decomposition; when they are all powers of linear factors they are the Jordan blocks.</p>
+<pre><code>import { matrixModule } from "@ratmath/structures";
+
+const M = matrixModule([[0, -1, 0], [1, 0, 0], [0, 0, 2]]);   // a quarter turn, and a stretch
+String(M);                       // "Q[x]/(x³ − 2x² + x − 2)": cyclic
+M.elementaryDivisors.map((e) =&gt; String(e.divisor));   // ["x − 2", "x² + 1"]
+M.rationalCanonical.map((r) =&gt; r.map(String).join(" "));   // ["0 0 2", "1 0 -1", "0 1 2"]
+
+matrixModule([[2, 0], [0, 2]]).isCyclic;   // false: Q[x]/(x − 2) ⊕ Q[x]/(x − 2)
+matrixModule([[1, 1], [0, 1]]).isCyclic;   // true: Q[x]/((x − 1)²)</code></pre>
+<p>This is the same computation as @ratmath/linalg's <code>similarity(A)</code>, done a second way: the tests compare the invariant factors, minimal polynomials and rational canonical forms of the two on many matrices. The Smith form itself is available over any Euclidean domain as <code>smithForm(A, domain)</code>, with <code>ZZ</code> and <code>polynomialDomain("x")</code> built in.</p>
+<pre><code>import { smithForm, polynomialDomain } from "@ratmath/structures";
+
+const Qx = polynomialDomain("x");
+smithForm([["x^2 - 1", "x - 1"], ["x + 1", "x^2 + x"]], Qx).diagonal.map(String);
+// ["1", "x⁴ + x³ − 2x² − x + 1"]</code></pre>
+<template data-runbox>
+// matrices that share a characteristic polynomial but are not similar
+const cases = {
+  "2I": [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
+  "one Jordan block": [[2, 1, 0], [0, 2, 1], [0, 0, 2]],
+  "a block and a 1×1": [[2, 1, 0], [0, 2, 0], [0, 0, 2]],
+};
+for (const [name, A] of Object.entries(cases)) {
+  const M = matrixModule(A);
+  PRINT(`${name}: ${M}   minimal polynomial ${M.minimalPolynomial}`);
+}
+
+// the rational canonical form of a matrix whose characteristic polynomial does not factor over Q
+const M = matrixModule([[1, 2, 0], [0, 1, 3], [1, 0, 1]]);
+PRINT("invariant factors:", M.invariantFactors.map(String));
+M.rationalCanonical.map((r) =&gt; r.map(String).join("  "))
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

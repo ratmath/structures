@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0
+
+Presentations, abelian groups and modules (roadmap phase 5).
+
+- `presentation("a, b | a^4, b^2, (ab)^2")`: groups from generators and
+  relators or relations; words with powers, brackets, commutators and capital
+  letters for inverses.
+- Todd–Coxeter coset enumeration (HLT with coincidences): `P.enumerate(H)`,
+  `P.index(H)`, `P.order()`, `P.toGroup()` (elements printed as shortest
+  words). Stops with an error past `maxCosets`.
+- `presentationOf(G)` for any finite Group; `abelianInvariants(G or P)`.
+- `smithForm(A, domain)` over the integers (`ZZ`) or Q[x]
+  (`polynomialDomain`), with U, V and V⁻¹.
+- `AbelianGroup` from relations (`fromRelations`, `integerModule`), invariant
+  factors (`abelianGroup`) or cyclic orders (`cyclicProduct`); elementary
+  divisors, products, `toGroup()`, generators of the cyclic factors;
+  `abelianGroups(n)`.
+- `matrixModule(A)`: Qⁿ as a Q[x]-module, with invariant factors, elementary
+  divisors, minimal and characteristic polynomials and the rational canonical
+  form; `companionMatrix(f)`.
+- Tests compare the Smith forms and module structures with @ratmath/linalg
+  (now a submodule under vendor/, used by the tests only).
+- Docs: pages on presentations, abelian groups and modules; the group
+  explorer accepts presentations.
+
 ## 0.2.0
 
 Finite groups (roadmap phase 1).

@@ -464,3 +464,122 @@ export const SMALL_ORDER_LIMIT: 20;
 export function smallGroups(n: number): Group<any>[];
 export function numberOfGroups(n: number): number;
 export function identify<E>(G: Group<E>): { name: string; group: Group<any>; iso: Homomorphism<E, any> } | null;
+
+// ---- presentations, abelian groups, modules ------------------------------------------------------
+
+/** A word: k for generator k (counting from 1), −k for its inverse. */
+export type Word = number[];
+export type WordLike = Word | string;
+
+export interface CosetTable {
+  /** The number of cosets: the index [G : H]. */
+  readonly index: number;
+  /** table[c][g]: the coset c·g, for generator g (from 0). */
+  readonly table: number[][];
+  readonly inverseTable: number[][];
+  /** A shortest word for each coset (cosets are numbered breadth first from H itself, 0). */
+  readonly representatives: Word[];
+  /** How many cosets were defined along the way, dead ones included. */
+  readonly defined: number;
+  cosetOfWord(w: Word): number;
+  /** With H = 1: coset j ↦ j·wᵢ, the action of the element of coset i. */
+  elementPermutation(i: number): number[];
+  toString(): string;
+}
+
+export class Presentation {
+  constructor(generators: string[], relators?: WordLike[]);
+  readonly generators: readonly string[];
+  readonly relators: readonly Word[];
+  word(text: WordLike): Word;
+  formatWord(w: Word, options?: { plain?: boolean }): string;
+  enumerate(H?: WordLike[], options?: { maxCosets?: number }): CosetTable;
+  index(H?: WordLike[], options?: { maxCosets?: number }): number;
+  order(options?: { maxCosets?: number }): number;
+  toGroup(options?: { maxCosets?: number; name?: string | null }): Group<number[]> & { presentation: Presentation; fromWord(w: WordLike): number[] };
+  abelianInvariants(): AbelianGroup;
+  toString(): string;
+}
+
+export function presentation(text: string): Presentation;
+export function presentation(generators: string | string[], relators: WordLike[]): Presentation;
+export function presentationOf(G: Group<any>, options?: { names?: string[] | null }): Presentation;
+export function parseWord(text: string, names: readonly string[]): Word;
+export function formatWord(w: Word, names: readonly string[], options?: { plain?: boolean }): string;
+export function reduceWord(w: Word): Word;
+export function invertWord(w: Word): Word;
+
+export class AbelianGroup {
+  constructor(invariants: Array<bigint | number>, rank?: number, options?: { generators?: { order: bigint | null; vector: bigint[] }[] | null; names?: string[] | null });
+  /** d₁ | d₂ | …, each above 1. */
+  readonly invariants: readonly bigint[];
+  /** The number of copies of Z. */
+  readonly rank: number;
+  /** From fromRelations: each cyclic factor's generator as a combination of the original generators. */
+  readonly generators: { order: bigint | null; vector: bigint[] }[] | null;
+  readonly order: bigint | null;
+  readonly isFinite: boolean;
+  readonly isTrivial: boolean;
+  readonly isCyclic: boolean;
+  readonly torsion: AbelianGroup;
+  readonly exponent: bigint;
+  readonly elementaryDivisors: { p: bigint; power: number; order: bigint }[];
+  equals(H: AbelianGroup): boolean;
+  times(H: AbelianGroup): AbelianGroup;
+  toGroup(): Group<any>;
+  toString(options?: { primary?: boolean }): string;
+}
+
+export function abelianGroup(invariants?: Array<bigint | number>, rank?: number): AbelianGroup;
+export function cyclicProduct(orders: Array<bigint | number>, rank?: number): AbelianGroup;
+export function fromRelations(relations: Array<Array<bigint | number>>, n?: number, extraRank?: number): AbelianGroup;
+export function abelianGroups(n: number): AbelianGroup[];
+export function abelianInvariants(G: Group<any> | Presentation): AbelianGroup;
+
+/** A Euclidean domain, as smithForm uses it. */
+export interface EuclideanDomain<T> {
+  readonly name: string;
+  readonly zero: T;
+  readonly one: T;
+  from(x: unknown): T;
+  isZero(a: T): boolean;
+  add(a: T, b: T): T;
+  sub(a: T, b: T): T;
+  mul(a: T, b: T): T;
+  neg(a: T): T;
+  divmod(a: T, b: T): { quotient: T; remainder: T };
+  norm(a: T): number | bigint;
+  unit(a: T): { u: T; inv: T };
+  equals(a: T, b: T): boolean;
+  format(a: T): string;
+}
+export const ZZ: EuclideanDomain<bigint>;
+export function polynomialDomain(v?: string, options?: RingOptions): EuclideanDomain<MPoly<any>> & { ring: PolyRing<any> };
+
+export interface SmithForm<T> {
+  readonly D: T[][];
+  readonly U: T[][];
+  readonly V: T[][];
+  readonly Vinv: T[][];
+  readonly diagonal: T[];
+  readonly rank: number;
+  readonly domain: EuclideanDomain<T>;
+}
+export function smithForm(A: Array<Array<bigint | number | string>>): SmithForm<bigint>;
+export function smithForm<T>(A: unknown[][], domain: EuclideanDomain<T>): SmithForm<T>;
+
+export interface MatrixModule {
+  readonly ring: PolyRing<Rational>;
+  readonly invariantFactors: MPoly<Rational>[];
+  readonly elementaryDivisors: { factor: MPoly<Rational>; multiplicity: number; divisor: MPoly<Rational> }[];
+  readonly minimalPolynomial: MPoly<Rational>;
+  readonly characteristicPolynomial: MPoly<Rational>;
+  readonly rationalCanonical: Rational[][];
+  readonly blocks: Rational[][][];
+  readonly isCyclic: boolean;
+  readonly smith: SmithForm<MPoly<Rational>>;
+  toString(): string;
+}
+export function matrixModule(A: Array<Array<number | bigint | string | Rational>>, options?: { variable?: string }): MatrixModule;
+export function companionMatrix(f: MPoly<Rational>): Rational[][];
+export function integerModule(relations: Array<Array<bigint | number>>, n?: number): AbelianGroup;

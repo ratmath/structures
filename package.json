@@ -1,6 +1,6 @@
 {
   "name": "@ratmath/structures",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Abstract algebra for RatMath: finite groups (subgroups, quotients, Sylow, homomorphisms, actions) and exact polynomials in several variables and rational functions over the rationals, finite fields and number fields",
   "type": "module",
   "main": "index.js",
@@ -51,10 +51,12 @@
   },
   "types": "index.d.ts",
   "workspaces": [
-    "vendor/algebraic"
+    "vendor/algebraic",
+    "vendor/linalg"
   ],
   "devDependencies": {
     "@ratmath/core": "^0.11.0",
+    "@ratmath/linalg": "^0.1.0",
     "katex": "0.19.1"
   },
   "author": "James Taylor",

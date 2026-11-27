@@ -61,6 +61,12 @@ Groups (a group is held by listing its elements, so up to a few thousand):
   (necklaces, coloured cubes); `toPermGroup()` hands the image to
   `@ratmath/discrete`'s Pólya counting. Algebraic's `PermGroup` is
   re-exported.
+- **Presentations**: `presentation("a, b | a^2, b^3, (ab)^5")`, Todd–Coxeter
+  coset enumeration (`order`, `index`, `toGroup`), `presentationOf(G)`.
+- **Abelian groups and modules**: `smithForm` over Z and Q[x],
+  `fromRelations` and `abelianGroups(n)` (the structure theorem),
+  `abelianInvariants`, and `matrixModule(A)` (invariant factors and the
+  rational canonical form).
 
 Polynomials:
 
@@ -93,7 +99,10 @@ elements otherwise. Nothing is rounded.
 - Division by several polynomials gives a remainder that can depend on their
   order. Gröbner bases, which fix that, are planned (see the
   [roadmap](https://github.com/ratmath/ratmath/blob/main/docs/design/library-roadmap.md)),
-  as are rings and ideals, group presentations and character tables.
+  as are rings and ideals and character tables.
+- Coset enumeration (HLT) can need many more cosets than the final index,
+  and gives up past `maxCosets` (500,000 by default); it cannot tell an
+  infinite group from a large one.
 - Groups are held by their elements: building one stops at 20,000 elements,
   and listing every subgroup at order 1000. Schreier–Sims for large
   permutation groups is planned.
@@ -106,7 +115,8 @@ bun add github:ratmath/structures
 
 It depends on `@ratmath/core` and `@ratmath/algebraic`. Until algebraic is on
 npm this repository carries it as a submodule (`vendor/algebraic`), so clone
-with `--recurse-submodules`.
+with `--recurse-submodules`. `vendor/linalg` is there for the tests only,
+which check the Smith forms against it.
 
 ## Development
 

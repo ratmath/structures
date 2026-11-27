@@ -40,7 +40,7 @@ dihedral(6).natural.onColourings(2).countOrbits().count;   // 13 bracelets with 
 <h2>Polynomials</h2>
 <p>A polynomial in several variables is a finite sum of terms, each a coefficient times a product of powers of the variables: \(x^2y - \tfrac32 xz + 1\). The polynomials in fixed variables with coefficients in a field \(K\) form a ring, written \(K[x, y, z]\): they can be added, subtracted and multiplied, and sometimes divided.</p>
 <p>This library holds such a polynomial as the list of its nonzero terms, with every coefficient exact (a fraction of whole numbers by default). The coefficients can instead come from any exact field in RatMath: the integers modulo a prime, a finite field GF(pᵏ), or a number field such as Q(√2).</p>
-<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Rings and ideals, Gröbner bases, presentations of groups, and character tables are planned for the same package and will build on what is here.</p>
+<p><code>@ratmath/structures</code> is the abstract algebra package of the <a href="https://ratmath.com/shelf/">RatMath Shelf</a>. Rings and ideals, Gröbner bases, Schreier–Sims and character tables are planned for the same package and will build on what is here.</p>
 
 <h2>A first program</h2>
 <pre><code>import { ring, gcd, factor, resultant, fractions } from "@ratmath/structures";
@@ -64,6 +64,8 @@ String(F.parse("1/(x + y) + 1/(x - y)"));     // "2x/(x² − y²)"</code></pre>
   <li><strong>Subgroups</strong>: every subgroup and its conjugacy class, normal subgroups, cosets, quotients, composition series, Sylow subgroups.</li>
   <li><strong>Maps</strong>: homomorphisms with kernels and images, the isomorphism theorems, isomorphism tests, automorphism groups, and the groups of order up to 20 by name.</li>
   <li><strong>Actions</strong>: orbits, stabilisers, fixed points, and the orbit-counting lemma for necklaces and coloured solids.</li>
+  <li><strong>Presentations</strong>: groups from generators and relations, built by Todd–Coxeter coset enumeration.</li>
+  <li><strong>Abelian groups and modules</strong>: the Smith normal form over the integers and over Q[x], the structure theorem, invariant factors and elementary divisors, and the rational canonical form of a matrix.</li>
   <li><strong>Polynomial rings</strong> over Q or any exact field, with the monomial orders lex, grlex and grevlex or one of your own.</li>
   <li><strong>Arithmetic and calculus</strong>: sums, products, powers, partial derivatives, gradients, substitution, evaluation, change of variables.</li>
   <li><strong>Division</strong> by one polynomial or by a list of them, with quotients and remainder.</li>

@@ -31,3 +31,9 @@ export { Action, action, regularAction, conjugationAction, cosetAction, burnside
 export { smallGroups, numberOfGroups, identify, SMALL_ORDER_LIMIT } from "./src/small.js";
 // algebraic's permutation groups (Galois groups are computed with them), re-exported
 export { PermGroup, cycleString, fromCycles, cycleType } from "@ratmath/algebraic";
+// presentations, abelian groups, modules
+export { Presentation, presentation, presentationOf, parseWord, formatWord, reduceWord, invertWord } from "./src/presentation.js";
+export { AbelianGroup, abelianGroup, cyclicProduct, fromRelations, abelianGroups } from "./src/abelian.js";
+export { smithForm, ZZ, polynomialDomain } from "./src/smith.js";
+export { matrixModule, companionMatrix, integerModule } from "./src/modules.js";
+export { abelianInvariants } from "./src/abelianise.js";
