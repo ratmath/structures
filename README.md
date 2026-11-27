@@ -3,7 +3,8 @@
 Abstract algebra for [RatMath](https://ratmath.com/), part of the
 [RatMath Shelf](https://ratmath.com/shelf/). So far it has **finite groups**
 (named groups, classes, subgroups, quotients, Sylow subgroups,
-homomorphisms, isomorphism tests, actions and orbit counting),
+homomorphisms, isomorphism tests, actions and orbit counting, character
+tables),
 **polynomials in several variables** with exact coefficients (division,
 greatest common divisors, factoring, resultants, rational functions,
 symmetric polynomials), **ideals and Gröbner bases** (membership with
@@ -133,6 +134,17 @@ Rings of numbers:
   against prime, every factorisation of an element, ideals with unique
   factorisation into primes, how primes split, the class group.
 
+Characters:
+
+- **`characterTable(G)`**: the irreducible characters with exact cyclotomic
+  values (Burnside–Dixon–Schneider), verified by the orthogonality relations;
+  normal subgroups, simplicity, the centre and G/G′ read off the table.
+- **Class functions**: inner products and decomposition, tensor products,
+  symmetric and alternating squares, Adams operations, the Frobenius–Schur
+  indicator, kernels, restriction and induction, permutation characters.
+- **`Cyclotomic`**: exact numbers in Q(ζₙ) that print as −1, i, (1 + √5)/2 or
+  ζ₇³.
+
 Fields and large groups:
 
 - **`extension({ a: "a^2 - 2", b: "b^3 - a" })`**: towers over Q with exact
@@ -175,8 +187,8 @@ elements otherwise. Nothing is rounded.
 - Towers of fields are comfortable to about degree 8; degree 16 is slow.
   `solveByRadicals` handles irreducible factors up to degree 7, and its
   formulas grow quickly (a general quartic takes seven radicals).
-- Character tables are planned (see the
-  [roadmap](https://github.com/ratmath/ratmath/blob/main/docs/design/library-roadmap.md)).
+- Character tables need the group listed (up to 20,000 elements) and at most
+  400 classes; time grows with the number of classes and the exponent.
 
 ## Install
 

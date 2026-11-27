@@ -8,7 +8,10 @@
 // Variables are single letters; a ring is made from whichever letters occur.
 // makeLang(A) takes the library (so the build can check every example).
 
+import { makeGroups } from "./groups.js?v=ad472c7629";
+
 export function makeLang(A) {
+  const groups = makeGroups(A);
   const letters = (s) => [...new Set(s.match(/[A-Za-z]/g) ?? [])].sort();
 
   /** Split at commas (or another separator) that are not inside parentheses. */
@@ -99,7 +102,7 @@ export function makeLang(A) {
     }
     return A.extension(defs);
   }
-  const RAW = new Set(["det", "inverse", "large", "tower", "galois", "radicals", "unity", "polygon", "constructible", "conway"]);
+  const RAW = new Set(["characters", "tensor", "det", "inverse", "large", "tower", "galois", "radicals", "unity", "polygon", "constructible", "conway"]);
 
   // Each function gets its arguments already expanded to plain text (names
   // replaced), plus the raw inside of the parentheses for matrices. It returns
@@ -371,6 +374,25 @@ export function makeLang(A) {
         rows.push([`GF(${p}${m > 1 ? `^${m}` : ""}) inside`, `its generator is a^${e.exponent} = ${F.format(e.image)}`]);
       }
       return { type: "record", title: `GF(${p}^${n}) = GF(${p})[a] / (${F.text.replaceAll("x", "a")})`, rows };
+    },
+    characters: (_, env, raw) => {
+      const G = groups.parse(raw.trim());
+      if (G.order > 2000) throw new Error("groups of order up to 2000 here, please");
+      const T = A.characterTable(G);
+      const [head, sizes, ...body] = T.rows();
+      return { type: "matrix", head, rows: [sizes, ...body] };
+    },
+    tensor: (_, env, raw) => {
+      const parts = splitTop(raw);
+      if (parts.length !== 3) throw new Error("tensor(group, i, j) multiplies the characters χi and χj, as in tensor(S4, 4, 4)");
+      const T = A.characterTable(groups.parse(parts[0]));
+      const [i, j] = parts.slice(1).map(whole);
+      const irr = T.irreducibles;
+      if (!irr[i - 1] || !irr[j - 1]) throw new Error(`the characters are χ1 to χ${irr.length}`);
+      const prod = irr[i - 1].mul(irr[j - 1]);
+      const rows = [["values", prod.values.join(", ")], ["degree", `${irr[i - 1].degree} · ${irr[j - 1].degree} = ${prod.degree}`], ["decomposition", prod.decomposition()]];
+      if (i === j) rows.push(["symmetric square", irr[i - 1].symmetricSquare().decomposition()], ["alternating square", irr[i - 1].alternatingSquare().decomposition()]);
+      return { type: "record", title: `${irr[i - 1].name} ⊗ ${irr[j - 1].name} = ${prod.decomposition()}`, rows };
     },
     symmetric: ([f, ...vs], env) => {
       const c = context(env, [f], vs.map(variable));

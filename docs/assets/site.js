@@ -2,10 +2,10 @@
 // theme switch, result rendering and expression demos (any element with
 // data-expr becomes one).
 
-import * as A from "./structures.js?v=383c881ae3";
-import { makeLang } from "./lang.js?v=383c881ae3";
-import { mountRunboxes } from "./runbox.js?v=383c881ae3";
-import { makeGroups } from "./groups.js?v=383c881ae3";
+import * as A from "./structures.js?v=ad472c7629";
+import { makeLang } from "./lang.js?v=ad472c7629";
+import { mountRunboxes } from "./runbox.js?v=ad472c7629";
+import { makeGroups } from "./groups.js?v=ad472c7629";
 
 const { run } = makeLang(A);
 const groups = makeGroups(A);
@@ -22,6 +22,8 @@ export const PAGES = [
   { href: "sylow.html", title: "Sylow subgroups", blurb: "Subgroups of prime-power order and how many there are" },
   { href: "homomorphisms.html", title: "Homomorphisms and isomorphism", blurb: "Kernels, the isomorphism theorems, automorphisms, the groups of order up to 20" },
   { href: "actions.html", title: "Actions and counting", blurb: "Orbits, stabilisers, and counting necklaces and cubes up to symmetry" },
+  { href: "characters.html", title: "Character tables", blurb: "Irreducible characters with exact cyclotomic values, orthogonality, the Burnside–Dixon method" },
+  { href: "class-functions.html", title: "Working with characters", blurb: "Products, restriction and induction, permutation characters, the Frobenius–Schur indicator" },
   { href: "large-groups.html", title: "Large permutation groups", blurb: "Schreier–Sims: the Rubik's cube group, membership and words without listing elements" },
   { group: "Polynomials" },
   { href: "polynomials.html", title: "Polynomials in several variables", blurb: "Rings, exact coefficients, reading and printing" },

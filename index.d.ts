@@ -1088,3 +1088,128 @@ export const classicalProblems: {
   trisecting(cosine?: number | bigint | string | Rational): ClassicalProblem;
   squaringTheCircle(): ClassicalProblem;
 };
+
+// ---- character tables ----------------------------------------------------------------------------
+
+/** An exact element of a cyclotomic field Q(ζₙ): the values of characters. */
+export class Cyclotomic {
+  constructor(n: number, coefficients: bigint[], denominator?: bigint);
+  static int(k: number | bigint, n?: number): Cyclotomic;
+  /** ζₙᵏ, with ζₙ = e^(2πi/n). */
+  static root(n: number, k?: number): Cyclotomic;
+  /** Σ mₖ ζₙᵏ from a list of multiplicities. */
+  static fromPowers(n: number, multiplicities: number[]): Cyclotomic;
+  static of(x: Cyclotomic | number | bigint, n?: number): Cyclotomic;
+  readonly n: number;
+  readonly c: bigint[];
+  readonly den: bigint;
+  lift(m: number): Cyclotomic;
+  add(o: Cyclotomic | number | bigint): Cyclotomic;
+  sub(o: Cyclotomic | number | bigint): Cyclotomic;
+  mul(o: Cyclotomic | number | bigint): Cyclotomic;
+  neg(): Cyclotomic;
+  /** Multiplication by q/p. */
+  over(p: number | bigint, q?: number | bigint): Cyclotomic;
+  /** The Galois conjugate ζ ↦ ζᵏ. */
+  galois(k: number): Cyclotomic;
+  conj(): Cyclotomic;
+  equals(o: Cyclotomic | number | bigint): boolean;
+  readonly isZero: boolean;
+  readonly isRational: boolean;
+  readonly isInteger: boolean;
+  readonly isReal: boolean;
+  toInteger(): number | null;
+  toFraction(): [bigint, bigint] | null;
+  approx(): { re: number; im: number };
+  conjugates(): Cyclotomic[];
+  /** The smallest m with this number in Q(ζₘ). */
+  readonly conductor: number;
+  toString(): string;
+  toTeX(): string;
+}
+
+export interface CharacterClass { name: string; representative: unknown; index: number; size: number; order: number; centralizerOrder: number }
+
+/** A class function on a group: one cyclotomic value per class of its table. */
+export class ClassFunction {
+  constructor(table: CharacterTable, values: Array<Cyclotomic | number | bigint>, name?: string | null);
+  readonly table: CharacterTable;
+  readonly values: readonly Cyclotomic[];
+  readonly name: string | null;
+  /** The value at the identity: a number when whole. */
+  readonly degree: number | Cyclotomic;
+  value(x: unknown): Cyclotomic;
+  add(o: ClassFunction): ClassFunction;
+  sub(o: ClassFunction): ClassFunction;
+  mul(o: ClassFunction): ClassFunction;
+  tensor(o: ClassFunction): ClassFunction;
+  scale(k: Cyclotomic | number | bigint): ClassFunction;
+  pow(k: number): ClassFunction;
+  conj(): ClassFunction;
+  dual(): ClassFunction;
+  equals(o: ClassFunction): boolean;
+  /** ⟨χ, ψ⟩: a number when whole, else the exact value. */
+  inner(o: ClassFunction): number | Cyclotomic;
+  readonly norm: number | Cyclotomic;
+  multiplicities(): Array<number | Cyclotomic>;
+  readonly isCharacter: boolean;
+  readonly isVirtualCharacter: boolean;
+  readonly isIrreducible: boolean;
+  readonly isLinear: boolean;
+  readonly isFaithful: boolean;
+  decompose(): Array<{ character: ClassFunction; multiplicity: number | Cyclotomic }>;
+  /** "χ₁ + 2χ₃". */
+  decomposition(): string;
+  /** g ↦ χ(gᵏ). */
+  adams(k: number): ClassFunction;
+  symmetricSquare(): ClassFunction;
+  alternatingSquare(): ClassFunction;
+  /** The Frobenius–Schur indicator: 1, 0 or −1 for an irreducible character. */
+  indicator(): number | Cyclotomic;
+  readonly type: "real" | "complex" | "quaternionic" | null;
+  kernelClasses(): number[];
+  kernel(): Group;
+  centreClasses(): number[];
+  restrict(H: Group | CharacterTable): ClassFunction;
+  induce(table: Group | CharacterTable): ClassFunction;
+  toString(): string;
+}
+
+/** The character table of a finite group, with exact cyclotomic entries. */
+export class CharacterTable {
+  constructor(G: Group, options?: { classLimit?: number });
+  readonly group: Group;
+  readonly classes: readonly CharacterClass[];
+  readonly exponent: number;
+  readonly inverseClass: readonly number[];
+  /** The prime the computation used: p ≡ 1 mod the exponent, p > 2√|G|. */
+  readonly prime: number;
+  readonly matricesUsed: number;
+  classOf(x: unknown): number;
+  powerMap(k: number): readonly number[];
+  readonly irreducibles: readonly ClassFunction[];
+  readonly characters: readonly ClassFunction[];
+  readonly degrees: number[];
+  readonly trivial: ClassFunction;
+  readonly linearCharacters: ClassFunction[];
+  readonly regular: ClassFunction;
+  classFunction(values: Array<Cyclotomic | number | bigint> | ((representative: unknown, cls: CharacterClass) => Cyclotomic | number | bigint)): ClassFunction;
+  /** The character of an action (fixed points) or of the cosets of a subgroup. */
+  permutationCharacter(X: Action | Group): ClassFunction;
+  decompose(cf: ClassFunction): Array<{ character: ClassFunction; multiplicity: number | Cyclotomic }>;
+  verify(): { rows: boolean; columns: boolean; degrees: boolean; ok: boolean };
+  subgroupOfClasses(list: number[]): Group;
+  normalSubgroups(): Array<{ order: number; classes: string[]; kernelOf: string[] }>;
+  readonly isSimple: boolean;
+  readonly isAbelian: boolean;
+  readonly abelianizationOrder: number;
+  readonly derivedSubgroupOrder: number;
+  readonly centreOrder: number;
+  readonly realClasses: string[];
+  rows(options?: { tex?: boolean }): string[][];
+  toString(): string;
+  toTeX(): string;
+  describe(): string;
+}
+/** The character table of a finite group (cached on the group). */
+export function characterTable(G: Group, options?: { classLimit?: number }): CharacterTable;

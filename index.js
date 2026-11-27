@@ -52,3 +52,6 @@ export { conwayPolynomial, conwayField, formatModular } from "./src/conway.js";
 export {
   solveByRadicals, rootOfUnityByRadicals, regularPolygon, constructible, classicalProblems, RadicalExpression,
 } from "./src/radicals.js";
+
+// character tables
+export { characterTable, CharacterTable, ClassFunction, Cyclotomic } from "./src/characters.js";

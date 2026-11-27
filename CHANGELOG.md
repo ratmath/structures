@@ -2,7 +2,7 @@
 
 ## 0.4.0
 
-Fields and large groups (roadmap phase 6).
+Fields and large groups (roadmap phase 6) and character tables (phase 7).
 
 - `schreierSims(generators)` and `PermChain`: permutation groups held by a
   base and strong generating set (deterministic Schreier–Sims), with order,
@@ -22,6 +22,15 @@ Fields and large groups (roadmap phase 6).
   in square roots) and `classicalProblems`.
 - `conwayPolynomial(p, n)` and `conwayField(p, n)` with compatible
   embeddings.
+- `characterTable(G)`: irreducible characters with exact values in a
+  cyclotomic field, by the Burnside–Dixon–Schneider method (class matrices
+  over GF(p), then Dixon's lift), checked by row and column orthogonality.
+  `ClassFunction` has inner products, decomposition, products, symmetric and
+  alternating squares, Adams operations, the Frobenius–Schur indicator,
+  kernels, restriction, induction and permutation characters. `Cyclotomic`
+  is the exact number type of the entries.
+- Docs: two more topic pages (character tables, working with characters) and
+  `characters` and `tensor` in the explorer.
 - Docs: six new topic pages (large permutation groups, field extensions and
   towers, automorphisms and the Galois correspondence, solving by radicals,
   ruler and compass, Conway polynomials), and `large`, `tower`, `galois`,
