@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quadratic Integer Rings</title>
+<meta name="description" content="Quadratic integer rings: Gaussian and Eisenstein integers, units and Pell's equation, Euclidean division, failure of unique factorisation, prime ideals and the class group.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script type="module" src="assets/site.js"></script>
+</head>
+<body>
+<div class="shell">
+<aside></aside>
+<main>
+<article>
+<div class="eyebrow">Rings of numbers</div>
+<h1>Quadratic integer rings</h1>
+<p class="lede">Adjoin a square root to the whole numbers and arithmetic changes. Sometimes primes still factor uniquely; sometimes 6 factors in two different ways. Ideals repair the damage, and the class group measures it.</p>
+<div data-expr="quadratic(-5)" data-title="A quadratic ring at a glance" data-examples="quadratic(-1)|quadratic(-3)|quadratic(2)|quadratic(5)|quadratic(10)|quadratic(-23)|quadratic(-163)|quadratic(94)|qfactor(-5, 6)|qfactor(-1, 30)|qfactor(-1, 7, 9)|qfactor(10, 6)|qfactor(-5, 3, 1)|qfactor(-3, 7)"></div>
+
+<h2>The rings</h2>
+<p>Let \(d\) be a square-free whole number other than 1. The <em>quadratic integers</em> for \(d\) are the numbers \(a + b\omega\) with \(a, b\) whole numbers, where</p>
+\[ \omega = \sqrt d \ \text{ if } d \equiv 2, 3 \pmod 4, \qquad \omega = \frac{1 + \sqrt d}{2} \ \text{ if } d \equiv 1 \pmod 4 . \]
+<p>(The halves are allowed in the second case because \(\omega\) then satisfies \(\omega^2 - \omega + \tfrac{1 - d}{4} = 0\), with whole-number coefficients.) They form a ring, the ring of integers of the field \(\mathbb Q(\sqrt d)\). For \(d = -1\) it is the <em>Gaussian integers</em> \(\mathbb Z[i]\), and for \(d = -3\) the <em>Eisenstein integers</em>.</p>
+<p>The <em>conjugate</em> of \(x + y\sqrt d\) is \(x - y\sqrt d\), and the <em>norm</em> is the product of the two, a whole number:</p>
+\[ N(x + y\sqrt d) = x^2 - d y^2, \qquad N(\alpha\beta) = N(\alpha)\,N(\beta). \]
+<pre><code>import { quadraticRing, gaussianIntegers } from "@ratmath/structures";
+
+const K = quadraticRing(-5);
+String(K);                       // "Z[√−5]"
+const a = K.sqrt(1, 1);          // 1 + √−5
+String(a.mul(a));                // "−4 + 2√−5"
+a.norm();                        // 6n
+String(a.conj());                // "1 − √−5"
+String(quadraticRing(5).omega);  // "(1 + √5)/2": the golden ratio</code></pre>
+
+
+<h2>Units</h2>
+<p>An element is a unit exactly when its norm is \(\pm 1\). For \(d &lt; 0\) there are only finitely many: \(\pm 1\), except the four powers of \(i\) when \(d = -1\) and the six sixth roots of unity when \(d = -3\). For \(d &gt; 0\) there are infinitely many, all of the form \(\pm\varepsilon^k\) for one <em>fundamental unit</em> \(\varepsilon &gt; 1\). Finding it is solving Pell's equation \(x^2 - d y^2 = \pm 1\) (or \(\pm 4\)), and the continued fraction of \(\sqrt d\) does it. The fundamental unit can be surprisingly large.</p>
+<pre><code>String(quadraticRing(2).fundamentalUnit);     // "1 + √2", norm −1
+String(quadraticRing(7).fundamentalUnit);     // "8 + 3√7":  8² − 7·3² = 1
+String(quadraticRing(61).fundamentalUnit);    // "(39 + 5√61)/2"
+String(quadraticRing(94).fundamentalUnit);    // "2143295 + 221064√94"
+gaussianIntegers().units.list.map(String);    // ["1", "i", "−1", "−i"]</code></pre>
+
+
+<h2>Division with remainder</h2>
+<p>In the Gaussian integers one can divide with a remainder of smaller norm: compute the exact quotient in \(\mathbb Q(i)\) and round both coordinates. So Euclid's algorithm works, greatest common divisors exist, and factorisation into primes is unique, exactly as for whole numbers. The same holds in a handful of other rings (for example \(d = -2, -3, -7, -11, 2, 3, 5, 13\)), called <em>norm-Euclidean</em>.</p>
+<pre><code>const G = gaussianIntegers();
+const { quotient, remainder } = G.divmod(G.of(27, 23), G.of(8, 1));
+[String(quotient), String(remainder)];        // ["4 + 2i", "−3 + 3i"]: norm 18 is less than 65
+String(G.gcd(G.of(11, 3), G.of(1, 8)).gcd);   // "2 + i"
+
+const f = G.factor(2210);
+f.factors.map(({ prime, exponent }) =&gt; `${prime}${exponent &gt; 1 ? "^" + exponent : ""}`);
+      // ["1 + i^2", "2 − i", "2 + i", "3 + 2i", "3 − 2i", "4 − i", "4 + i"]: 2210 = 2·5·13·17</code></pre>
+
+<p>A whole-number prime \(p\) behaves in one of three ways in the ring. It can stay prime (<em>inert</em>), become a product of two different primes (<em>split</em>), or become the square of a prime, up to a unit (<em>ramified</em>). In \(\mathbb Z[i]\): 2 ramifies, primes \(p \equiv 1 \pmod 4\) split (that is Fermat's theorem that such a prime is a sum of two squares), and primes \(p \equiv 3 \pmod 4\) are inert.</p>
+
+<h2>When unique factorisation fails</h2>
+<p>An element is <em>irreducible</em> when it is not a product of two non-units. It is <em>prime</em> when it cannot divide a product without dividing a factor. For whole numbers these are the same thing. In \(\mathbb Z[\sqrt{-5}]\) they are not:</p>
+\[ 6 = 2 \cdot 3 = (1 + \sqrt{-5})(1 - \sqrt{-5}). \]
+<p>All four factors are irreducible, since their norms are 4, 9, 6, 6 and no element has norm 2 or 3 (\(x^2 + 5y^2\) never equals 2 or 3). But none is prime: 2 divides the product on the right without dividing either factor. So 6 has two genuinely different factorisations.</p>
+<pre><code>K.factorizations(6).map((f) =&gt; f.factors.map(String));
+      // [["2", "3"], ["1 + √−5", "1 − √−5"]]
+K.isIrreducible(2);              // true
+K.isPrimeElement(2);             // false
+K.elementsOfNorm(2);             // []
+K.isUFD;                         // false</code></pre>
+
+
+<h2>Ideals put it right</h2>
+<p>Kummer and Dedekind's repair: factor <em>ideals</em>, not elements. In these rings every nonzero ideal is a product of prime ideals in exactly one way. The two factorisations of 6 are two ways of grouping the same four prime ideals:</p>
+\[ \langle 2\rangle = \mathfrak p^2, \quad \langle 3\rangle = \mathfrak q\,\bar{\mathfrak q}, \quad \langle 1 + \sqrt{-5}\rangle = \mathfrak p\,\mathfrak q, \quad \langle 1 - \sqrt{-5}\rangle = \mathfrak p\,\bar{\mathfrak q}, \]
+<p>with \(\mathfrak p = \langle 2, 1 + \sqrt{-5}\rangle\) and \(\mathfrak q = \langle 3, 1 + \sqrt{-5}\rangle\). None of \(\mathfrak p, \mathfrak q, \bar{\mathfrak q}\) is generated by a single element, which is why they were invisible among the numbers.</p>
+<pre><code>const p = K.ideal(2, a);                 // (2, 1 + √−5)
+const q = K.ideal(3, a);
+p.norm;                                  // 2n: the quotient by p has 2 elements
+p.isPrime();                             // true
+p.isPrincipal();                         // false
+String(p.mul(p));                        // "(2)"
+String(p.mul(q));                        // "(1 + √−5)"
+String(p.mul(q).generator());            // "1 + √−5"
+K.ideal(6).factor().map(({ prime, exponent }) =&gt; `${prime}^${exponent}`);
+      // ["(2, 1 + √−5)^2", "(3, 2 + √−5)^1", "(3, 1 + √−5)^1"]
+K.splitting(7).kind;                     // "split"</code></pre>
+
+
+<h2>The class group</h2>
+<p>How badly does unique factorisation fail? Call two ideals <em>equivalent</em> when one is the other multiplied by a number of the field. The classes form a finite abelian group under multiplication, the <em>class group</em>, and its size \(h\) is the <em>class number</em>. The principal ideals are the identity class, so</p>
+\[ h = 1 \iff \text{every ideal is principal} \iff \text{factorisation of elements is unique}. \]
+<p>The class group is computable because every class contains an ideal of norm at most the <em>Minkowski bound</em> (\(\tfrac{2}{\pi}\sqrt{|D|}\) for an imaginary ring and \(\tfrac12\sqrt D\) for a real one, where \(D\) is the discriminant). So it is enough to look at the primes above the small whole-number primes and work out which products are principal.</p>
+<pre><code>K.classNumber();                              // 2
+p.isEquivalentTo(q);                          // true: both are in the one non-principal class
+quadraticRing(-23).classGroup().text;         // "C3"
+quadraticRing(-65).classGroup().text;         // "C2 × C4"
+quadraticRing(10).classNumber();              // 2: 6 = 2·3 = (4 + √10)(4 − √10)
+[-1, -2, -3, -7, -11, -19, -43, -67, -163].map((d) =&gt; quadraticRing(d).classNumber());
+      // all 1, and by the Baker–Heegner–Stark theorem no other negative d has class number 1
+quadraticRing(-19).isPID;                     // true, although
+quadraticRing(-19).isNormEuclidean;           // false</code></pre>
+
+<p class="small muted">Class groups are found by listing ideals up to the Minkowski bound and testing which are principal, which suits discriminants up to a few thousand. Whether there are infinitely many real quadratic rings of class number 1 is an open problem.</p>
+<template data-runbox>
+// Sums of two squares: a prime p is x² + y² exactly when it splits in Z[i]
+const G = gaussianIntegers();
+for (const p of [5, 13, 29, 97, 1009]) {
+  const { factors } = G.factor(p);
+  const z = factors[0].prime;
+  PRINT(`${p} = (${z})(${z.conj()}) = ${z.a}² + ${z.b &lt; 0n ? -z.b : z.b}²`);
+}
+PRINT("7 stays prime:", G.isIrreducible(7), "  2 ramifies:", G.splitting(2).kind);
+
+// Class numbers of Z[√d] and friends for small negative d
+const hs = [];
+for (let d = -1; d &gt;= -30; d -= 1) {
+  let squarefree = true;
+  for (let k = 2; k * k &lt;= -d; k += 1) if (d % (k * k) === 0) squarefree = false;
+  if (squarefree) hs.push(`${d}: ${quadraticRing(d).classNumber()}`);
+}
+PRINT("class numbers:", hs.join("   "));
+
+// A number with five factorisations in Z[√−5]
+const K = quadraticRing(-5);
+const ways = K.factorizations(18);
+for (const f of ways) PRINT("18 =", (String(f.unit) === "1" ? "" : `(${f.unit})·`) + f.factors.map((q) =&gt; `(${q})`).join("·"));
+PRINT("but one factorisation into prime ideals:", K.ideal(18).factor().map(({ prime, exponent }) =&gt; `${prime}^${exponent}`).join(" · "));
+
+// Pell's equation x² − 61y² = 1 (Fermat's challenge): square the fundamental unit until the norm is 1 and the halves go
+const P = quadraticRing(61);
+let u = P.fundamentalUnit;
+PRINT("fundamental unit:", u, " norm", String(u.norm()));
+u = u.pow(6);
+String(u)
+</template>
+</article>
+</main>
+</div>
+</body>
+</html>

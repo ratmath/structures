@@ -1,5 +1,80 @@
 # Changelog
 
+## 0.4.0
+
+Fields and large groups (roadmap phase 6) and character tables (phase 7).
+
+- `schreierSims(generators)` and `PermChain`: permutation groups held by a
+  base and strong generating set (deterministic Schreier–Sims), with order,
+  membership, words in the generators, random elements, orbits, stabilisers,
+  subgroup comparisons, normal closures, the derived series, block systems
+  and primitivity. `largeGroups` has Sₙ, Aₙ, the Mathieu groups and the
+  Rubik's cube and pocket cube groups.
+- `extension({ … })`: towers of field extensions of Q with exact elements,
+  degrees and the tower law, minimal polynomials over Q or a level of the
+  tower, norm and trace, primitive elements, roots and factors over the
+  field, automorphisms, `galoisGroup()` and `fixedField()`.
+- `solveByRadicals(poly)`: Galois group, solvability and, when solvable, the
+  roots as nested radicals for irreducible factors up to degree 7, each
+  formula checked against its root. `RadicalExpression` prints in steps, in
+  one line or as TeX. `rootOfUnityByRadicals(n)`.
+- `constructible(poly)`, `regularPolygon(n)` (Gauss–Wantzel, with cos(2π/n)
+  in square roots) and `classicalProblems`.
+- `conwayPolynomial(p, n)` and `conwayField(p, n)` with compatible
+  embeddings.
+- `characterTable(G)`: irreducible characters with exact values in a
+  cyclotomic field, by the Burnside–Dixon–Schneider method (class matrices
+  over GF(p), then Dixon's lift), checked by row and column orthogonality.
+  `ClassFunction` has inner products, decomposition, products, symmetric and
+  alternating squares, Adams operations, the Frobenius–Schur indicator,
+  kernels, restriction, induction and permutation characters. `Cyclotomic`
+  is the exact number type of the entries.
+- Docs: two more topic pages (character tables, working with characters) and
+  `characters` and `tensor` in the explorer.
+- Docs: six new topic pages (large permutation groups, field extensions and
+  towers, automorphisms and the Galois correspondence, solving by radicals,
+  ruler and compass, Conway polynomials), and `large`, `tower`, `galois`,
+  `radicals`, `unity`, `polygon`, `constructible` and `conway` in the
+  explorer.
+
+## 0.3.0
+
+Rings, ideals and Gröbner bases (roadmap phases 3 and 4).
+
+- `groebner(polys, { order, certificates, maxPairs, timeLimit })`: Buchberger's
+  algorithm with the normal selection strategy and Gebauer and Möller's
+  criteria, fraction-free over Q and by field arithmetic elsewhere. The
+  result has the reduced basis, `reduce`, `divide`, `contains`,
+  `express(f)` (a member of the ideal as a combination of the original
+  generators, multiplied out to confirm), `verify()` (Buchberger's criterion
+  re-checked), `dimension`, `standardMonomials()`, `quotientDimension` and
+  `stats`. Also `sPolynomial` and `eliminationOrder`.
+- `ideal(R, generators)`: membership, equality, `add`, `mul`, `pow`,
+  `intersect`, `quotient`, `saturate`, `eliminate`, `radicalContains` (with
+  a certificate fᵏ = Σ cᵢfᵢ on request), `exponentOf`, `radical`,
+  `isRadical`, `dimension`, `degree`, `minimalPolynomial`, `isMaximal`,
+  `isPrime`, and `chineseRemainder(I, J)`.
+- `solve(R, polys, { complex })` and `I.solve()`: exact solutions of systems
+  with finitely many solutions over Q, by a separating linear form and a
+  rational univariate representation. Real solutions as algebraic numbers
+  with float approximations, complex ones on request, multiplicity, and the
+  components with their number fields.
+- Quotient rings `I.quotientRing()`: elements in normal form with `inverse`,
+  `isUnit`, `isZeroDivisor`, `isNilpotent`, `minimalPolynomial`, `matrix`;
+  `isField`, `isIntegralDomain`, `isReduced`, `asField`.
+- `Zn(n)`: arithmetic, units, zero divisors, nilpotents, idempotents, ideals,
+  the unit group, primitive roots, `decompose()`; `crt(residues, moduli)`
+  (moduli need not be coprime).
+- `quadraticRing(d)`, `gaussianIntegers()`, `eisensteinIntegers()`: elements,
+  units and the fundamental unit, `divmod` and `gcd`, `elementsOfNorm`,
+  `isIrreducible` against `isPrimeElement`, `factorizations` (all of them),
+  `factor` (when unique), ideals with `mul`, `isPrincipal`, `generator`,
+  `factor`, `splitting(p)`, and `classGroup()`.
+- Docs: six new topic pages (Gröbner bases, ideals, solving polynomial
+  systems, quotient rings, the integers mod n, quadratic integer rings), and
+  `groebner`, `member`, `eliminate`, `radical`, `solve`, `zmod`, `crt`,
+  `quadratic` and `qfactor` in the explorer.
+
 ## 0.2.0
 
 Finite groups (roadmap phase 1).

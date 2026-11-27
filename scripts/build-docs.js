@@ -40,7 +40,7 @@ for (const file of files) {
   const box = runboxHtml(seed, { lib: "<code>@ratmath/structures</code> and Core's <code>Rational</code>" });
   if (!html.includes("</article>")) throw new Error(`${file}: no </article> to put the code box in`);
   const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? "RatMath Structures";
-  const og = `<meta property="og:title" content="${title}">\n<meta property="og:description" content="Finite groups, polynomials in several variables, rational functions and elimination, exact, in JavaScript.">\n<meta property="og:type" content="website">\n<meta property="og:url" content="https://ratmath.com/structures/${file === "index.html" ? "" : file}">`;
+  const og = `<meta property="og:title" content="${title}">\n<meta property="og:description" content="Finite groups, polynomials in several variables, ideals, Gröbner bases and rings of numbers, exact, in JavaScript.">\n<meta property="og:type" content="website">\n<meta property="og:url" content="https://ratmath.com/structures/${file === "index.html" ? "" : file}">`;
   const math = renderMath(html.replace("</title>", `</title>\n${og}`).replace("</article>", `${box}\n${SITE_LINKS}\n</article>`));
   formulas += math.count;
   const page = math.count ? math.html.replace('<link rel="stylesheet" href="assets/style.css">', `${KATEX_LINK}\n<link rel="stylesheet" href="assets/style.css">`) : math.html;
