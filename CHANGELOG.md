@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Requires Core 0.12: the `@ratmath/core` peer range is now `>=0.12.0` (Core 0.12 returns Integers from `floor`/`ceil`/`trunc`/`round` and rounds half up by default).
 - `chainComplex([∂1, ∂2, …], { sizes })` / `ChainComplex`: checks ∂∂ = 0;
   `homology(k, { coefficients: "Z" | "Q" | "Z/p" })` with torsion over Z,
   `betti()`, `torsion`, `eulerCharacteristic`, `reducedHomology`,
