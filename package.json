@@ -54,7 +54,7 @@
     "@ratmath/algebraic": "^0.1.0"
   },
   "peerDependencies": {
-    "@ratmath/core": ">=0.10.0 <0.12.0"
+    "@ratmath/core": ">=0.12.0"
   },
   "types": "index.d.ts",
   "workspaces": [
@@ -62,13 +62,14 @@
     "vendor/linalg"
   ],
   "devDependencies": {
-    "@ratmath/core": "^0.11.0",
+    "@ratmath/core": "^0.12.0",
     "@ratmath/linalg": "^0.1.0",
     "katex": "0.19.1"
   },
   "author": "James Taylor",
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "bun": ">=1.4.2"
   },
   "bugs": {
     "url": "https://github.com/ratmath/structures/issues"
